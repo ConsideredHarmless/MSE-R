@@ -1,4 +1,4 @@
-import2 <- function(filename) {
+importNew <- function(filename) {
 
     #Importing data
     DT <<- data.table::fread(filename, header=TRUE)

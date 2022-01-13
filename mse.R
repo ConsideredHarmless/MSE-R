@@ -27,11 +27,12 @@ library(knitr)
 
 #Import functions
 source("import.R")
-source("import2.R")
+source("importNew.R")
 source("matching.R")
 source("payoff.R")
 source("assignList.R")
 source("inequalities.R")
+source("inequalitiesNew.R")
 source("dataArray.R")
 source("objective.R")
 source("maximize.R")
