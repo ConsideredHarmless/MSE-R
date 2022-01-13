@@ -9,20 +9,27 @@ Cx<-function(n){
   }
 }
 
-
+# The following function creates the symbolic expression
+#   sum(dist(m, u, d, k) * x_k, k)
+# for a given triple (m, u, d) (named (m, i, j) in the function signature).
+# Since we assume (for now) that the payoff function for a given triple is
+# linear with respect to both the distance attributes and the parameters, we can
+# deprecate this function and simply use the vectors distanceMatrices[, d, u, m].
+# This might also allow us to vectorise some operations.
 payoffDM<-function(Cx,distanceMatrices,noAttr,m,i,j){
   #payoffDM(Cx,distanceMatrices,noAttr,m,i,j) returns the payoff of i-upstream and j-upstream in the m-market
   
-  x<-as.numeric((distanceMatrices[[m]][i][[1]][j,]))*Sym(c(1,Cx[1:noAttr-1]))
-  y<-""
+  x<-as.numeric((distanceMatrices[[m]][i][[1]][j,]))*ysym(c(1,Cx[1:noAttr-1]))
+  y<-ysym(0)
   for(i in 1:noAttr){
-    y<-y+Sym(x[i])
+    y<-y+x[i]
   }
-  
+
   return(y)
   
 }
 
+# Deprecated. See above. This is essentially the array distanceMatrices.
 CpayoffMatrix<-function(noM,noU,noD,Cx,distanceMatrices,noAttr){
   #payoffMatrix=CpayoffMatrix(noM,noU,noD,Cx,distanceMatrices,noAttr) calculates and assigns the payoffMatrix 
   
@@ -32,6 +39,7 @@ CpayoffMatrix<-function(noM,noU,noD,Cx,distanceMatrices,noAttr){
   return(CpayoffMatrix)
 }
 
+# Deprecated. See above.
 assignpayoffMatrix<-function(payoffMatrix,xval){
   #assignpayoffMatrix(payoffMatrix,xval) assigns payoffMatrix numerical values (set x's)
   Cx<-paste("x",seq( from = 1, to = noAttr-1, by = 1 ),sep="")
