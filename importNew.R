@@ -12,9 +12,13 @@ importNew <- function(filename) {
     #Calculating number of attributes
     noAttr <<- length(DT)-3-1
 
-    checkConsecutive <- function(v) {
-    # Check if indexes are consecutive (1, 2, ..., n).
-        if (!isTRUE(all.equal(v, seq_along(v)))) {
+    checkIndexes <- function(idxs) {
+        # Check if the index vector is not empty.
+        if (length(idxs) == 0) {
+            warning("index set empty")
+        }
+        # Check if indexes are consecutive (1, 2, ..., n).
+        if (!isTRUE(all.equal(idxs, seq_along(idxs)))) {
             warning("indexes not consecutive")
         }
     }
@@ -22,14 +26,14 @@ importNew <- function(filename) {
     #Calculating number of markets
     marketIdxs = unique(DT, by = "Market")[[1]] # might be slightly faster
     # marketIdxs = unique(DT[[1]])
-    checkConsecutive(marketIdxs)
+    checkIndexes(marketIdxs)
     noM <- length(marketIdxs)
 
     #Calculating number of up streams and down streams in each market
     upIdxs <- DT[, list(x = list(unique(UpStream))),   by = Market]$x
     dnIdxs <- DT[, list(x = list(unique(DownStream))), by = Market]$x
-    lapply(upIdxs, checkConsecutive)
-    lapply(dnIdxs, checkConsecutive)
+    lapply(upIdxs, checkIndexes)
+    lapply(dnIdxs, checkIndexes)
     noU <- unlist(lapply(upIdxs, length))
     noD <- unlist(lapply(dnIdxs, length))
 
