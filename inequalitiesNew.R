@@ -36,9 +36,12 @@ CineqmembersNew <- function(mate) {
 #   $fctDnIdxs: a list of downstream index vectors for the factual case.
 #   $cfcUpIdxs: a list of upstream index vectors for the counterfactual case.
 #   $cfcDnIdxs: a list of downstream index vectors for the counterfactual case.
+#   $numIneqs: the number of inequalities for this market. Also the common
+#     length of the above lists.
 CineqmembersSingle <- function(marketMates) {
     uIdxs <- marketMates$UpStream
     n <- length(uIdxs)
+    numIneqs = n*(n-1)/2
     # First, we create the transposition indexes {(i, j): 1 <= i < j <= n} as a
     # pair of vectors.
     iIdxs <- unlist(lapply(1:n, function (x) { rep(x, n-x) }))
@@ -55,10 +58,42 @@ CineqmembersSingle <- function(marketMates) {
         fctUpIdxs = fctUpIdxs,
         fctDnIdxs = fctDnIdxs,
         cfcUpIdxs = cfcUpIdxs,
-        cfcDnIdxs = cfcDnIdxs))
+        cfcDnIdxs = cfcDnIdxs,
+        numIneqs  = numIneqs))
 }
 
-CinequalitiesNew <- function(f, ineqmembers) {} # TODO
+# CinequalitiesNew(payoffFunction, ineqmembers) computes, for each inequality,
+# the value
+#   (sum of payoff function values over LHS terms) -
+#   (sum of payoff function values over RHS terms).
+# payoffFunction is a function which takes three arguments (mIdx, uIdx, dIdx)
+# and returns the value of the payoff function for that triple.
+# For the structure ineqmembers, see the function CineqmembersNew.
+#
+# Returns a list of vectors, one for each market. Each vector element
+# corresponds to a single inequality.
+CinequalitiesNew <- function(payoffFunction, ineqmembers) {
+    g <- function(mIdx, ineqmembersSingle) {
+        f <- function(ineqIdx) {
+            numTerms <- length(ineqmembersSingle$fctUpIdxs[[ineqIdx]])
+            termsLHS <- mapply(
+                payoffFunction,
+                rep(mIdx, numTerms),
+                ineqmembersSingle$fctUpIdxs[[ineqIdx]],
+                ineqmembersSingle$fctUpIdxs[[ineqIdx]])
+            termsRHS <- mapply(
+                payoffFunction,
+                rep(mIdx, numTerms),
+                ineqmembersSingle$cfcUpIdxs[[ineqIdx]],
+                ineqmembersSingle$cfcUpIdxs[[ineqIdx]])
+            return(sum(termsLHS) - sum(termsRHS))
+        }
+        ineqIdxs <- 1:ineqmembersSingle$numIneqs
+        return(sapply(ineqIdxs, f))
+    }
+    mIdxs <- seq_along(ineqmembers)
+    return(mapply(g, mIdxs, ineqmembers, SIMPLIFY = FALSE))
+}
 
 # The next functions convert between the old and the new representations.
 
