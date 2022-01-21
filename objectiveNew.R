@@ -3,7 +3,7 @@ makeObjFun <- function(dataArray, coefficient1 = 1) {
     # only minimize.
     objFun <- function(b) {
         u <- t(dataArray) %*% c(coefficient1, b)
-        return(-sum(u > 0))
+        return(-sum(u >= 0))
     }
     return(objFun)
 }
