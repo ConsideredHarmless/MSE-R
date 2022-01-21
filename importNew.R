@@ -39,17 +39,17 @@ importNew <- function(filename) {
 
     #Calculating distance matrices
     # distanceMatrices is now a list of noM arrays (one for each market) of
-    # dimension (noAttr, noD[midx], noU[midx]).
+    # dimension (noAttr, noD[mIdx], noU[mIdx]).
     # distanceMatrices[[m]][i, d, u] gives the i-th attribute value for the
     # triple (m, u, d).
     # The unexpected ordering of the dimensions is due to R using column-major
     # format for its arrays.
     # For old code, replace distanceMatrices[[m]][[u]][[i]][d] by
     # distanceMatrices[[m]][i, d, u].
-    distanceMatrices <- lapply(marketIdxs, function(midx) {
-        distTable <- DT[Market == midx, (3+1):(3+noAttr)]
-        p <- noU[midx]
-        q <- noD[midx]
+    distanceMatrices <- lapply(marketIdxs, function(mIdx) {
+        distTable <- DT[Market == mIdx, (3+1):(3+noAttr)]
+        p <- noU[mIdx]
+        q <- noD[mIdx]
         # The following is now a (p*q*noAttr)-length vector, but its values are
         # not naturally ordered, due to an unfortunate mix of row-major and
         # column-major indexing.
@@ -65,26 +65,26 @@ importNew <- function(filename) {
 
     #Calculating matchMatrix
     # matchMatrix is now a list of noM arrays (one for each market) of dimension
-    # (noD[midx], noU[midx]).
+    # (noD[mIdx], noU[mIdx]).
     # matchMatrix[[m]][d, u] is 1 if the triple (m, u, d) matches and 0
     # otherwise.
     # See distanceMatrices for the construction of the object.
-    matchMatrix <- lapply(marketIdxs, function(midx) {
-        matchTable <- DT[Market == midx, Match]
-        p <- noU[midx]
-        q <- noD[midx]
+    matchMatrix <- lapply(marketIdxs, function(mIdx) {
+        matchTable <- DT[Market == mIdx, Match]
+        p <- noU[mIdx]
+        q <- noD[mIdx]
         return(array(unlist(matchTable), c(q, p)))
     })
 
     #Calculating mate
     # mate is now a list of noM data.table objects (one for each market). Each
-    # object has noU[midx] rows (one for each upstream), with fields:
+    # object has noU[mIdx] rows (one for each upstream), with fields:
     #   $UpStream: the index of that upstream.
     #   $DownMates: a list of the downstream indexes which the upstream is
     # matched to.
-    mate <- lapply(marketIdxs, function(midx) {
+    mate <- lapply(marketIdxs, function(mIdx) {
         DT[
-            Market == midx & Match == 1,
+            Market == mIdx & Match == 1,
             list(DownMates = list(DownStream)),
             keyby = UpStream] })
 
