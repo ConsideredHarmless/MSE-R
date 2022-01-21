@@ -82,6 +82,11 @@ importNew <- function(filename) {
     #   $UpStream: the index of that upstream.
     #   $DownMates: a list of the downstream indexes which the upstream is
     # matched to.
+    # FIXME
+    # The above assertion is currently not true. Upstreams with no matching
+    # downstreams are not included at all. A possible fix could be the
+    # equivalent of an SQL outer join.
+    # A dataset which triggers this bug is import/round1m2-1.
     mate <- lapply(marketIdxs, function(mIdx) {
         DT[
             Market == mIdx & Match == 1,
