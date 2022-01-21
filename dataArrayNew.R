@@ -20,6 +20,8 @@ CdataArrayNew <- function(distanceMatrices, ineqmembers) {
     f <- function(mIdx) {
         ineqmembersSingle <- ineqmembers[[mIdx]]
         ineqIdxs <- 1:ineqmembersSingle$numIneqs
+        noAttr <- dim(distanceMatrices[[mIdx]])[1]
+        zeroCol <- rep(0, noAttr)
         h <- function(uIdxLHS, dIdxLHS, uIdxRHS, dIdxRHS) {
             valLHS <- distanceMatrices[[mIdx]][, dIdxLHS, uIdxLHS]
             valRHS <- distanceMatrices[[mIdx]][, dIdxRHS, uIdxRHS]
@@ -31,7 +33,16 @@ CdataArrayNew <- function(distanceMatrices, ineqmembers) {
             cfcUpIdxs <- ineqmembersSingle$cfcUpIdxs[[ineqIdx]]
             cfcDnIdxs <- ineqmembersSingle$cfcDnIdxs[[ineqIdx]]
             termIdxs <- seq_along(fctUpIdxs)
-            return(rowSums(mapply(h, fctUpIdxs, fctDnIdxs, cfcUpIdxs, cfcDnIdxs, SIMPLIFY = FALSE)))
+            # The following might be empty. In that case mapply returns an empty
+            # list instead of an empty vector/array, so we have to special-case
+            # it.
+            termValues <- mapply(h, fctUpIdxs, fctDnIdxs, cfcUpIdxs, cfcDnIdxs, SIMPLIFY = TRUE)
+            if (length(termValues) == 0) {
+                result <- zeroCol
+            } else {
+                result <- rowSums(termValues)
+            }
+            return(result)
         }
         return(sapply(ineqIdxs, g))
     }

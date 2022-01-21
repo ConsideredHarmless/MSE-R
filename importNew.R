@@ -82,16 +82,18 @@ importNew <- function(filename) {
     #   $UpStream: the index of that upstream.
     #   $DownMates: a list of the downstream indexes which the upstream is
     # matched to.
-    # FIXME
-    # The above assertion is currently not true. Upstreams with no matching
-    # downstreams are not included at all. A possible fix could be the
-    # equivalent of an SQL outer join.
-    # A dataset which triggers this bug is import/round1m2-1.
     mate <- lapply(marketIdxs, function(mIdx) {
-        DT[
+        # The following table omits upstreams with no matching downstreams.
+        marketMateTableCompressed <- DT[
             Market == mIdx & Match == 1,
             list(DownMates = list(DownStream)),
-            keyby = UpStream] })
+            keyby = UpStream]
+        # The following table has a row for each unique upstream index.
+        marketUpStreamTable <- DT[Market == mIdx, UpStream, keyby = UpStream][, "UpStream"]
+        # Using an outer join, we restore any missing upstream indexes.
+        marketMateTableRestored <- marketMateTableCompressed[marketUpStreamTable, on = list(UpStream)]
+        return(marketMateTableRestored)
+        })
 
     return(list(
         "header"=header, "noM"=noM, "noU"=noU, "noD"=noD,"noAttr"=noAttr,

@@ -39,9 +39,6 @@ CineqmembersNew <- function(mate) {
 #   $numIneqs: the number of inequalities for this market. Also the common
 #     length of the above lists.
 CineqmembersSingle <- function(marketMates) {
-    # FIXME
-    # Bug in 1m2-1: upstreams with no downstream mates are dropped, and the
-    # indexing is now wrong.
     uIdxs <- marketMates$UpStream
     n <- length(uIdxs)
     numIneqs = n*(n-1)/2
