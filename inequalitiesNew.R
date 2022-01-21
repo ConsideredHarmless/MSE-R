@@ -80,12 +80,12 @@ CinequalitiesNew <- function(payoffFunction, ineqmembers) {
                 payoffFunction,
                 rep(mIdx, numTerms),
                 ineqmembersSingle$fctUpIdxs[[ineqIdx]],
-                ineqmembersSingle$fctUpIdxs[[ineqIdx]])
+                ineqmembersSingle$fctDnIdxs[[ineqIdx]])
             termsRHS <- mapply(
                 payoffFunction,
                 rep(mIdx, numTerms),
                 ineqmembersSingle$cfcUpIdxs[[ineqIdx]],
-                ineqmembersSingle$cfcUpIdxs[[ineqIdx]])
+                ineqmembersSingle$cfcDnIdxs[[ineqIdx]])
             return(sum(termsLHS) - sum(termsRHS))
         }
         ineqIdxs <- 1:ineqmembersSingle$numIneqs
