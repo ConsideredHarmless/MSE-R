@@ -31,7 +31,7 @@ CdataArrayNew <- function(distanceMatrices, ineqmembers) {
             cfcUpIdxs <- ineqmembersSingle$cfcUpIdxs[[ineqIdx]]
             cfcDnIdxs <- ineqmembersSingle$cfcDnIdxs[[ineqIdx]]
             termIdxs <- seq_along(fctUpIdxs)
-            return(rowSums(mapply(h, fctUpIdxs, fctDnIdxs, cfcUpIdxs, cfcDnIdxs)))
+            return(rowSums(mapply(h, fctUpIdxs, fctDnIdxs, cfcUpIdxs, cfcDnIdxs, SIMPLIFY = FALSE)))
         }
         return(sapply(ineqIdxs, g))
     }

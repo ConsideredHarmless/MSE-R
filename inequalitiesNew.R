@@ -50,10 +50,10 @@ CineqmembersSingle <- function(marketMates) {
     # To create the upstream indexes, we repeat them as many times as there are
     # corresponding downstream matches.
     repUp <- function(i, j) { rep_len(i, length(dnMates[[j]])) }
-    fctUpIdxs <- mapply(function (i, j) { c(repUp(i, i),  repUp(j, j))  }, iIdxs, jIdxs)
-    fctDnIdxs <- mapply(function (i, j) { c(dnMates[[i]], dnMates[[j]]) }, iIdxs, jIdxs)
-    cfcUpIdxs <- mapply(function (i, j) { c(repUp(i, j),  repUp(j, i))  }, iIdxs, jIdxs)
-    cfcDnIdxs <- mapply(function (i, j) { c(dnMates[[j]], dnMates[[i]]) }, iIdxs, jIdxs)
+    fctUpIdxs <- mapply(function (i, j) { c(repUp(i, i),  repUp(j, j))  }, iIdxs, jIdxs, SIMPLIFY = FALSE)
+    fctDnIdxs <- mapply(function (i, j) { c(dnMates[[i]], dnMates[[j]]) }, iIdxs, jIdxs, SIMPLIFY = FALSE)
+    cfcUpIdxs <- mapply(function (i, j) { c(repUp(i, j),  repUp(j, i))  }, iIdxs, jIdxs, SIMPLIFY = FALSE)
+    cfcDnIdxs <- mapply(function (i, j) { c(dnMates[[j]], dnMates[[i]]) }, iIdxs, jIdxs, SIMPLIFY = FALSE)
     return(list(
         fctUpIdxs = fctUpIdxs,
         fctDnIdxs = fctDnIdxs,
@@ -80,12 +80,14 @@ CinequalitiesNew <- function(payoffFunction, ineqmembers) {
                 payoffFunction,
                 rep(mIdx, numTerms),
                 ineqmembersSingle$fctUpIdxs[[ineqIdx]],
-                ineqmembersSingle$fctDnIdxs[[ineqIdx]])
+                ineqmembersSingle$fctDnIdxs[[ineqIdx]],
+                SIMPLIFY = FALSE)
             termsRHS <- mapply(
                 payoffFunction,
                 rep(mIdx, numTerms),
                 ineqmembersSingle$cfcUpIdxs[[ineqIdx]],
-                ineqmembersSingle$cfcDnIdxs[[ineqIdx]])
+                ineqmembersSingle$cfcDnIdxs[[ineqIdx]],
+                SIMPLIFY = FALSE)
             return(sum(termsLHS) - sum(termsRHS))
         }
         ineqIdxs <- 1:ineqmembersSingle$numIneqs
