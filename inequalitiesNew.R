@@ -6,7 +6,7 @@
 # Returns a list of 4-tuples containing indexes. For that structure, see
 # CineqmembersSingle.
 CineqmembersNew <- function(mate) {
-    mateList <- lapply(result$mate, as.list)
+    mateList <- lapply(mate, as.list)
     return(lapply(mateList, CineqmembersSingle))
 }
 
