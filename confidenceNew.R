@@ -49,34 +49,26 @@ pointIdentifiedCRNew <- function(ssSize, numSubsamples, pointEstimate,
     # two asymptotics. subNormalization is the standardization multiplier
     # for the subsamples, fullNormalization is the multiplier for the
     # construction of the final confidence interval from all of the subsamples.
-    # TODO We could just set the exponent.
-    switch(asymp,
-           "nests" = {
-               subNormalization  <- (ssSize)^(1/3)
-               fullNormalization <- (length(unique(groupIDs)))^(1/3)
-
-           },
-           "coalitions"={
-               subNormalization  <- (ssSize)^(1/2)
-               fullNormalization <- (length(unique(groupIDs)))^(1/2)
-           }
-    )
+    normExponent <- switch(asymp, "nests" = 1/3, "coalitions" = 1/2)
+    subNormalization  <- ssSize^normExponent
+    fullNormalization <- length(unique(groupIDs))^normExponent
 
     # Standardized and raw subsample estimates.
-    # TODO sapply?
-    estimates   <- matrix(0, nrow = numSubsamples, ncol = numFreeAttrs)
-    ssEstimates <- matrix(0, nrow = numSubsamples, ncol = numFreeAttrs)
-    for (i in 1:numSubsamples) {
+    # Note: these arrays are transposed compared to the old function.
+    # estimates[paramIdx, iterIdx] gives the estimate for the parameter with
+    # index paramIdx in iteration with index iterIdx.
+    calcEstimate <- function(iterIdx) {
         ssDataArray <- generateRandomSubsampleNew(ssSize, groupIDs, dataArray)
         objective <- makeObjFun(ssDataArray)
         optResult <- maximizeNew(objective, optimParams)
-
-        ssEstimates[i, ] <- optResult$bestmem
-        # TODO This could be moved after the loop.
-        estimates[i, ]   <- subNormalization * (ssEstimates[i, ] - pointEstimate)
-        if (progress > 0 && i %% progress == 0)
-            cat(sprintf("[pointIdentifiedCRNew] Iterations completed: %d \n", i))
+        ssEstimate <- optResult$bestmem
+        if (progress > 0 && iterIdx %% progress == 0) {
+            cat(sprintf("[pointIdentifiedCRNew] Iterations completed: %d\n", iterIdx))
+        }
+        return(ssEstimate)
     }
+    ssEstimates <- sapply(1:numSubsamples, calcEstimate)
+    estimates   <- subNormalization * (ssEstimates - pointEstimate)
 
     # For the symmetric case, we want to add and subtract the (1 - alpha')-th
     # quantile from the point estimate. We take the Abs here for simplicity:
@@ -85,23 +77,26 @@ pointIdentifiedCRNew <- function(ssSize, numSubsamples, pointEstimate,
     # quantiles and subtract them. Keep in mind that since estimates has its
     # mean subtracted, only in freakishly unlikely cases will these two have
     # the same sign. This is not true for the symmetric case.
-    # TODO This could be sapply.
-    crSymm <- list()
-    crAsym <- list()
-    for (i in 1:numFreeAttrs) {
-        qSymm <- quantile(abs(estimates[, i]), c(1 - alpha, 1 - alpha), names=FALSE, type=1)
+    calcConfRegionSymm <- function(paramIdx) {
+        qSymm <- quantile(abs(estimates[paramIdx, ]), c(1 - alpha, 1 - alpha), names=FALSE, type=1)
         qSymm <- c(-1, 1)*qSymm
-        qAsym <- quantile((estimates[, i]), c(alpha/2, 1 - alpha/2), names=FALSE, type=1)
         qSymm <- rev(qSymm) / fullNormalization
-        qAsym <- rev(qAsym) / fullNormalization
-        crSymm[[i]] <- pointEstimate[i] - qSymm
-        crAsym[[i]] <- pointEstimate[i] - qAsym
+        return(pointEstimate[paramIdx] - qSymm)
     }
+    calcConfRegionAsym <- function(paramIdx) {
+        qAsym <- quantile((estimates[paramIdx, ]), c(alpha/2, 1 - alpha/2), names=FALSE, type=1)
+        qAsym <- rev(qAsym) / fullNormalization
+        return(pointEstimate[paramIdx] - qAsym)
+    }
+    crSymm <- sapply(1:numFreeAttrs, calcConfRegionSymm)
+    crAsym <- sapply(1:numFreeAttrs, calcConfRegionAsym)
+
     result <- list(crSymm = crSymm, crAsym = crAsym, estimates = estimates)
     return(result)
 }
 
 plotCR <- function(estimates) {
+    estimates <- t(estimates)
     plot(c(col(estimates)), c(estimates), type="p", col="blue", xlab="", ylab="")
     abline(h=0, v=0)
 }
