@@ -99,5 +99,70 @@ CinequalitiesNew <- function(payoffFunction, ineqmembers) {
 
 # The next functions convert between the old and the new representations.
 
-ineqmembersOldToNew <- function(ineqmembersOld) {} # TODO
-ineqmembersNewToOld <- function(ineqmembersNew) {} # TODO
+# TODO docs
+ineqmembersOldToNew <- function(ineqmembersOld) {
+    f <- function(mIdx) {
+        ineqmembersSingle <- ineqmembersOld[[mIdx]]
+        fct <- ineqmembersSingle[[1]]
+        cfc <- ineqmembersSingle[[2]]
+        numIneqs <- length(fct)
+        ineqIdxs <- 1:numIneqs
+        g <- function(ineqIdx) {
+            fctUp <- unlist(lapply(fct[[ineqIdx]], '[[', 2))
+            fctDn <- unlist(lapply(fct[[ineqIdx]], '[[', 3))
+            cfcUp <- unlist(lapply(cfc[[ineqIdx]], '[[', 2))
+            cfcDn <- unlist(lapply(cfc[[ineqIdx]], '[[', 3))
+            return(list(fctUp, fctDn, cfcUp, cfcDn))
+        }
+        w <- transpose(lapply(ineqIdxs, g))
+        names(w) <- c("fctUpIdxs", "fctDnIdxs", "cfcUpIdxs", "cfcDnIdxs")
+        return(append(w, list(numIneqs = numIneqs)))
+    }
+    mIdxs <- seq_along(ineqmembers)
+    return(lapply(mIdxs, f))
+}
+
+# This is currently correct up to reordering of the second part of the pair of
+# each market in ineqmembersOld. The old implementation does not generate them
+# in canonical order.
+# TODO write function that compares new and old.
+ineqmembersNewToOld <- function(ineqmembersNew) {
+    f <- function(mIdx) {
+        ineqmembersSingle <- ineqmembersNew[[mIdx]]
+        ineqIdxs <- 1:ineqmembersSingle$numIneqs
+        termsIdxs <- lapply(ineqIdxs, function (i) { getIneqTermsIdxs(ineqmembersSingle, i) })
+        g <- function(termIdxArray) {
+            # Prepend a column with the market index.
+            lhsIdxs <- unname(cbind(mIdx, termIdxArray[, 1:2]))
+            rhsIdxs <- unname(cbind(mIdx, termIdxArray[, 3:4]))
+            lhsIdxs <- asplit(lhsIdxs, 1)
+            rhsIdxs <- asplit(rhsIdxs, 1)
+            # This removes the dim attribute.
+            # Not strictly necessary, unless we want to compare with all.equal.
+            lhsIdxs <- lapply(lhsIdxs, as.vector)
+            rhsIdxs <- lapply(rhsIdxs, as.vector)
+            return(list(lhsIdxs, rhsIdxs))
+        }
+        # transpose() needs purrr, but we might be able to remove the dependency
+        # by hand-rolling it.
+        return(transpose(lapply(termsIdxs, g)))
+    }
+    mIdxs <- seq_along(ineqmembers)
+    return(lapply(mIdxs, f))
+}
+
+# getIneqTermsIdxs(ineqmembersSingle, ineqIdx) returns, for a given inequality,
+# the 4-tuple of indexes defining each term in that inequality.
+#
+# ineqmembersSingle is an element of the list constructed by Cineqmembers,
+# corresponding to a single market.
+# ineqIdx is the index of the inequality within that market.
+#
+# Returns an array of dimension (numTerms, 4), where numTerms is the number of
+# terms the given inequality has. The columns of the array have names
+# fctUpIdxs, fctDnIdxs, ,cfcUpIdxs, cfcDnIdxs. For information on those names,
+# see the documentation of CineqmembersSingle.
+getIneqTermsIdxs <- function(ineqmembersSingle, ineqIdx) {
+    # [1:4] drops the $numIneqs member.
+    return(do.call(cbind, lapply(ineqmembersSingle[1:4], "[[", ineqIdx)))
+}
