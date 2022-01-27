@@ -1,0 +1,79 @@
+---
+title: Numeric Example
+output: pdf_document
+---
+
+```{r setup, include=FALSE,warning=FALSE,echo=FALSE,message=FALSE}
+# Load Libraries and functions
+# FIXME
+setwd(rprojroot::find_rstudio_root_file())
+source("mse.R")
+knitr::opts_knit$set(root.dir = getwd())
+```
+
+## Import precomputed data
+Set the data's directory preferably in the variable 'filename'.
+```{r }
+filename <- "import/precomp_testdata.dat"
+data <- importNew(filename)
+```
+
+```{r }
+# Create inequality members
+ineqmembers <- CineqmembersNew(data$mate)
+```
+
+```{r }
+#Create Data Array
+dataArray <- CdataArrayNew(data$distanceMatrices, ineqmembers)
+```
+
+## Maximization
+
+### Differential Evolution Method
+The default DifferentialEvolution parameters:
+
+\begin{table}[]
+\centering
+\begin{tabular}{lll}
+option name & default value   & \\ \hline
+lower,upper & -10,10          & two vectors specifying scalar real lower and upper bounds on each parameter to be optimized, so that the i-th element of lower and upper applies to the i-th parameter. The implementation searches between lower and upper for the global optimum (minimum) of fn.\\
+CR          & 0.5             & crossover probability from interval [0,1]\\
+trace       & FALSE           & Positive integer or logical value indicating whether printing of progress occurs at each iteration\\
+itermax     & 100             & the maximum iteration (population generation) allowed\\
+F           & 0.6             & differential weighting factor from interval [0,2]\\
+NP          & 50              & number of population members. Defaults to NA; if the user does not change the value of NP from NA or specifies a value less than 4 it is reset when DEoptim is called as 10*length(lower). For many problems it is best to set NP to be at least 10 times the length of the parameter vector.\\
+reltol      & 0.001           & relative convergence tolerance. The algorithm stops if it is unable to reduce the value by a factor of reltol * (abs(val) + reltol) after steptol steps\\
+RandomSeed  & 0               &  Random Seed to be used for result reproducibility 
+\end{tabular}
+\end{table}
+
+```{r }
+# Objective function
+coefficient1 <- 1
+numFreeAttrs <- data$noAttr - 1
+bounds <- makeBounds(data$noAttr, 100)
+optimParams <- list(lower=bounds$lower, upper=bounds$upper, NP=50, F=0.6, CR=0.5,
+                    itermax=100, trace=FALSE, reltol=1e-3)
+objective <- makeObjFun(dataArray, coefficient1)
+# Set seed once before the rest.
+randomSeed <- 42
+set.seed(randomSeed)
+optimResult <- maximizeNew(objective, optimParams)
+print(optimResult)
+```
+
+## Confidence Intervals
+#Generate random subsample
+```{r }
+#Create groupIDs
+groupIDs <- makeGroupIDs(ineqmembers)
+ssSize <- 2
+optionsCR <- list(progressUpdate=0, confidenceLevel=0.95, asymptotics="nests",
+                  symmetric=FALSE)
+numSubsamples <- 50
+pointEstimate <- as.numeric(optimResult$bestmem)
+cr <- pointIdentifiedCRNew(ssSize, numSubsamples, pointEstimate, numFreeAttrs,
+                           groupIDs, dataArray, optionsCR, optimParams)
+plotCR(cr$estimates)
+```
