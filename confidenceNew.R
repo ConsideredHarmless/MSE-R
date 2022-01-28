@@ -1,4 +1,7 @@
-# Creates the initial group IDs.
+# makeGroupIDs(ineqmembers) creates the initial group IDs.
+# For the structure ineqmembers, see CineqmembersNew.
+# Returns a vector containing noU[mIdx] repetitions of the value mIdx, for each
+# mIdx in the range 1:noM.
 makeGroupIDs <- function(ineqmembers) {
     f <- function(mIdx) {
         return(rep(mIdx, ineqmembers[[mIdx]]$numIneqs))
@@ -9,6 +12,11 @@ makeGroupIDs <- function(ineqmembers) {
 
 # generateRandomSubsampleNew(ssSize, groupIDs, dataArray) generates a subsample
 # of a given size from a data array.
+# ssSize is an integer denoting the number of markets in the subsample.
+# For groupIDs, see the function makeGroupIDs.
+# For the structure dataArray, see the function CdataArray.
+# Returns an array with the same structure as dataArray, containing only the
+# columns corresponding to inequalities in the (randomly) selected markets.
 generateRandomSubsampleNew <- function(ssSize, groupIDs, dataArray) {
     uniqueGroups <- unique(groupIDs)
     selectedGroups <- sort(sample(uniqueGroups, ssSize))
@@ -19,29 +27,43 @@ generateRandomSubsampleNew <- function(ssSize, groupIDs, dataArray) {
 }
 
 # TODO docs
-# pointIdentifiedCR[ssSize,numSubsamples,pointEstimate,args,groupIDs,dataArray,method,permuteinvariant,options] generates a confidence region estimate using subsampling
+# pointIdentifiedCRNew(...) generates a confidence region estimate using
+# subsampling.
+#
 # Parameters:
-# ssSize - The size of each subsample to be estimated.
-# numSubsamples -The number of subsamples to use in estimating the confidence region.
-# pointEstimate - The point estimate to build the confidence region around (typically the output of pairwiseMSE).
-# objFunc - The objective function used in pairwiseMSE.
-#   DEPRECATED args - A list of unique symbols used in pairwiseMSE.
-# numFreeAttrs: ...
-# groupIDs - A data map used to generate the subsamples.
-# dataArray - The dataArray parameter used in pairwiseMSE.
-# options - An optional parameter specifying options. Available options are:
-# progressUpdate - How often to print progress (0 to disable). Default=0.
-# confidenceLevel - The confidence level of the region. Default=.95.
-# asymptotics - Type of asymptotics to use (nests or coalitions). Default=nests.
-# subsampleMonitor - An expression to evaluate for each subsample. Default=Null.
-# symmetric - True or False. If True,the confidence region will be symmetric. Default=False.
+# ssSize          The size of each subsample to be estimated.
+# numSubsamples   The number of subsamples to use in estimating the confidence
+#                 region.
+# pointEstimate   The point estimate to build the confidence region around
+#                 (typically the output of pairwiseMSE).
+# numFreeAttrs    Should be equal to noAttr-1.
+# groupIDs        A data map used to generate the subsamples. See makeGroupIDs.
+# dataArray       The dataArray parameter used in pairwiseMSE.
+# optimParams     The parameters passed to the maximizeNew function.
+# options         An optional parameter specifying options. Available options are:
+#   progressUpdate      How often to print progress (0 to disable). Default=0.
+#   confidenceLevel     The confidence level of the region. Default=.95.
+#   asymptotics         Type of asymptotics to use (nests or coalitions). Default=nests.
+#
+# Returns a list with elements:
+#   crSymm      The confidence regions of each parameter for the symmetric case,
+#               as an array of dimension (2, numFreeAttrs).
+#   crAsym      Same as above, for the asymmetric case.
+#   estimates   The estimates for each parameters, as an array of dimension
+#               (numFreeAttrs, numSubsamples).
 pointIdentifiedCRNew <- function(ssSize, numSubsamples, pointEstimate,
-                                 numFreeAttrs, groupIDs, dataArray, options,
-                                 optimParams) {
+                                 numFreeAttrs, groupIDs, dataArray, optimParams,
+                                 options=list()) {
+    defaultOptions <- list(progressUpdate=0, confidenceLevel=0.95,
+                           asymptotics="nests")
+    for (name in names(defaultOptions)) {
+        if (is.null(options[[name]])) {
+            options[[name]] <- defaultOptions[[name]]
+        }
+    }
     progress  <- options[["progressUpdate"]]
     confLevel <- options[["confidenceLevel"]]
     asymp     <- options[["asymptotics"]]
-    sym       <- options[["symmetric"]] # Currently not used.
 
     alpha <- 1 - confLevel
 

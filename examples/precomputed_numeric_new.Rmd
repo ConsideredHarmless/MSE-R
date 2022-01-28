@@ -69,11 +69,10 @@ print(optimResult)
 #Create groupIDs
 groupIDs <- makeGroupIDs(ineqmembers)
 ssSize <- 2
-optionsCR <- list(progressUpdate=0, confidenceLevel=0.95, asymptotics="nests",
-                  symmetric=FALSE)
+optionsCR <- list(progressUpdate=0, confidenceLevel=0.95, asymptotics="nests")
 numSubsamples <- 50
 pointEstimate <- as.numeric(optimResult$bestmem)
 cr <- pointIdentifiedCRNew(ssSize, numSubsamples, pointEstimate, numFreeAttrs,
-                           groupIDs, dataArray, optionsCR, optimParams)
+                           groupIDs, dataArray, optimParams, optionsCR)
 plotCR(cr$estimates)
 ```
