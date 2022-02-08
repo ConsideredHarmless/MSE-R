@@ -98,6 +98,7 @@ CinequalitiesNew <- function(payoffFunction, ineqmembers) {
 }
 
 # The next functions convert between the old and the new representations.
+# FIXME check if both work correctly. Use unit tests.
 
 # TODO docs
 ineqmembersOldToNew <- function(ineqmembersOld) {
