@@ -49,7 +49,13 @@ CineqmembersSingle <- function(marketMates) {
     dnMates <- marketMates$DownMates # alias for brevity
     # To create the upstream indexes, we repeat them as many times as there are
     # corresponding downstream matches.
-    repUp <- function(i, j) { rep_len(i, length(dnMates[[j]])) }
+    # See test "All unmatched" in test_ineqmembers.R. rep_len returns numeric(0)
+    # instead of NULL (a.k.a. c()) when n is 0.
+    repUp <- function(i, j) {
+        n <- length(dnMates[[j]])
+        if (n == 0) { return(NULL) }
+        return(rep_len(i, n))
+    }
     fctUpIdxs <- mapply(function (i, j) { c(repUp(i, i),  repUp(j, j))  }, iIdxs, jIdxs, SIMPLIFY = FALSE)
     fctDnIdxs <- mapply(function (i, j) { c(dnMates[[i]], dnMates[[j]]) }, iIdxs, jIdxs, SIMPLIFY = FALSE)
     cfcUpIdxs <- mapply(function (i, j) { c(repUp(i, j),  repUp(j, i))  }, iIdxs, jIdxs, SIMPLIFY = FALSE)
@@ -166,4 +172,9 @@ ineqmembersNewToOld <- function(ineqmembersNew) {
 getIneqTermsIdxs <- function(ineqmembersSingle, ineqIdx) {
     # [1:4] drops the $numIneqs member.
     return(do.call(cbind, lapply(ineqmembersSingle[1:4], "[[", ineqIdx)))
+}
+
+getAllIneqTermsIdxs <- function(ineqmembersSingle) {
+    lapply(1:ineqmembersSingle$numIneqs,
+           function(ineqIdx) { getIneqTermsIdxs(ineqmembersSingle, ineqIdx) })
 }
