@@ -63,6 +63,7 @@ importNew <- function(filename) {
         return(array(temp, c(noAttr, q, p)))
     })
 
+    # TODO maybe rename (plural)?
     #Calculating matchMatrix
     # matchMatrix is now a list of noM arrays (one for each market) of dimension
     # (noD[mIdx], noU[mIdx]).
@@ -76,6 +77,8 @@ importNew <- function(filename) {
         return(array(unlist(matchTable), c(q, p)))
     })
 
+    # TODO since there are many structures with this name (see Cmate and
+    # Cmates), maybe rename?
     #Calculating mate
     # mate is now a list of noM data.table objects (one for each market). Each
     # object has noU[mIdx] rows (one for each upstream), with fields:
@@ -93,7 +96,7 @@ importNew <- function(filename) {
         # Using an outer join, we restore any missing upstream indexes.
         marketMateTableRestored <- marketMateTableCompressed[marketUpStreamTable, on = list(UpStream)]
         return(marketMateTableRestored)
-        })
+    })
 
     return(list(
         "header"=header, "noM"=noM, "noU"=noU, "noD"=noD,"noAttr"=noAttr,
