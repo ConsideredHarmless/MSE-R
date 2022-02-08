@@ -10,6 +10,7 @@ if (!"foreach" %in% installed.packages()) install.packages("foreach")
 if (!"DEoptim" %in% installed.packages()) install.packages("DEoptim")
 if (!"microbenchmark" %in% installed.packages()) install.packages("microbenchmark")
 if (!"knitr" %in% installed.packages()) install.packages("knitr")
+if (!"testthat" %in% installed.packages()) install.packages("testthat")
 
 
 #Import installed packages
