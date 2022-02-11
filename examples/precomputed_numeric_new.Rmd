@@ -55,12 +55,18 @@ numFreeAttrs <- data$noAttr - 1
 bounds <- makeBounds(data$noAttr, 100)
 optimParams <- list(lower=bounds$lower, upper=bounds$upper, NP=50, F=0.6, CR=0.5,
                     itermax=100, trace=FALSE, reltol=1e-3)
-objective <- makeObjFun(dataArray, coefficient1)
+permuteInvariant <- TRUE
 # Set seed once before the rest.
 randomSeed <- 42
 set.seed(randomSeed)
-optimResult <- maximizeNew(objective, optimParams)
-print(optimResult)
+optimizeScoreArgs <- list(dataArray = dataArray,
+                          coefficient1 = coefficient1,
+                          optimParams = optimParams,
+                          getIneqSat = TRUE,
+                          permuteInvariant = permuteInvariant)
+optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
+print(optResult)
+print(calcPerMarketStats(optResult$ineqSat, makeGroupIDs(ineqmembers)))
 ```
 
 ## Confidence Intervals
@@ -69,10 +75,15 @@ print(optimResult)
 #Create groupIDs
 groupIDs <- makeGroupIDs(ineqmembers)
 ssSize <- 2
-optionsCR <- list(progressUpdate=0, confidenceLevel=0.95, asymptotics="nests")
+optionsCR <- list(progressUpdate=1, confidenceLevel=0.95, asymptotics="nests")
 numSubsamples <- 50
-pointEstimate <- as.numeric(optimResult$bestmem)
+pointEstimate <- as.numeric(optResult$optArg)
+optimizeScoreArgs$dataArray <- NULL
+optimizeScoreArgs$getIneqSat <- FALSE
 cr <- pointIdentifiedCRNew(ssSize, numSubsamples, pointEstimate, numFreeAttrs,
-                           groupIDs, dataArray, optimParams, optionsCR)
+                           groupIDs, dataArray,
+                           optimizeScoreArgs = optimizeScoreArgs,
+                           options = optionsCR)
 plotCR(cr$estimates)
+print(t(cr$estimates))
 ```

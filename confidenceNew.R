@@ -26,7 +26,7 @@ generateRandomSubsampleNew <- function(ssSize, groupIDs, dataArray) {
     return(dataArray[, qualifiedIndexes])
 }
 
-# TODO docs
+# TODO update docs
 # pointIdentifiedCRNew(...) generates a confidence region estimate using
 # subsampling.
 #
@@ -52,8 +52,8 @@ generateRandomSubsampleNew <- function(ssSize, groupIDs, dataArray) {
 #   estimates   The estimates for each parameters, as an array of dimension
 #               (numFreeAttrs, numSubsamples).
 pointIdentifiedCRNew <- function(ssSize, numSubsamples, pointEstimate,
-                                 numFreeAttrs, groupIDs, dataArray, optimParams,
-                                 options=list()) {
+                                 numFreeAttrs, groupIDs, dataArray,
+                                 optimizeScoreArgs, options=list()) {
     defaultOptions <- list(progressUpdate=0, confidenceLevel=0.95,
                            asymptotics="nests")
     for (name in names(defaultOptions)) {
@@ -81,9 +81,9 @@ pointIdentifiedCRNew <- function(ssSize, numSubsamples, pointEstimate,
     # index paramIdx in iteration with index iterIdx.
     calcEstimate <- function(iterIdx) {
         ssDataArray <- generateRandomSubsampleNew(ssSize, groupIDs, dataArray)
-        objective <- makeObjFun(ssDataArray)
-        optResult <- maximizeNew(objective, optimParams)
-        ssEstimate <- optResult$bestmem
+        optimizeScoreArgs$dataArray <- ssDataArray
+        optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
+        ssEstimate <- optResult$optArg
         if (progress > 0 && iterIdx %% progress == 0) {
             cat(sprintf("[pointIdentifiedCRNew] Iterations completed: %d\n", iterIdx))
         }
