@@ -177,25 +177,99 @@ test_that("All unmatched", {
         rbind(),
         rbind(),
         rbind())
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
     expect_equal(CineqmembersSingle(marketMates), expected)
+    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
 })
 
-# TODO
-# test_that("Identity Matrix 1-1 relationships with 10 up and 10 down", {
-#     marketMates <- list(
-#         UpStream  = 1:10,
-#         DownMates = as.list(1:10))
-#     expected <- list(
-#         fctUpIdxs = list(),
-#         fctDnIdxs = list(),
-#         cfcUpIdxs = list(),
-#         cfcDnIdxs = list(),
-#         numIneqs  = 45)
-#     expect_equal(CineqmembersSingle(marketMates), expected)
-# })
+test_that("Identity Matrix 1-1 relationships with 5 up and 5 down", {
+    marketMates <- list(
+        UpStream  = 1:5,
+        DownMates = as.list(1:5))
+    expected <- list(
+        fctUpIdxs = list(c(1, 2), c(1, 3), c(1, 4), c(1, 5), c(2, 3),
+                         c(2, 4), c(2, 5), c(3, 4), c(3, 5), c(4, 5)),
+        fctDnIdxs = list(c(1, 2), c(1, 3), c(1, 4), c(1, 5), c(2, 3),
+                         c(2, 4), c(2, 5), c(3, 4), c(3, 5), c(4, 5)),
+        cfcUpIdxs = list(c(1, 2), c(1, 3), c(1, 4), c(1, 5), c(2, 3),
+                         c(2, 4), c(2, 5), c(3, 4), c(3, 5), c(4, 5)),
+        cfcDnIdxs = list(c(2, 1), c(3, 1), c(4, 1), c(5, 1), c(3, 2),
+                         c(4, 2), c(5, 2), c(4, 3), c(5, 3), c(5, 4)),
+        numIneqs  = 10)
+    expectedHR <- list(
+        rbind(c(1, 1, 1, 2),
+              c(2, 2, 2, 1)),
+        rbind(c(1, 1, 1, 3),
+              c(3, 3, 3, 1)),
+        rbind(c(1, 1, 1, 4),
+              c(4, 4, 4, 1)),
+        rbind(c(1, 1, 1, 5),
+              c(5, 5, 5, 1)),
+        rbind(c(2, 2, 2, 3),
+              c(3, 3, 3, 2)),
+        rbind(c(2, 2, 2, 4),
+              c(4, 4, 4, 2)),
+        rbind(c(2, 2, 2, 5),
+              c(5, 5, 5, 2)),
+        rbind(c(3, 3, 3, 4),
+              c(4, 4, 4, 3)),
+        rbind(c(3, 3, 3, 5),
+              c(5, 5, 5, 3)),
+        rbind(c(4, 4, 4, 5),
+              c(5, 5, 5, 4)))
+    expect_equal(CineqmembersSingle(marketMates), expected)
+    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+})
 
-# TODO
-# test_that("4 small markets", {
-#     expect_equal(NULL, NULL)
-# })
+test_that("3 small markets", {
+    mates <- list(
+        list(
+            UpStream  = c(1, 2, 3),
+            DownMates = list(c(1), c(1, 2), c(2))),
+        list(
+            UpStream  = c(1, 2),
+            DownMates = list(c(1), c(2))),
+        list(
+            UpStream  = c(1, 2, 3),
+            DownMates = list(c(1), c(2), c(3))))
+    expected <- list(
+        list(
+            fctUpIdxs = list(c(1, 2, 2), c(1, 3), c(2, 2, 3)),
+            fctDnIdxs = list(c(1, 1, 2), c(1, 2), c(1, 2, 2)),
+            cfcUpIdxs = list(c(1, 1, 2), c(1, 3), c(2, 3, 3)),
+            cfcDnIdxs = list(c(1, 2, 1), c(2, 1), c(2, 1, 2)),
+            numIneqs  = 3),
+        list(
+            fctUpIdxs = list(c(1, 2)),
+            fctDnIdxs = list(c(1, 2)),
+            cfcUpIdxs = list(c(1, 2)),
+            cfcDnIdxs = list(c(2, 1)),
+            numIneqs  = 1),
+        list(
+            fctUpIdxs = list(c(1, 2), c(1, 3), c(2, 3)),
+            fctDnIdxs = list(c(1, 2), c(1, 3), c(2, 3)),
+            cfcUpIdxs = list(c(1, 2), c(1, 3), c(2, 3)),
+            cfcDnIdxs = list(c(2, 1), c(3, 1), c(3, 2)),
+            numIneqs  = 3))
+    expectedHR <- list(
+        list(
+            rbind(c(1, 1, 1, 1),
+                  c(2, 1, 1, 2),
+                  c(2, 2, 2, 1)),
+            rbind(c(1, 1, 1, 2),
+                  c(3, 2, 3, 1)),
+            rbind(c(2, 1, 2, 2),
+                  c(2, 2, 3, 1),
+                  c(3, 2, 3, 2))),
+        list(
+            rbind(c(1, 1, 1, 2),
+                  c(2, 2, 2, 1))),
+        list(
+            rbind(c(1, 1, 1, 2),
+                  c(2, 2, 2, 1)),
+            rbind(c(1, 1, 1, 3),
+                  c(3, 3, 3, 1)),
+            rbind(c(2, 2, 2, 3),
+                  c(3, 3, 3, 2))))
+    expect_equal(CineqmembersNew(mates), expected)
+    expect_equivalent(lapply(expected, getAllIneqTermsIdxs), expectedHR)
+})
