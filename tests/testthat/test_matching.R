@@ -6,7 +6,7 @@ source("mse.R")
 # The Mathematica version uses transposed arrays (upstream first) with respect
 # to our version, so we transpose before and after.
 
-# Same for all unit tests.
+# Shared across unit tests.
 payoffMatrix <- t(rbind(
     c(910.41, 707.28, 706.35, 621.92, 726.38,
       960.84, 754.13, 764.83, 801.89, 701.89,
@@ -24,6 +24,12 @@ payoffMatrix <- t(rbind(
       1033.23, 744.3, 779.32, 827.8, 677.75,
       659.65, 723.39, 798.59, 824.87, 842.86)))
 
+# TODO Precompute and store in a file.
+filename <- "import/precomp_testdata.dat"
+data <- importNew(filename)
+beta <- c(1, 2, 1.5, 2.3)
+payoffMatrices <- evaluatePayoffMatrices(data$distanceMatrices, beta)
+
 test_that("generateAssignmentMatrix with numeric values and 1-1 quotas", {
     quotaU <- 1
     quotaD <- 1
@@ -33,8 +39,9 @@ test_that("generateAssignmentMatrix with numeric values and 1-1 quotas", {
         c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
         c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0),
         c(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
-    x <- generateAssignmentMatrix(payoffMatrix, quotaU, quotaD)
-    expect_equal(x, expected)
+    expect_equal(
+        generateAssignmentMatrix(payoffMatrix, quotaU, quotaD),
+        expected)
 })
 
 test_that("generateAssignmentMatrix with numeric values and 3-1 quotas", {
@@ -46,8 +53,9 @@ test_that("generateAssignmentMatrix with numeric values and 3-1 quotas", {
         c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0),
         c(0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0),
         c(0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1)))
-    x <- generateAssignmentMatrix(payoffMatrix, quotaU, quotaD)
-    expect_equal(x, expected)
+    expect_equal(
+        generateAssignmentMatrix(payoffMatrix, quotaU, quotaD),
+        expected)
 })
 
 test_that("generateAssignmentMatrix with numeric values and 3-2 quotas", {
@@ -59,8 +67,9 @@ test_that("generateAssignmentMatrix with numeric values and 3-2 quotas", {
         c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0),
         c(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1),
         c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0)))
-    x <- generateAssignmentMatrix(payoffMatrix, quotaU, quotaD)
-    expect_equal(x, expected)
+    expect_equal(
+        generateAssignmentMatrix(payoffMatrix, quotaU, quotaD),
+        expected)
 })
 
 test_that("generateAssignmentMatrix with numeric values and {3,3,3,3,3}-1 quotas", {
@@ -72,8 +81,9 @@ test_that("generateAssignmentMatrix with numeric values and {3,3,3,3,3}-1 quotas
         c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0),
         c(0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0),
         c(0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1)))
-    x <- generateAssignmentMatrix(payoffMatrix, quotaU, quotaD)
-    expect_equal(x, expected)
+    expect_equal(
+        generateAssignmentMatrix(payoffMatrix, quotaU, quotaD),
+        expected)
 })
 
 test_that("generateAssignmentMatrix with numeric values and {3,1,3,0,2}-1 quotas", {
@@ -85,10 +95,10 @@ test_that("generateAssignmentMatrix with numeric values and {3,1,3,0,2}-1 quotas
         c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0),
         c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
         c(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0)))
-    x <- generateAssignmentMatrix(payoffMatrix, quotaU, quotaD)
-    expect_equal(x, expected)
+    expect_equal(
+        generateAssignmentMatrix(payoffMatrix, quotaU, quotaD),
+        expected)
 })
-
 
 test_that("generateAssignmentMatrix with numeric values and {3,1,3,0,2}-{...} quotas", {
     quotaU <- c(3, 1, 3, 0, 2)
@@ -99,6 +109,49 @@ test_that("generateAssignmentMatrix with numeric values and {3,1,3,0,2}-{...} qu
         c(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0),
         c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
         c(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0)))
-    x <- generateAssignmentMatrix(payoffMatrix, quotaU, quotaD)
-    expect_equal(x, expected)
+    expect_equal(
+        generateAssignmentMatrix(payoffMatrix, quotaU, quotaD),
+        expected)
+})
+
+test_that("CmatchMatrix on precomp_testdata.dat -- test 1", {
+    quotasU <- rep(2, 3)
+    quotasD <- rep(1, 3)
+    expected <- list(
+        t(rbind(
+            c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0),
+            c(0, 0, 0, 1, 0, 1, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 1, 0, 0, 0, 0, 0, 0, 0),
+            c(1, 0, 0, 0, 0, 0, 1, 0, 0, 0),
+            c(0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1),
+            c(0, 0, 0, 0, 0, 0, 0, 1, 0, 0))),
+        t(rbind(
+            c(0, 0, 0, 0, 1, 0, 0, 0, 1, 0),
+            c(0, 0, 0, 0, 0, 0, 1, 0, 0, 0),
+            c(0, 0, 0, 1, 0, 0, 0, 0, 0, 1),
+            c(0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 1, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 1, 0, 1, 0, 0))),
+        t(rbind(
+            c(0, 0, 0, 0, 0, 0, 1, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0),
+            c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 0, 1, 1, 0, 0, 0, 0),
+            c(0, 0, 1, 0, 0, 0, 0, 1, 0, 0),
+            c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            c(0, 0, 0, 1, 0, 0, 0, 0, 0, 1))))
+    expect_equal(
+        CmatchMatrices(payoffMatrices, quotasU, quotasD),
+        expected)
 })
