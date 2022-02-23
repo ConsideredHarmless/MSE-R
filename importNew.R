@@ -38,7 +38,9 @@ extractDistanceMatrices <- function(marketData) {
     # For old code, replace distanceMatrices[[m]][[u]][[i]][d] by
     # distanceMatrices[[m]][i, d, u].
     distanceMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
-        distTable <- marketData$DT[Market == mIdx, ..marketData$distColIdxs]
+        # The unname is important!
+        colSel <- unname(marketData$distColIdxs)
+        distTable <- marketData$DT[Market == mIdx, ..colSel]
         p <- marketData$noU[mIdx]
         q <- marketData$noD[mIdx]
         # The following is now a (p*q*noAttr)-length vector, but its values are
