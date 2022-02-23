@@ -81,14 +81,13 @@ generateAssignmentMatrix <- function(payoffMatrix, quotaU, quotaD) {
     return(array(round(x), c(numD, numU)))
 }
 
-# CmatchMatrix(payoffMatrices, quotasU, quotasD) creates the structure matchMatrix
-# (see importNew).
+# CmatchMatrices(payoffMatrices, quotasU, quotasD) creates the structure
+# matchMatrices (see importNew).
 # TODO docs
 # quotasU and quotasD are lists.
-CmatchMatrix <- function(payoffMatrices, quotasU, quotasD) {
+CmatchMatrices <- function(payoffMatrices, quotasU, quotasD) {
     return(mapply(generateAssignmentMatrix, payoffMatrices, quotasU, quotasD,
                   SIMPLIFY = FALSE))
 }
 
-# TODO normalize names (matchMatrix -> matchMatrices)
-# TODO create conversion functions: matchMatrix, mate, mates (also rename)
+# TODO create conversion functions: matchMatrices, mate, mates (also rename)
