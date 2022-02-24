@@ -1,6 +1,6 @@
-# CdataArrayNew(distanceMatrices, ineqmembers) computes the data array. For the
+# CdataArray(distanceMatrices, ineqmembers) computes the data array. For the
 # data array, see section 5.2 in [1]. For the distanceMatrices structure, see
-# the importNew function. For the ineqmembers structure, see the CineqmembersNew
+# the import function. For the ineqmembers structure, see the Cineqmembers
 # function.
 #
 # Returns an array of dimension (noAttr, sumNumIneqs), where sumNumIneqs is the
@@ -15,7 +15,7 @@
 # respectively.
 #
 # [1] David Santiago and Fox, Jeremy (2009). "A Toolkit for Matching Maximum Score Estimation and Point and Set Identified Subsampling Inference".
-CdataArrayNew <- function(distanceMatrices, ineqmembers) {
+CdataArray <- function(distanceMatrices, ineqmembers) {
     mIdxs <- seq_along(ineqmembers)
     f <- function(mIdx) {
         ineqmembersSingle <- ineqmembers[[mIdx]]

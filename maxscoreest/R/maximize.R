@@ -1,5 +1,5 @@
 # Optimizes the maximum score function defined by dataArray. The objective
-# function is created using makeObjFun (see the objectiveNew.R) file.
+# function is created using makeObjFun (see the objective.R) file.
 #
 # dataArray is the output of CdataArray.
 # coefficient1 is the first coefficient of the extended parameter vector. See
@@ -27,11 +27,11 @@ optimizeScoreFunction <- function(dataArray, coefficient1 = NULL,
     objDataArray <- dataArray
     if (permuteInvariant) {
         # TODO docs
-        stdDevs <- apply(dataArray, 1, sd)
+        stdDevs <- apply(dataArray, 1, stats::sd)
         perm <- order(stdDevs[-1])
         # Now sort(stdDevs[-1]) == stdDevs[-1][perm].
         objDataArray[-1, ] <- objDataArray[-1, ][perm, ]
-        # Now apply(objDataArray, 1, sd)[-1] is sorted.
+        # Now apply(objDataArray, 1, stats::sd)[-1] is sorted.
         invPerm <- rep(0, length(perm))
         for (i in 1:length(perm)) {
             invPerm[perm[i]] <- i
@@ -47,7 +47,7 @@ optimizeScoreFunction <- function(dataArray, coefficient1 = NULL,
             objFun <- do.call(makeObjFun, makeObjFunArgs)
             result <- maximizeDEoptim(objFun, optimParams)
         },
-        error(sprintf("optimizeScoreFunction: method %s is not implemented",
+        stop(sprintf("optimizeScoreFunction: method %s is not implemented",
                       method))
     )
     if (permuteInvariant) {
@@ -64,7 +64,7 @@ optimizeScoreFunction <- function(dataArray, coefficient1 = NULL,
 
 maximizeDEoptim <- function(objective, params) {
     control <- params[c("NP", "itermax", "trace", "reltol", "CR", "F")]
-    outDEoptim <- DEoptim(objective, params$lower, params$upper, control = control)
+    outDEoptim <- DEoptim::DEoptim(objective, params$lower, params$upper, control = control)
     optArg <-  outDEoptim$optim$bestmem
     optVal <- -outDEoptim$optim$bestval
     return(list(optVal = optVal, optArg = optArg))

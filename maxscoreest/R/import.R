@@ -1,6 +1,16 @@
+# Declaring variables used in data.table code as NULL is necessary to suppress
+# notes regarding the use of non-standard evaluation when running
+# devtools::check().
+# See:
+# https://community.rstudio.com/t/how-to-solve-no-visible-binding-for-global-variable-note/28887
+# https://github.com/Rdatatable/data.table/issues/850
+# https://www.r-bloggers.com/2019/08/no-visible-binding-for-global-variable/
+
+#' @import data.table
 importCommon <- function(filename) {
+    Market <- UpStream <- DownStream <- NULL
     # Importing data
-    DT <- data.table::fread(filename, header=TRUE)
+    DT <- fread(filename, header=TRUE)
     # Adding keys for fast filtering
     setkey(DT, Market, UpStream, DownStream)
     # Header names
@@ -11,8 +21,7 @@ importCommon <- function(filename) {
         function(s) { startsWith(s, "Distance") }))
     noAttr <- length(distColIdxs)
     # Calculating number of markets
-    marketIdxs = unique(DT, by = "Market")[[1]] # might be slightly faster
-    # marketIdxs = unique(DT[[1]])
+    marketIdxs = unique(DT, by = "Market")[[1]]
     checkIndexes(marketIdxs)
     noM <- length(marketIdxs)
     # Calculating number of up streams and down streams in each market
@@ -38,9 +47,10 @@ extractDistanceMatrices <- function(marketData) {
     # For old code, replace distanceMatrices[[m]][[u]][[i]][d] by
     # distanceMatrices[[m]][i, d, u].
     distanceMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
+        Market <- NULL
         # The unname is important!
         colSel <- unname(marketData$distColIdxs)
-        distTable <- marketData$DT[Market == mIdx, ..colSel]
+        distTable <- marketData$DT[Market == mIdx, colSel, with=FALSE]
         p <- marketData$noU[mIdx]
         q <- marketData$noD[mIdx]
         # The following is now a (p*q*noAttr)-length vector, but its values are
@@ -65,6 +75,7 @@ extractMatchMatrices <- function(marketData) {
     # (mIdx, uIdx, dIdx) matches and 0 otherwise.
     # See distanceMatrices for the construction of the object.
     matchMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
+        Market <- Match <- NULL
         matchTable <- marketData$DT[Market == mIdx, Match]
         p <- marketData$noU[mIdx]
         q <- marketData$noD[mIdx]
@@ -82,6 +93,7 @@ extractMate <- function(marketData) {
     #   $DownMates: a list of the downstream indexes which the upstream is
     # matched to.
     mate <- lapply(marketData$marketIdxs, function(mIdx) {
+        Market <- UpStream <- DownStream <- Match <- NULL
         # The following table omits upstreams with no matching downstreams.
         marketMateTableCompressed <- marketData$DT[
             Market == mIdx & Match == 1,
@@ -105,15 +117,19 @@ extractPayoffMatrices <- function(marketData) {
     # payoffMatrices[[mIdx]][dIdx, uIdx] is the value of the payoff function
     # for that index triple.
     payoffMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
+        Market <- Payoff <- NULL
         payoffTable <- marketData$DT[Market == mIdx, Payoff]
         p <- marketData$noU[mIdx]
         q <- marketData$noD[mIdx]
-        return(array(unlist(matchTable), c(q, p)))
+        return(array(unlist(payoffTable), c(q, p)))
     })
     return(payoffMatrices)
 }
 
-importNew <- function(filename) {
+# TODO
+extractQuotas <- function(marketData) {}
+
+import <- function(filename) {
     marketData <- importCommon(filename)
     distanceMatrices <- extractDistanceMatrices(marketData)
     matchMatrices <- extractMatchMatrices(marketData)

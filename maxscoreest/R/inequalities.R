@@ -1,11 +1,11 @@
-# CineqmembersNew(mate) computes the upstream and downstream indexes
+# Cineqmembers(mate) computes the upstream and downstream indexes
 # for each inequality term for all markets.
 #
-# For the structure mate, see the importNew function.
+# For the structure mate, see the import function.
 #
 # Returns a list of 4-tuples containing indexes. For that structure, see
 # CineqmembersSingle.
-CineqmembersNew <- function(mate) {
+Cineqmembers <- function(mate) {
     mateList <- lapply(mate, as.list)
     return(lapply(mateList, CineqmembersSingle))
 }
@@ -68,17 +68,17 @@ CineqmembersSingle <- function(marketMates) {
         numIneqs  = numIneqs))
 }
 
-# CinequalitiesNew(payoffFunction, ineqmembers) computes, for each inequality,
+# Cinequalities(payoffFunction, ineqmembers) computes, for each inequality,
 # the value
 #   (sum of payoff function values over LHS terms) -
 #   (sum of payoff function values over RHS terms).
 # payoffFunction is a function which takes three arguments (mIdx, uIdx, dIdx)
 # and returns the value of the payoff function for that triple.
-# For the structure ineqmembers, see the function CineqmembersNew.
+# For the structure ineqmembers, see the function Cineqmembers.
 #
 # Returns a list of vectors, one for each market. Each vector element
 # corresponds to a single inequality.
-CinequalitiesNew <- function(payoffFunction, ineqmembers) {
+Cinequalities <- function(payoffFunction, ineqmembers) {
     g <- function(mIdx, ineqmembersSingle) {
         f <- function(ineqIdx) {
             numTerms <- length(ineqmembersSingle$fctUpIdxs[[ineqIdx]])
@@ -125,7 +125,7 @@ ineqmembersOldToNew <- function(ineqmembersOld) {
         names(w) <- c("fctUpIdxs", "fctDnIdxs", "cfcUpIdxs", "cfcDnIdxs")
         return(append(w, list(numIneqs = numIneqs)))
     }
-    mIdxs <- seq_along(ineqmembers)
+    mIdxs <- seq_along(ineqmembersOld)
     return(lapply(mIdxs, f))
 }
 
@@ -154,7 +154,7 @@ ineqmembersNewToOld <- function(ineqmembersNew) {
         # by hand-rolling it.
         return(transpose(lapply(termsIdxs, g)))
     }
-    mIdxs <- seq_along(ineqmembers)
+    mIdxs <- seq_along(ineqmembersNew)
     return(lapply(mIdxs, f))
 }
 

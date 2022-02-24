@@ -15,17 +15,17 @@ knitr::opts_knit$set(root.dir = getwd())
 Set the data's directory preferably in the variable 'filename'.
 ```{r }
 filename <- "import/precomp_testdata.dat"
-data <- importNew(filename)
+data <- import(filename)
 ```
 
 ```{r }
 # Create inequality members
-ineqmembers <- CineqmembersNew(data$mate)
+ineqmembers <- Cineqmembers(data$mate)
 ```
 
 ```{r }
 #Create Data Array
-dataArray <- CdataArrayNew(data$distanceMatrices, ineqmembers)
+dataArray <- CdataArray(data$distanceMatrices, ineqmembers)
 ```
 
 ## Maximization
@@ -80,10 +80,10 @@ numSubsamples <- 50
 pointEstimate <- as.numeric(optResult$optArg)
 optimizeScoreArgs$dataArray <- NULL
 optimizeScoreArgs$getIneqSat <- FALSE
-cr <- pointIdentifiedCRNew(ssSize, numSubsamples, pointEstimate, numFreeAttrs,
-                           groupIDs, dataArray,
-                           optimizeScoreArgs = optimizeScoreArgs,
-                           options = optionsCR)
+cr <- pointIdentifiedCR(ssSize, numSubsamples, pointEstimate, numFreeAttrs,
+                        groupIDs, dataArray,
+                        optimizeScoreArgs = optimizeScoreArgs,
+                        options = optionsCR)
 plotCR(cr$estimates)
 print(t(cr$estimates))
 ```

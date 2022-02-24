@@ -1,7 +1,3 @@
-context("ineqmembers")
-setwd('../../')
-source("mse.R")
-
 # Note: we actually require a weaker form of equality: equality up to reordering
 # of inequalities. This will be relevant when comparing results with the old
 # code. Also, reordering of the terms should also not matter. The solution would
@@ -29,7 +25,7 @@ test_that("2 pairs 1-1 relationships", {
         rbind(c(1, 1, 1, 2),
               c(2, 2, 2, 1)))
     expect_equal(CineqmembersSingle(marketMates), expected)
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+    expect_equal(getAllIneqTermsIdxs(expected), expectedHR, ignore_attr=TRUE)
 })
 
 test_that("3 pairs 1-1 relationships", {
@@ -50,7 +46,7 @@ test_that("3 pairs 1-1 relationships", {
         rbind(c(2, 2, 2, 3),
               c(3, 3, 3, 2)))
     expect_equal(CineqmembersSingle(marketMates), expected)
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+    expect_equal(getAllIneqTermsIdxs(expected), expectedHR, ignore_attr=TRUE)
 })
 
 test_that("One to many relationships", {
@@ -75,7 +71,7 @@ test_that("One to many relationships", {
               c(3, 2, 2, 3),
               c(3, 3, 3, 2)))
     expect_equal(CineqmembersSingle(marketMates), expected)
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+    expect_equal(getAllIneqTermsIdxs(expected), expectedHR, ignore_attr=TRUE)
 })
 
 test_that("Many to one relationships", {
@@ -100,7 +96,7 @@ test_that("Many to one relationships", {
               c(2, 3, 3, 2),
               c(3, 3, 3, 3)))
     expect_equal(CineqmembersSingle(marketMates), expected)
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+    expect_equal(getAllIneqTermsIdxs(expected), expectedHR, ignore_attr=TRUE)
 })
 
 test_that("Unmatched in a 1-1 relationship", {
@@ -119,7 +115,7 @@ test_that("Unmatched in a 1-1 relationship", {
               c(3, 2, 3, 1)),
         rbind(c(3, 2, 2, 2)))
     expect_equal(CineqmembersSingle(marketMates), expected)
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+    expect_equal(getAllIneqTermsIdxs(expected), expectedHR, ignore_attr=TRUE)
 })
 
 test_that("Unmatched in a one to many relationship (1)", {
@@ -139,7 +135,7 @@ test_that("Unmatched in a one to many relationship (1)", {
               c(1, 2, 3, 2)),
         rbind())
     expect_equal(CineqmembersSingle(marketMates), expected)
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+    expect_equal(getAllIneqTermsIdxs(expected), expectedHR, ignore_attr=TRUE)
 })
 
 test_that("Unmatched in a one to many relationship (2)", {
@@ -160,7 +156,7 @@ test_that("Unmatched in a one to many relationship (2)", {
         rbind(c(3, 2, 2, 2),
               c(3, 3, 2, 3)))
     expect_equal(CineqmembersSingle(marketMates), expected)
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+    expect_equal(getAllIneqTermsIdxs(expected), expectedHR, ignore_attr=TRUE)
 })
 
 test_that("All unmatched", {
@@ -178,7 +174,7 @@ test_that("All unmatched", {
         rbind(),
         rbind())
     expect_equal(CineqmembersSingle(marketMates), expected)
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+    expect_equal(getAllIneqTermsIdxs(expected), expectedHR, ignore_attr=TRUE)
 })
 
 test_that("Identity Matrix 1-1 relationships with 5 up and 5 down", {
@@ -217,7 +213,7 @@ test_that("Identity Matrix 1-1 relationships with 5 up and 5 down", {
         rbind(c(4, 4, 4, 5),
               c(5, 5, 5, 4)))
     expect_equal(CineqmembersSingle(marketMates), expected)
-    expect_equivalent(getAllIneqTermsIdxs(expected), expectedHR)
+    expect_equal(getAllIneqTermsIdxs(expected), expectedHR, ignore_attr=TRUE)
 })
 
 test_that("3 small markets", {
@@ -270,6 +266,6 @@ test_that("3 small markets", {
                   c(3, 3, 3, 1)),
             rbind(c(2, 2, 2, 3),
                   c(3, 3, 3, 2))))
-    expect_equal(CineqmembersNew(mates), expected)
-    expect_equivalent(lapply(expected, getAllIneqTermsIdxs), expectedHR)
+    expect_equal(Cineqmembers(mates), expected)
+    expect_equal(lapply(expected, getAllIneqTermsIdxs), expectedHR, ignore_attr=TRUE)
 })

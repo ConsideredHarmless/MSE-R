@@ -64,7 +64,7 @@
 #'
 #' @param payoffMatrix An array of payoffs for all upstream-downstream pairs in
 #' this market. Note that the first dimension indexes the downstreams. See the
-#' payoffNew.R file for more details.
+#' payoff.R file for more details.
 #' @param quotaU A vector of length \code{numU}, containing integers in the
 #' range \code{0:numD}. Its \code{j}-th element is the maximum allowed number of
 #' matches for the corresponding upstream. Alternatively, it can be a single
@@ -87,10 +87,10 @@ generateAssignmentMatrix <- function(payoffMatrix, quotaU, quotaD) {
         quotaD <- rep(quotaD, numD)
     }
     if (length(quotaU) != numU) {
-        error("generateAssignmentMatrix: upstream quota vector has incorrect size")
+        stop("generateAssignmentMatrix: upstream quota vector has incorrect size")
     }
     if (length(quotaD) != numD) {
-        error("generateAssignmentMatrix: downstream quota vector has incorrect size")
+        stop("generateAssignmentMatrix: downstream quota vector has incorrect size")
     }
 
     # Constraints
@@ -116,7 +116,7 @@ generateAssignmentMatrix <- function(payoffMatrix, quotaU, quotaD) {
     f.con <- m
     f.dir <- rep("<=", numD + numU + numD*numU)
     f.rhs <- b
-    result <- lp("max", f.obj, f.con, f.dir, f.rhs)
+    result <- lpSolve::lp("max", f.obj, f.con, f.dir, f.rhs)
     x <- result$solution
 
     # Round to integer values and restore the dimensions.
@@ -124,7 +124,7 @@ generateAssignmentMatrix <- function(payoffMatrix, quotaU, quotaD) {
 }
 
 # CmatchMatrices(payoffMatrices, quotasU, quotasD) creates the structure
-# matchMatrices (see importNew).
+# matchMatrices (see import).
 # TODO docs
 # quotasU and quotasD are lists.
 CmatchMatrices <- function(payoffMatrices, quotasU, quotasD) {
