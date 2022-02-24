@@ -36,3 +36,6 @@ vignettes/*.pdf
 # R markdown output
 examples/*
 !examples/*.Rmd
+
+# Manual
+*.pdf
