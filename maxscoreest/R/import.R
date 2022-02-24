@@ -7,6 +7,7 @@
 # https://www.r-bloggers.com/2019/08/no-visible-binding-for-global-variable/
 
 #' @import data.table
+#' @keywords internal
 importCommon <- function(filename) {
     Market <- UpStream <- DownStream <- NULL
     # Importing data
@@ -37,15 +38,27 @@ importCommon <- function(filename) {
         upIdxs=upIdxs, dnIdxs=dnIdxs))
 }
 
+#' dimorder dummy
+#' @section Dimension ordering:
+#' Note the unexpected ordering of the dimensions. We use this convention in this package because R is a column-major language.
+#' @name dimorder
+NULL
+
+#' Extract distance matrices from imported table
+#'
+#' @param marketData The return value of \code{importCommon}.
+#'
+#' @section Distance matrix structure:
+#' Let \code{mIdx} index a market. Each \code{distanceMatrix} is an array (technically not a matrix) of dimension \code{(noAttr, noD[mIdx], noU[mIdx])}. The element indexed by \code{[i, dIdx, uIdx]} gives the \code{i}-th distance attribute value for the triple \code{(mIdx, uIdx, dIdx)}.
+#'
+#' @inheritSection dimorder Dimension ordering
+#'
+#' @section Old code:
+#' To port code using the previous version, replace \code{distanceMatrices[[m]][[u]][[i]][d]} by \code{distanceMatrices[[m]][i, d, u]}.
+#'
+#' @return A list of distance matrices.
+#' @keywords internal
 extractDistanceMatrices <- function(marketData) {
-    # distanceMatrices is now a list of noM arrays (one for each market) of
-    # dimension (noAttr, noD[mIdx], noU[mIdx]).
-    # distanceMatrices[[mIdx]][i, dIdx, uIdx] gives the i-th attribute value for
-    # the triple (mIdx, uIdx, dIdx).
-    # The unexpected ordering of the dimensions is due to R using column-major
-    # format for its arrays.
-    # For old code, replace distanceMatrices[[m]][[u]][[i]][d] by
-    # distanceMatrices[[m]][i, d, u].
     distanceMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
         Market <- NULL
         # The unname is important!
@@ -68,6 +81,20 @@ extractDistanceMatrices <- function(marketData) {
     return(distanceMatrices)
 }
 
+#' Extract match matrices from imported table
+#'
+#' @param marketData The return value of \code{importCommon}.
+#'
+#' @section Match matrix structure:
+#' Let \code{mIdx} index a market. Each \code{matchMatrix} is an array of dimension \code{(noD[mIdx], noU[mIdx])}. The element indexed by \code{[dIdx, uIdx]} is \code{1} if the triple \code{(mIdx, uIdx, dIdx)} matches and \code{0} otherwise.
+#'
+#' @inheritSection dimorder Dimension ordering
+#'
+#' @section Old code:
+#' To port code using the previous version, replace \code{matchMatrix[[m]][[u]][d]} by \code{matchMatrices[[m]][d, u]}.
+#'
+#' @return A list of match matrices.
+#' @keywords internal
 extractMatchMatrices <- function(marketData) {
     # matchMatrices is now a list of noM arrays (one for each market) of
     # dimension (noD[mIdx], noU[mIdx]).
@@ -84,14 +111,22 @@ extractMatchMatrices <- function(marketData) {
     return(matchMatrices)
 }
 
+#' Extract mate tables from imported table
+#'
+#' @param marketData The return value of \code{importCommon}.
+#'
+#' @section Mate table structure:
+#' Let \code{mIdx} index a market. Each mate table is a \code{data.table} object
+#' with fields \code{UpStream} and \code{DownMates}. Each upstream in the market
+#' corresponds to a row, whose \code{DownMates} field contains a vector of the
+#' downstream indices which the upstream is matched to. The rows are ordered
+#' consecutively based on the upstream index \code{UpStream}.
+#'
+#' @return A list of mate tables.
+#' @keywords internal
 extractMate <- function(marketData) {
     # TODO since there are many structures with this name (see Cmate and
     # Cmates), maybe rename?
-    # mate is now a list of noM data.table objects (one for each market). Each
-    # object has noU[mIdx] rows (one for each upstream), with fields:
-    #   $UpStream: the index of that upstream.
-    #   $DownMates: a list of the downstream indexes which the upstream is
-    # matched to.
     mate <- lapply(marketData$marketIdxs, function(mIdx) {
         Market <- UpStream <- DownStream <- Match <- NULL
         # The following table omits upstreams with no matching downstreams.
@@ -129,6 +164,61 @@ extractPayoffMatrices <- function(marketData) {
 # TODO
 extractQuotas <- function(marketData) {}
 
+#' Import matched market data
+#'
+#' Reads a CSV file containing data for matched markets.
+#'
+#' @section File structure:
+#'
+#' The file must be a delimiter-separated file with a header. It must contain
+#' the following fields:
+#' \tabular{ll}{
+#'   \code{Market} \tab The market index.\cr
+#'   \code{UpStream} \tab The upstream index.\cr
+#'   \code{DownStream} \tab The downstream index.\cr
+#'   \code{Match} \tab \code{1} if this triple matches, \code{0} otherwise.
+#' }
+#' It must also contain at least one field with a name starting with
+#' \code{Distance}. These fields containg distance attribute values. The order
+#' they appear in, and not their full name, specifies their actual order.
+#'
+#' Indices should have consecutive values, starting from \code{1}. Distance
+#' attribute values should be numerical.
+#'
+#' Each row should correspond to a unique triple of market, upstream, and
+#' downstream indices.
+#'
+#' @inheritSection extractDistanceMatrices Distance matrix structure
+#'
+#' @inheritSection extractMatchMatrices Match matrix structure
+#'
+#' @inheritSection extractMate Mate table structure
+#'
+#' @param filename Absolute or relative path to the file. See also the
+#'   parameters to \code{\link[data.table]{data.table::fread}}.
+#'
+#' @return A list with members:
+#' \tabular{ll}{
+#'   \code{$header}             \tab A character vector of the headers of the
+#'     table.\cr
+#'   \code{$noM}                \tab The number of markets.\cr
+#'   \code{$noU}, \code{$noD}   \tab Vectors of size \code{$noM}, whose
+#'     \code{m}-th element is the number of upstreams and downstreams
+#'     respectively in the \code{m}-th market.\cr
+#'   \code{$noAttr}             \tab The number of distance attributes.\cr
+#'   \code{$distanceMatrices}   \tab A list of arrays of distance values, one
+#'     for each market. See the appropriate section for their definition.\cr
+#'   \code{$matchMatrices}      \tab A list of arrays of zeros or ones
+#'     describing matches, one for each market. See the appropriate section for
+#'     their definition.\cr
+#'   \code{$mate}               \tab A list of data.table objects describing
+#'   matches, one for each market. See the appropriate section for their
+#'   definition.\cr
+#' }
+#' Members \code{$matchMatrices} and \code{$mate} provide the same information,
+#' expressed in different ways.
+#'
+#' @export
 import <- function(filename) {
     marketData <- importCommon(filename)
     distanceMatrices <- extractDistanceMatrices(marketData)
@@ -138,7 +228,7 @@ import <- function(filename) {
         distanceMatrices=distanceMatrices,
         matchMatrices=matchMatrices,
         mate=mate)
-    return(c(marketData, rest))
+    return(c(marketData[2:5], rest))
 }
 
 # For the inverse problem.
@@ -149,7 +239,7 @@ importInv <- function(filename) {
     # TODO
     quotas <- extractQuotas(marketData)
     rest <- list(payoffMatrices=payoffMatrices, quotas=quotas)
-    return(c(marketData, rest))
+    return(c(marketData[2:5], rest))
 }
 
 checkIndexes <- function(idxs) {
