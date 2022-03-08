@@ -35,6 +35,7 @@
 # indices 2 through noAttr.
 # Returns an array of dimension (noD, noU). Its element indexed by [dIdx, uIdx]
 # gives the value of the payoff function for that downstream-upstream pair.
+#' @export
 evaluatePayoffMatrix <- function(unevalPayoffMatrix, beta) {
     dims <- dim(unevalPayoffMatrix)
     noAttr <- dims[1]
@@ -48,6 +49,7 @@ evaluatePayoffMatrix <- function(unevalPayoffMatrix, beta) {
 }
 
 # As above, but for all markets. A convenience function.
+#' @export
 evaluatePayoffMatrices <- function(unevalPayoffMatrices, beta) {
     return(lapply(unevalPayoffMatrices, function(p) { evaluatePayoffMatrix(p, beta) }))
 }

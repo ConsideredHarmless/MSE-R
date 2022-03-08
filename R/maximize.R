@@ -81,6 +81,7 @@ maximizeDEoptim <- function(objective, params) {
 
 # TODO docs
 # makeBounds(3, 10) -> list(lower = c(-10, -10), upper = c(10, 10))
+#' @export
 makeBounds <- function(numAttrs, b) {
     stopifnot(numAttrs >= 2)
     n <- numAttrs - 1
@@ -89,6 +90,7 @@ makeBounds <- function(numAttrs, b) {
 }
 
 # TODO docs
+#' @export
 calcPerMarketStats <- function(ineqSat, groupIDs) {
     calcRow <- function (mIdx) {
         ineqIdxs <- which(groupIDs == mIdx)

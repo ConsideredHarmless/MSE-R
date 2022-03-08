@@ -239,7 +239,7 @@ import <- function(filename) {
         distanceMatrices=distanceMatrices,
         matchMatrices=matchMatrices,
         mate=mate)
-    return(c(marketData[2:5], rest))
+    return(c(marketData[2:6], rest))
 }
 
 # For the inverse problem.
@@ -250,7 +250,7 @@ importInv <- function(filename) {
     # TODO
     quotas <- extractQuotas(marketData)
     rest <- list(payoffMatrices=payoffMatrices, quotas=quotas)
-    return(c(marketData[2:5], rest))
+    return(c(marketData[2:6], rest))
 }
 
 checkIndices <- function(idxs) {

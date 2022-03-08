@@ -18,7 +18,6 @@
 #'   \code{[dIdx, uIdx]} is \code{1} if that downstream-upstream pair matches,
 #'   and \code{0} otherwise.
 #' @export
-#'
 generateAssignmentMatrix <- function(payoffMatrix, quotaU, quotaD) {
     numD <- dim(payoffMatrix)[1]
     numU <- dim(payoffMatrix)[2]
@@ -181,6 +180,7 @@ formulateLP <- function(payoffMatrix, numU, numD, quotaU, quotaD) {
 # matchMatrices (see import).
 # TODO docs
 # quotasU and quotasD are lists.
+#' @export
 CmatchMatrices <- function(payoffMatrices, quotasU, quotasD) {
     return(mapply(generateAssignmentMatrix, payoffMatrices, quotasU, quotasD,
                   SIMPLIFY = FALSE))

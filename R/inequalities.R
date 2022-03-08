@@ -1,10 +1,12 @@
-# Cineqmembers(mate) computes the upstream and downstream indices
-# for each inequality term for all markets.
-#
-# For the structure mate, see the import function.
-#
-# Returns a list of 4-tuples containing indices. For that structure, see
-# CineqmembersSingle.
+#' Compute inequality members for all markets
+#'
+#' Computes the upstream and downstream indices for each inequality term for all
+#' markets.
+#'
+#' @param mate TODO
+#' @return TODO A list of 4-tuples containing indices. For that structure, see
+#' CineqmembersSingle
+#' @export
 Cineqmembers <- function(mate) {
     mateList <- lapply(mate, as.list)
     return(lapply(mateList, CineqmembersSingle))

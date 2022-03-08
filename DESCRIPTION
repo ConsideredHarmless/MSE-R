@@ -1,12 +1,16 @@
 Package: maxscoreest
-Title: Maximum Score Estimation
+Title: Maximum Score Estimator
 Version: 0.0.0.9000
 Authors@R: c(
     person("Theodore", "Chronis", email = "t.n.chronis@gmail.com",
         role = c("aut", "cre")),
+    person("Denisa", "Mindruta", email = "mindruta@hec.fr",
+        role = c("aut")),
+    person("Christina", "Tatli",
+        role = c("aut")),
     person("Panaghis", "Mavrokefalos", email = "panaghismavrokefalos@gmail.com",
         role = c("aut")))
-Description: What the package does (one paragraph).
+Description: Solves the pairwise maximum score estimation problem.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

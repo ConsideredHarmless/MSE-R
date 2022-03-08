@@ -2,6 +2,7 @@
 # For the structure ineqmembers, see Cineqmembers.
 # Returns a vector containing noU[mIdx] repetitions of the value mIdx, for each
 # mIdx in the range 1:noM.
+#' @export
 makeGroupIDs <- function(ineqmembers) {
     f <- function(mIdx) {
         return(rep(mIdx, ineqmembers[[mIdx]]$numIneqs))
@@ -51,6 +52,7 @@ generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
 #   crAsym      Same as above, for the asymmetric case.
 #   estimates   The estimates for each parameters, as an array of dimension
 #               (numFreeAttrs, numSubsamples).
+#' @export
 pointIdentifiedCR <- function(ssSize, numSubsamples, pointEstimate,
                                  numFreeAttrs, groupIDs, dataArray,
                                  optimizeScoreArgs, options=list()) {
@@ -123,6 +125,7 @@ pointIdentifiedCR <- function(ssSize, numSubsamples, pointEstimate,
     return(result)
 }
 
+#' @export
 plotCR <- function(estimates) {
     estimates <- t(estimates)
     plot(c(col(estimates)), c(estimates), type="p", col="blue", xlab="", ylab="")

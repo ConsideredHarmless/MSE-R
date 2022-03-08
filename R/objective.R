@@ -11,6 +11,7 @@
 #   routine that can only minimize, such as DEoptim::DEoptim.
 #
 # For dataArray, see the CdataArray function.
+#' @export
 makeObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
     objFun <- function(b) {
         u <- t(dataArray) %*% c(coefficient1, b)
@@ -25,6 +26,7 @@ makeObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
 #
 # The purpose of this function is not to be passed to an optimization routine,
 # but to track which inequalities were satisfied.
+#' @export
 makeObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
     objFunVec <- function(b) {
         u <- t(dataArray) %*% c(coefficient1, b)
