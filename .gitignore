@@ -38,4 +38,4 @@ examples/*
 !examples/*.Rmd
 
 # Manual
-*.pdf
+maxscoreest*.pdf

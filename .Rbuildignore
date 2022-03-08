@@ -1,0 +1,8 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^\.github$
+^\.old-doc$
+^\.old-src$
+^\.old-testing$
+^\.old-examples$
