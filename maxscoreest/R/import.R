@@ -23,13 +23,13 @@ importCommon <- function(filename) {
     noAttr <- length(distColIdxs)
     # Calculating number of markets
     marketIdxs = unique(DT, by = "Market")[[1]]
-    checkIndexes(marketIdxs)
+    checkIndices(marketIdxs)
     noM <- length(marketIdxs)
     # Calculating number of up streams and down streams in each market
     upIdxs <- DT[, list(x = list(unique(UpStream))),   by = Market]$x
     dnIdxs <- DT[, list(x = list(unique(DownStream))), by = Market]$x
-    lapply(upIdxs, checkIndexes)
-    lapply(dnIdxs, checkIndexes)
+    lapply(upIdxs, checkIndices)
+    lapply(dnIdxs, checkIndices)
     noU <- unlist(lapply(upIdxs, length))
     noD <- unlist(lapply(dnIdxs, length))
     return(list(
@@ -40,7 +40,8 @@ importCommon <- function(filename) {
 
 #' dimorder dummy
 #' @section Dimension ordering:
-#' Note the unexpected ordering of the dimensions. We use this convention in this package because R is a column-major language.
+#' Note the unexpected ordering of the dimensions. We use this convention in
+#' this package because R is a column-major language.
 #' @name dimorder
 NULL
 
@@ -49,12 +50,18 @@ NULL
 #' @param marketData The return value of \code{importCommon}.
 #'
 #' @section Distance matrix structure:
-#' Let \code{mIdx} index a market. Each \code{distanceMatrix} is an array (technically not a matrix) of dimension \code{(noAttr, noD[mIdx], noU[mIdx])}. The element indexed by \code{[i, dIdx, uIdx]} gives the \code{i}-th distance attribute value for the triple \code{(mIdx, uIdx, dIdx)}.
+#' Let \code{mIdx} index a market. Each \code{distanceMatrix} is an array
+#' (technically not a matrix) of dimension \code{(noAttr, noD[mIdx],
+#' noU[mIdx])}. The element indexed by \code{[i, dIdx, uIdx]} gives the
+#' \code{i}-th distance attribute value for the triple \code{(mIdx, uIdx,
+#' dIdx)}.
 #'
 #' @inheritSection dimorder Dimension ordering
 #'
 #' @section Old code:
-#' To port code using the previous version, replace \code{distanceMatrices[[m]][[u]][[i]][d]} by \code{distanceMatrices[[m]][i, d, u]}.
+#' To port code using the previous version, replace
+#' \code{distanceMatrices[[m]][[u]][[i]][d]} by
+#' \code{distanceMatrices[[m]][i, d, u]}.
 #'
 #' @return A list of distance matrices.
 #' @keywords internal
@@ -86,12 +93,16 @@ extractDistanceMatrices <- function(marketData) {
 #' @param marketData The return value of \code{importCommon}.
 #'
 #' @section Match matrix structure:
-#' Let \code{mIdx} index a market. Each \code{matchMatrix} is an array of dimension \code{(noD[mIdx], noU[mIdx])}. The element indexed by \code{[dIdx, uIdx]} is \code{1} if the triple \code{(mIdx, uIdx, dIdx)} matches and \code{0} otherwise.
+#' Let \code{mIdx} index a market. Each \code{matchMatrix} is an array of
+#' dimension \code{(noD[mIdx], noU[mIdx])}. The element indexed by
+#' \code{[dIdx, uIdx]} is \code{1} if the triple \code{(mIdx, uIdx, dIdx)}
+#' matches and \code{0} otherwise.
 #'
 #' @inheritSection dimorder Dimension ordering
 #'
 #' @section Old code:
-#' To port code using the previous version, replace \code{matchMatrix[[m]][[u]][d]} by \code{matchMatrices[[m]][d, u]}.
+#' To port code using the previous version, replace
+#' \code{matchMatrix[[m]][[u]][d]} by \code{matchMatrices[[m]][d, u]}.
 #'
 #' @return A list of match matrices.
 #' @keywords internal
@@ -137,7 +148,7 @@ extractMate <- function(marketData) {
         # The following table has a row for each unique upstream index.
         marketUpStreamTable <- marketData$DT[
             Market == mIdx, UpStream, keyby = UpStream][, "UpStream"]
-        # Using an outer join, we restore any missing upstream indexes.
+        # Using an outer join, we restore any missing upstream indices.
         marketMateTableRestored <- marketMateTableCompressed[
             marketUpStreamTable, on = list(UpStream)]
         return(marketMateTableRestored)
@@ -195,7 +206,7 @@ extractQuotas <- function(marketData) {}
 #' @inheritSection extractMate Mate table structure
 #'
 #' @param filename Absolute or relative path to the file. See also the
-#'   parameters to \code{\link[data.table]{data.table::fread}}.
+#'   parameters to \code{\link[data.table]{fread}}.
 #'
 #' @return A list with members:
 #' \tabular{ll}{
@@ -242,13 +253,13 @@ importInv <- function(filename) {
     return(c(marketData[2:5], rest))
 }
 
-checkIndexes <- function(idxs) {
+checkIndices <- function(idxs) {
     # Check if the index vector is not empty.
     if (length(idxs) == 0) {
         warning("index set empty")
     }
-    # Check if indexes are consecutive (1, 2, ..., n).
+    # Check if indices are consecutive (1, 2, ..., n).
     if (!isTRUE(all.equal(idxs, seq_along(idxs)))) {
-        warning("indexes not consecutive")
+        warning("indices not consecutive")
     }
 }

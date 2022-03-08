@@ -20,10 +20,10 @@ makeGroupIDs <- function(ineqmembers) {
 generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
     uniqueGroups <- unique(groupIDs)
     selectedGroups <- sort(sample(uniqueGroups, ssSize))
-    # Get the indexes of the dataArray columns that correspond to the selected
+    # Get the indices of the dataArray columns that correspond to the selected
     # groups.
-    qualifiedIndexes <- which(groupIDs %in% selectedGroups)
-    return(dataArray[, qualifiedIndexes])
+    qualifiedIndices <- which(groupIDs %in% selectedGroups)
+    return(dataArray[, qualifiedIndices])
 }
 
 # TODO update docs

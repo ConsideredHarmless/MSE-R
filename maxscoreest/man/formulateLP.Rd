@@ -6,11 +6,26 @@
 \usage{
 formulateLP(payoffMatrix, numU, numD, quotaU, quotaD)
 }
+\arguments{
+\item{payoffMatrix}{An array of payoffs for all upstream-downstream pairs in
+this market. Note that the first dimension indexes the downstreams. See the
+\code{payoff.R} file for more details.}
+
+\item{numU, numD}{The number of upstreams and downstreams in the market.}
+
+\item{quotaU}{A vector of length \code{numU}, containing integers in the
+range \code{0:numD}. Its \code{j}-th element is the maximum allowed number
+of matches for the corresponding upstream. Alternatively, it can be a
+single non-negative integer. In this case, the quota vector is this value,
+repeated the appropriate number of times.}
+
+\item{quotaD}{As \code{quotaU}, but for downstreams.}
+}
 \value{
 A list of arguments for \code{lpSolve::lp()}. Use with \code{do.call}.
 }
 \description{
-For internal use. Generates the arguments passed to \code{lpSolve::lp()} for
+Generates the arguments passed to \code{lpSolve::lp()} for
 the given optimal matching problem. See \code{generateAssignmentMatrix} for
 the parameters.
 }
@@ -107,3 +122,4 @@ We can now write the vectorized formulation of the ILP:
 }
 where \eqn{M_D} and \eqn{M_U} are defined above.
 }
+\keyword{internal}

@@ -8,7 +8,7 @@ import(filename)
 }
 \arguments{
 \item{filename}{Absolute or relative path to the file. See also the
-parameters to \code{\link[data.table]{data.table::fread}}.}
+parameters to \code{\link[data.table]{fread}}.}
 }
 \value{
 A list with members:
@@ -59,12 +59,19 @@ downstream indices.
 
 \section{Distance matrix structure}{
 
-Let \code{mIdx} index a market. Each \code{distanceMatrix} is an array (technically not a matrix) of dimension \code{(noAttr, noD[mIdx], noU[mIdx])}. The element indexed by \code{[i, dIdx, uIdx]} gives the \code{i}-th distance attribute value for the triple \code{(mIdx, uIdx, dIdx)}.
+Let \code{mIdx} index a market. Each \code{distanceMatrix} is an array
+(technically not a matrix) of dimension \code{(noAttr, noD[mIdx],
+noU[mIdx])}. The element indexed by \code{[i, dIdx, uIdx]} gives the
+\code{i}-th distance attribute value for the triple \code{(mIdx, uIdx,
+dIdx)}.
 }
 
 \section{Match matrix structure}{
 
-Let \code{mIdx} index a market. Each \code{matchMatrix} is an array of dimension \code{(noD[mIdx], noU[mIdx])}. The element indexed by \code{[dIdx, uIdx]} is \code{1} if the triple \code{(mIdx, uIdx, dIdx)} matches and \code{0} otherwise.
+Let \code{mIdx} index a market. Each \code{matchMatrix} is an array of
+dimension \code{(noD[mIdx], noU[mIdx])}. The element indexed by
+\code{[dIdx, uIdx]} is \code{1} if the triple \code{(mIdx, uIdx, dIdx)}
+matches and \code{0} otherwise.
 }
 
 \section{Mate table structure}{

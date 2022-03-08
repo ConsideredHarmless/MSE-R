@@ -8,6 +8,7 @@ dimorder dummy
 }
 \section{Dimension ordering}{
 
-Note the unexpected ordering of the dimensions. We use this convention in this package because R is a column-major language.
+Note the unexpected ordering of the dimensions. We use this convention in
+this package because R is a column-major language.
 }
 

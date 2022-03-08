@@ -43,7 +43,7 @@ generateAssignmentMatrix <- function(payoffMatrix, quotaU, quotaD) {
 
 #' Formulate linear program for optimal matching
 #'
-#' For internal use. Generates the arguments passed to \code{lpSolve::lp()} for
+#' Generates the arguments passed to \code{lpSolve::lp()} for
 #' the given optimal matching problem. See \code{generateAssignmentMatrix} for
 #' the parameters.
 #'
@@ -139,8 +139,11 @@ generateAssignmentMatrix <- function(payoffMatrix, quotaU, quotaD) {
 #' }
 #' where \eqn{M_D} and \eqn{M_U} are defined above.
 #'
-#' @return A list of arguments for \code{lpSolve::lp()}. Use with \code{do.call}.
+#' @inheritParams generateAssignmentMatrix
+#' @param numU,numD The number of upstreams and downstreams in the market.
 #'
+#' @return A list of arguments for \code{lpSolve::lp()}. Use with \code{do.call}.
+#' @keywords internal
 formulateLP <- function(payoffMatrix, numU, numD, quotaU, quotaD) {
     # Constraints
     # Let x = vec(X) the flattened variables. We will convert the constraints to

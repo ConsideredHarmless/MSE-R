@@ -1,20 +1,42 @@
-# CdataArray(distanceMatrices, ineqmembers) computes the data array. For the
-# data array, see section 5.2 in [1]. For the distanceMatrices structure, see
-# the import function. For the ineqmembers structure, see the Cineqmembers
-# function.
-#
-# Returns an array of dimension (noAttr, sumNumIneqs), where sumNumIneqs is the
-# sum over all markets of the number of inequalities of each market.
-#
-# For old code, replace
-#    dataArray[[ineqIdx]]
-#    dataArray[[ineqIdx]][paramIdx]
-# by
-#    dataArray[, ineqIdx]
-#    dataArray[paramIdx, ineqIdx]
-# respectively.
-#
-# [1] David Santiago and Fox, Jeremy (2009). "A Toolkit for Matching Maximum Score Estimation and Point and Set Identified Subsampling Inference".
+#' Compute data array
+#'
+#' Computes the data array, as defined in section 5.2 of \[1\].
+#'
+#' Each column of the data array corresponds to a single inequality. To compute
+#' its value, we gather the index triples (for market, upstream, and downstream)
+#' appearing on either side of the inequality, and we generate the corresponding
+#' term (a column vector of distance attribute values) from the distance
+#' matrices. The difference between the sum of the LHS and RHS terms is equal to
+#' the desired column.
+#'
+#' @inheritSection extractDistanceMatrices Distance matrix structure
+#'
+#' @inheritSection CineqmembersSingle Inequality members structure
+#'
+#' @section Old code:
+#' To port code using the previous version, replace \code{dataArray[[ineqIdx]]}
+#' and \code{dataArray[[ineqIdx]][paramIdx]} by \code{dataArray[, ineqIdx]} and
+#' \code{dataArray[paramIdx, ineqIdx]} respectively.
+#'
+#' @section References:
+#' \tabular{ll}{
+#'   \[1\] \tab David Santiago and Fox, Jeremy (2009). "A Toolkit for Matching
+#'   Maximum Score Estimation and Point and Set Identified Subsampling
+#'   Inference".
+#' }
+#'
+#' @param distanceMatrices A list of arrays of distance values, one
+#'   for each market. See the appropriate section for their definition.
+#' @param ineqmembers A list of objects describing the indices participating in
+#'   the inequalities occurring in the objective function. See the appropriate
+#'   section for their definition.
+#'
+#' @return An array of dimension \code{(noAttr, sumNumIneqs)}, where
+#'   \code{noAttr} is the number of distance attributes and \code{sumNumIneqs}
+#'   is the sum of the number of inequalities of each market over all markets.
+#'   \code{[paramIdx, ineqIdx]} indexes the \code{paramIdx}-th attribute for the
+#'   \code{ineqIdx}-th inequality.
+#' @export
 CdataArray <- function(distanceMatrices, ineqmembers) {
     mIdxs <- seq_along(ineqmembers)
     f <- function(mIdx) {

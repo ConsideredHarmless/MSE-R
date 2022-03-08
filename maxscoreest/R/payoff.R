@@ -24,7 +24,7 @@
 #
 # To evaluate such an array for a given parameter vector, we can simply perform
 # a matrix-vector product, by flattening and unflattening the dimensions
-# corresponding to the upstream and downstream indexes. This is performed by the
+# corresponding to the upstream and downstream indices. This is performed by the
 # function evaluatePayoffMatrix.
 
 # evaluatePayoffMatrix(unevalPayoffMatrix, beta) evaluates the payoff functions
@@ -32,7 +32,7 @@
 # unevalPayoffMatrix is an array of dimension (noAttr, noD, noU). See import
 # for more information. Note that in this case it is not literally a matrix.
 # beta is a vector of length noAttr-1, containing the parameter values for
-# indexes 2 through noAttr.
+# indices 2 through noAttr.
 # Returns an array of dimension (noD, noU). Its element indexed by [dIdx, uIdx]
 # gives the value of the payoff function for that downstream-upstream pair.
 evaluatePayoffMatrix <- function(unevalPayoffMatrix, beta) {

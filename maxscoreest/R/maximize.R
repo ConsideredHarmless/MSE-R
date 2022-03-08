@@ -1,26 +1,35 @@
-# Optimizes the maximum score function defined by dataArray. The objective
-# function is created using makeObjFun (see the objective.R) file.
-#
-# dataArray is the output of CdataArray.
-# coefficient1 is the first coefficient of the extended parameter vector. See
-#   makeObjFun.
-# method is a string denoting an optimization method. Currently, only "DEoptim"
-#   (the default value) is supported.
-# optimParams is a list of parameters to be passed to the optimization routine.
-# getIneqSat is a boolean argument. If it is TRUE, then the result also
-#   contains a $ineqSat member (see below). Its default value is FALSE.
-# permuteInvariant: TODO
-#
-# Returns a list with members:
-#   $optVal: the optimal value of the objective function.
-#   $optArg: the argument vector which achieves that value.
-#   $ineqSat: a vector of 0s and 1s. Each element corresponds to a single
-#     inequality, and is 1 if that inequality is satisfied for the optimal
-#     parameters, and 0 otherwise. Only present if getIneqSat = TRUE.
-optimizeScoreFunction <- function(dataArray, coefficient1 = NULL,
-                                  method = NULL, optimParams = NULL,
-                                  getIneqSat = FALSE,
-                                  permuteInvariant = FALSE) {
+#' Calculate maximum score
+#'
+#' Optimizes the maximum score function defined by the data array. The objective
+#' function is created using \code{makeObjFun}.
+#'
+#' @section Optimization methods:
+#' TODO
+#'
+#' @param dataArray The output of \code{CdataArray}.
+#' @param coefficient1 (optional) The first coefficient of the extended
+#'   parameter vector. See \code{makeObjFun} for more details.
+#' @param method (optional) A string denoting the optimization method.
+#'   Currently, only \code{"DEoptim"} (the default value) is supported.
+#' @param optimParams (optional) A list of parameters to be passed to the
+#'   optimization routine. Defaults to the empty list (TODO see do.call).
+#' @param getIneqSat (optional) A boolean indicating whether to include the
+#'   \code{$ineqSat} member in the result. Defaults to \code{FALSE}.
+#' @param permuteInvariant (optional) TODO. Defaults to \code{FALSE}.
+#'
+#' @return A list with members:
+#' \tabular{ll}{
+#'   \code{$optVal}  \tab The optimal value of the objective function.\cr
+#'   \code{$optArg}  \tab The argument vector which achieves that value.\cr
+#'   \code{$ineqSat} \tab A vector of \code{0}s and \code{1}s. Each element
+#'     corresponds to a single inequality, and is \code{1} if that inequality is
+#'     satisfied for the optimal parameters, and \code{0} otherwise. Only
+#'     present if \code{getIneqSat} is \code{TRUE}.
+#' }
+#' @export
+optimizeScoreFunction <- function(
+        dataArray, coefficient1 = NULL, method = NULL, optimParams = NULL,
+        getIneqSat = FALSE, permuteInvariant = FALSE) {
     if (is.null(method)) {
         method <- "DEoptim"
     }

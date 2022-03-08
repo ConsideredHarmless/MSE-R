@@ -1,53 +1,61 @@
-# Cineqmembers(mate) computes the upstream and downstream indexes
+# Cineqmembers(mate) computes the upstream and downstream indices
 # for each inequality term for all markets.
 #
 # For the structure mate, see the import function.
 #
-# Returns a list of 4-tuples containing indexes. For that structure, see
+# Returns a list of 4-tuples containing indices. For that structure, see
 # CineqmembersSingle.
 Cineqmembers <- function(mate) {
     mateList <- lapply(mate, as.list)
     return(lapply(mateList, CineqmembersSingle))
 }
 
-# CineqmembersSingle(marketMates) computes the upstream and downstream indexes
-# for each inequality term for a single market.
-#
-# The structure marketMates is a list with members:
-#   $UpStream: a vector of the unique indexes of upstreams for this market.
-#   $DownMates: a list with n elements, where n is the number of upstreams.
-#     Element $DownMates[[i]] is a vector of the downstream indexes which the
-#     upstream with index i is matched to.
-#
-# Each transposition (i, j) of the set {1, 2, ..., n} yields a single
-# inequality, with the factual terms in the LHS and the counterfactual terms in
-# the RHS. The factual terms correspond to all current matches of both upstream
-# indexes (i and j), and the counterfactual terms correspond to the matches
-# where i and j switch partners.
-#
-# Instead of returning a complicated nested structure, we return a 4-tuple of
-# lists, each of the same length (one element for each inequality). Every
-# element corresponding to the same inequality is a vector of indexes (one index
-# for each term in the inequality).
-#
-# Returns:
-# A list with members:
-#   $fctUpIdxs: a list of upstream index vectors for the factual case.
-#   $fctDnIdxs: a list of downstream index vectors for the factual case.
-#   $cfcUpIdxs: a list of upstream index vectors for the counterfactual case.
-#   $cfcDnIdxs: a list of downstream index vectors for the counterfactual case.
-#   $numIneqs: the number of inequalities for this market. Also the common
-#     length of the above lists.
+#' Compute inequality members for a single market
+#'
+#' Computes the upstream and downstream indices for each inequality term for a
+#' single market.
+#'
+#' Let \eqn{n} be the number of upstreams in the market. Each transposition
+#' \eqn{(i, j)} of the set \eqn{{1, 2, ..., n}} yields a single inequality, with
+#' the factual terms in the LHS and the counterfactual terms in the RHS. The
+#' factual terms correspond to all current matches of both upstream indices
+#' (\eqn{i} and \eqn{j}), and the counterfactual terms correspond to the matches
+#' where \eqn{i} and \eqn{j} switch partners.
+#'
+#' @section Inequality members structure:
+#' TODO
+#'
+#' @param marketMates A list with members:
+#' \tabular{ll}{
+#'   \code{$UpStream} \tab A vector of the unique indices of upstreams for this
+#'     market.\cr
+#'   \code{$DownMates} \tab A list with n elements, where n is the number of
+#'     upstreams. Element \code{$DownMates[[i]]} is a vector of the downstream
+#'     indices which the \code{i}-th upstream is matched to.
+#' }
+#'
+#' @return A list with members:
+#' \tabular{ll}{
+#'   \code{$fctUpIdxs} \tab A list of upstream index vectors for the factual case.\cr
+#'   \code{$fctDnIdxs} \tab A list of downstream index vectors for the factual case.\cr
+#'   \code{$cfcUpIdxs} \tab A list of upstream index vectors for the counterfactual case.\cr
+#'   \code{$cfcDnIdxs} \tab A list of downstream index vectors for the counterfactual case.\cr
+#'   \code{$numIneqs}  \tab The number of inequalities for this market. Also the
+#'     common length of the above lists.
+#' }
+#' Each list element of the first four members corresponds to a single
+#' inequality. That element is a vector of indices, with one index for each
+#' term in that inequality.
 CineqmembersSingle <- function(marketMates) {
     uIdxs <- marketMates$UpStream
     n <- length(uIdxs)
     numIneqs = n*(n-1)/2
-    # First, we create the transposition indexes {(i, j): 1 <= i < j <= n} as a
+    # First, we create the transposition indices {(i, j): 1 <= i < j <= n} as a
     # pair of vectors.
     iIdxs <- unlist(lapply(1:n, function (x) { rep(x, n-x) }))
     jIdxs <- unlist(lapply(1:n, function (x) { seq(from=x+1, to=n, length=max(0,n-x)) }))
     dnMates <- marketMates$DownMates # alias for brevity
-    # To create the upstream indexes, we repeat them as many times as there are
+    # To create the upstream indices, we repeat them as many times as there are
     # corresponding downstream matches.
     # See test "All unmatched" in test_ineqmembers.R. rep_len returns numeric(0)
     # instead of NULL (a.k.a. c()) when n is 0.
@@ -159,7 +167,7 @@ ineqmembersNewToOld <- function(ineqmembersNew) {
 }
 
 # getIneqTermsIdxs(ineqmembersSingle, ineqIdx) returns, for a given inequality,
-# the 4-tuple of indexes defining each term in that inequality.
+# the 4-tuple of indices defining each term in that inequality.
 #
 # ineqmembersSingle is an element of the list constructed by Cineqmembers,
 # corresponding to a single market.

@@ -17,17 +17,22 @@ Extract match matrices from imported table
 }
 \section{Match matrix structure}{
 
-Let \code{mIdx} index a market. Each \code{matchMatrix} is an array of dimension \code{(noD[mIdx], noU[mIdx])}. The element indexed by \code{[dIdx, uIdx]} is \code{1} if the triple \code{(mIdx, uIdx, dIdx)} matches and \code{0} otherwise.
+Let \code{mIdx} index a market. Each \code{matchMatrix} is an array of
+dimension \code{(noD[mIdx], noU[mIdx])}. The element indexed by
+\code{[dIdx, uIdx]} is \code{1} if the triple \code{(mIdx, uIdx, dIdx)}
+matches and \code{0} otherwise.
 }
 
 \section{Old code}{
 
-To port code using the previous version, replace \code{matchMatrix[[m]][[u]][d]} by \code{matchMatrices[[m]][d, u]}.
+To port code using the previous version, replace
+\code{matchMatrix[[m]][[u]][d]} by \code{matchMatrices[[m]][d, u]}.
 }
 
 \section{Dimension ordering}{
 
-Note the unexpected ordering of the dimensions. We use this convention in this package because R is a column-major language.
+Note the unexpected ordering of the dimensions. We use this convention in
+this package because R is a column-major language.
 }
 
 \keyword{internal}
