@@ -20,13 +20,11 @@ payoffMatrix <- t(rbind(
       1033.23, 744.3, 779.32, 827.8, 677.75,
       659.65, 723.39, 798.59, 824.87, 842.86)))
 
-# FIXME
-# I get errors when running devtools::check().
 # # TODO Precompute and store in a file.
-# filename <- paste(rprojroot::find_rstudio_root_file(), "../import/precomp_testdata.dat", sep="/")
-# data <- import(filename)
-# beta <- c(1, 2, 1.5, 2.3)
-# payoffMatrices <- evaluatePayoffMatrices(data$distanceMatrices, beta)
+filename <- system.file("extdata", "precomp_testdata.dat", package = "maxscoreest")
+data <- import(filename)
+beta <- c(1, 2, 1.5, 2.3)
+payoffMatrices <- evaluatePayoffMatrices(data$distanceMatrices, beta)
 
 test_that("generateAssignmentMatrix with numeric values and 1-1 quotas", {
     quotaU <- 1
@@ -149,7 +147,6 @@ test_that("CmatchMatrix on precomp_testdata.dat -- test 1", {
             c(0, 0, 1, 0, 0, 0, 0, 1, 0, 0),
             c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
             c(0, 0, 0, 1, 0, 0, 0, 0, 0, 1))))
-    return() # FIXME
     expect_equal(
         CmatchMatrices(payoffMatrices, quotasU, quotasD),
         expected)
