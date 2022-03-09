@@ -32,7 +32,7 @@ We import this using the function `importMatched`.
 
 <!--TODO-->
 ```{r}
-matchedData <- import(filename)
+matchedData <- importMatched(filename)
 ```
 
 First, we need to calculate the *inequality members*; lists of indices of the

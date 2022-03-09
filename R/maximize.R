@@ -79,8 +79,11 @@ maximizeDEoptim <- function(objective, params) {
     return(list(optVal = optVal, optArg = optArg))
 }
 
-# TODO docs
 # makeBounds(3, 10) -> list(lower = c(-10, -10), upper = c(10, 10))
+#' TODO
+#' @param numAttrs TODO
+#' @param b TODO
+#' @return TODO
 #' @export
 makeBounds <- function(numAttrs, b) {
     stopifnot(numAttrs >= 2)
@@ -89,7 +92,10 @@ makeBounds <- function(numAttrs, b) {
     return(list(lower = -upper, upper = upper))
 }
 
-# TODO docs
+#' TODO
+#' @param ineqSat TODO
+#' @param groupIDs TODO
+#' @return TODO
 #' @export
 calcPerMarketStats <- function(ineqSat, groupIDs) {
     calcRow <- function (mIdx) {

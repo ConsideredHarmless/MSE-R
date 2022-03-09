@@ -230,7 +230,7 @@ extractQuotas <- function(marketData) {}
 #' expressed in different ways.
 #'
 #' @export
-import <- function(filename) {
+importMatched <- function(filename) {
     marketData <- importCommon(filename)
     distanceMatrices <- extractDistanceMatrices(marketData)
     matchMatrices <- extractMatchMatrices(marketData)
@@ -244,7 +244,7 @@ import <- function(filename) {
 
 # For the inverse problem.
 # TODO docs
-importInv <- function(filename) {
+importUnmatched <- function(filename) {
     marketData <- importCommon(filename)
     payoffMatrices <- extractPayoffMatrices(marketData)
     # TODO

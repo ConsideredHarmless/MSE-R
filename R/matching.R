@@ -176,10 +176,15 @@ formulateLP <- function(payoffMatrix, numU, numD, quotaU, quotaD) {
     return(argList)
 }
 
-# CmatchMatrices(payoffMatrices, quotasU, quotasD) creates the structure
-# matchMatrices (see import).
-# TODO docs
-# quotasU and quotasD are lists.
+#' Calculate optimal matchings for all markets
+#'
+#' TODO docs
+#'
+#' @param payoffMatrices TODO See \code{evaluatePayoffMatrices}.
+#' @param quotasU,quotasD TODO
+#'
+#' @return TODO
+#'
 #' @export
 CmatchMatrices <- function(payoffMatrices, quotasU, quotasD) {
     return(mapply(generateAssignmentMatrix, payoffMatrices, quotasU, quotasD,

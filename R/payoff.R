@@ -19,7 +19,7 @@
 # interested in the linear case, this is equivalent to a three-dimensional
 # array indexed by the upstream index, the downstream index, and the attribute
 # index, whose values are D_{t,k}, for all relevant triples t. This is, in fact,
-# the array distanceMatrices[[mIdx]] described in import. In the general
+# the array distanceMatrices[[mIdx]] described in importMatched. In the general
 # case, we would have a two-dimensional array of symbolic expressions instead.
 #
 # To evaluate such an array for a given parameter vector, we can simply perform
@@ -29,12 +29,17 @@
 
 # evaluatePayoffMatrix(unevalPayoffMatrix, beta) evaluates the payoff functions
 # for a given market.
-# unevalPayoffMatrix is an array of dimension (noAttr, noD, noU). See import
+# unevalPayoffMatrix is an array of dimension (noAttr, noD, noU). See importMatched
 # for more information. Note that in this case it is not literally a matrix.
 # beta is a vector of length noAttr-1, containing the parameter values for
 # indices 2 through noAttr.
 # Returns an array of dimension (noD, noU). Its element indexed by [dIdx, uIdx]
 # gives the value of the payoff function for that downstream-upstream pair.
+
+#' TODO
+#' @param unevalPayoffMatrix TODO
+#' @param beta TODO
+#' @return TODO
 #' @export
 evaluatePayoffMatrix <- function(unevalPayoffMatrix, beta) {
     dims <- dim(unevalPayoffMatrix)
@@ -49,8 +54,11 @@ evaluatePayoffMatrix <- function(unevalPayoffMatrix, beta) {
 }
 
 # As above, but for all markets. A convenience function.
+#' TODO
+#' @param unevalPayoffMatrices TODO
+#' @param beta TODO
+#' @return TODO
 #' @export
 evaluatePayoffMatrices <- function(unevalPayoffMatrices, beta) {
     return(lapply(unevalPayoffMatrices, function(p) { evaluatePayoffMatrix(p, beta) }))
 }
-

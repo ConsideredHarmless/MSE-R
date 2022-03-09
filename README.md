@@ -39,7 +39,7 @@ A demonstration using synthetic data:
 ```r
 library(maxscoreest)
 filename <- system.file("extdata", "precomp_testdata.dat", package = "maxscoreest")
-data <- import(filename)
+data <- importMatched(filename)
 ineqmembers <- Cineqmembers(data$mate)
 dataArray <- CdataArray(data$distanceMatrices, ineqmembers)
 coefficient1 <- 1

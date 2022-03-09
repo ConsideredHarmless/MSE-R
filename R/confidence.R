@@ -2,6 +2,9 @@
 # For the structure ineqmembers, see Cineqmembers.
 # Returns a vector containing noU[mIdx] repetitions of the value mIdx, for each
 # mIdx in the range 1:noM.
+#' TODO
+#' @param ineqmembers TODO
+#' @return TODO
 #' @export
 makeGroupIDs <- function(ineqmembers) {
     f <- function(mIdx) {
@@ -52,6 +55,17 @@ generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
 #   crAsym      Same as above, for the asymmetric case.
 #   estimates   The estimates for each parameters, as an array of dimension
 #               (numFreeAttrs, numSubsamples).
+
+#' TODO
+#' @param ssSize TODO
+#' @param numSubsamples TODO
+#' @param pointEstimate TODO
+#' @param numFreeAttrs TODO
+#' @param groupIDs TODO
+#' @param dataArray TODO
+#' @param optimizeScoreArgs TODO
+#' @param options TODO
+#' @return TODO
 #' @export
 pointIdentifiedCR <- function(ssSize, numSubsamples, pointEstimate,
                                  numFreeAttrs, groupIDs, dataArray,
@@ -91,6 +105,7 @@ pointIdentifiedCR <- function(ssSize, numSubsamples, pointEstimate,
         }
         return(ssEstimate)
     }
+    # TODO transpose
     ssEstimates <- sapply(1:numSubsamples, calcEstimate)
     estimates   <- subNormalization * (ssEstimates - pointEstimate)
 
@@ -125,6 +140,9 @@ pointIdentifiedCR <- function(ssSize, numSubsamples, pointEstimate,
     return(result)
 }
 
+#' TODO
+#' @param estimates TODO
+#' @return TODO
 #' @export
 plotCR <- function(estimates) {
     estimates <- t(estimates)

@@ -20,9 +20,9 @@ payoffMatrix <- t(rbind(
       1033.23, 744.3, 779.32, 827.8, 677.75,
       659.65, 723.39, 798.59, 824.87, 842.86)))
 
-# # TODO Precompute and store in a file.
+# TODO Precompute and store in a file.
 filename <- system.file("extdata", "precomp_testdata.dat", package = "maxscoreest")
-data <- import(filename)
+data <- importMatched(filename)
 beta <- c(1, 2, 1.5, 2.3)
 payoffMatrices <- evaluatePayoffMatrices(data$distanceMatrices, beta)
 
