@@ -1,0 +1,114 @@
+---
+title: "Calculating optimal parameters from matched data"
+author: "Panaghis Mavrokefalos"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Calculating optimal parameters from matched data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# A quick example
+
+```{r setup}
+library(maxscoreest)
+```
+
+First, we need to import the data into R. Let's use some synthetic data provided
+with the package.
+
+```{r}
+filename <- system.file("extdata", "precomp_testdata.dat", package = "maxscoreest")
+```
+
+We import this using the function `importMatched`.
+
+<!--TODO-->
+```{r}
+matchedData <- import(filename)
+```
+
+First, we need to calculate the *inequality members*; lists of indices of the
+pairings which participate in the inequalities defining the objective function.
+
+```{r}
+ineqmembers <- Cineqmembers(matchedData$mate)
+```
+
+Now we can create the *data array*.
+
+```{r}
+dataArray <- CdataArray(matchedData$distanceMatrices, ineqmembers)
+```
+
+Next, we need to set up the optimization parameters.
+
+---
+
+### An important note regarding optimization
+
+We are optimizing a non-smooth, non-convex objective function, so the
+general-purpose optimization methods are ill-suited for this problem. We are
+currently supporting only the *Differential Evolution* method (implemented in
+the package `DEoptim`), but this is a **non-deterministic** method. A user can
+fix the RNG seed on their setup, but there is no guarantee of reproducibility
+across different machines, operating systems, R versions, or package versions.
+
+The two facts stated above are also complicating things:
+
+- The objective is non-convex: this means that there is no guarantee of reaching
+the global optimum using local search methods.
+- The objective is non-smooth, and actually piecewise constant: this means that
+the objective attains its (global) optimum for infinitely many points. Even
+worse, there are potentially many disconnected subsets of the search space on
+which the objective attains its optimum.
+
+Differential Evolution works very well in practice however, either finding the
+global optimum or approximating it very closely.
+
+---
+
+Let's use the default parameters for Differential Evolution.
+
+<!--TODO turn into function, TODO echo, TODO what is bounds-->
+```{r}
+bounds <- makeBounds(matchedData$noAttr, 100)
+optimParams <- list(lower=bounds$lower, upper=bounds$upper, NP=50, F=0.6, CR=0.5,
+                    itermax=100, trace=FALSE, reltol=1e-3)
+```
+
+We might also want to fix the RNG for reproducibility across runs. See the
+*note regarding optimization* above.
+
+```{r}
+randomSeed <- 42
+set.seed(randomSeed)
+```
+
+We are now ready to perform the optimization. The function
+`optimizeScoreFunction` creates and optimizes the objective.
+
+<!--TODO unname-->
+```{r}
+optResult <- optimizeScoreFunction(
+    dataArray = dataArray, optimParams = optimParams, getIneqSat = TRUE
+)
+```
+
+We can now see the optimal parameter vector, and how many inequalities are
+satisfied across all markets.
+```{r}
+optResult$optArg
+optResult$optVal
+```
+
+## Taking a closer look
+
+# Calculating the confidence intervals
