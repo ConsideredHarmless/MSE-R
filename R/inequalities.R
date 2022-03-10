@@ -3,9 +3,12 @@
 #' Computes the upstream and downstream indices for each inequality term for all
 #' markets.
 #'
-#' @param mate TODO
-#' @return TODO A list of 4-tuples containing indices. For that structure, see
-#' CineqmembersSingle
+#' @inheritSection CineqmembersSingle Inequality members structure
+#'
+#' @param mate See the return value of \code{importMatched}.
+#' @return A list of structures for each market. See the appropriate section for
+#'   its definition.
+#'
 #' @export
 Cineqmembers <- function(mate) {
     mateList <- lapply(mate, as.list)
@@ -25,18 +28,7 @@ Cineqmembers <- function(mate) {
 #' where \eqn{i} and \eqn{j} switch partners.
 #'
 #' @section Inequality members structure:
-#' TODO
-#'
-#' @param marketMates A list with members:
-#' \tabular{ll}{
-#'   \code{$UpStream} \tab A vector of the unique indices of upstreams for this
-#'     market.\cr
-#'   \code{$DownMates} \tab A list with n elements, where n is the number of
-#'     upstreams. Element \code{$DownMates[[i]]} is a vector of the downstream
-#'     indices which the \code{i}-th upstream is matched to.
-#' }
-#'
-#' @return A list with members:
+#' The inequality members structure is list with members:
 #' \tabular{ll}{
 #'   \code{$fctUpIdxs} \tab A list of upstream index vectors for the factual case.\cr
 #'   \code{$fctDnIdxs} \tab A list of downstream index vectors for the factual case.\cr
@@ -48,6 +40,19 @@ Cineqmembers <- function(mate) {
 #' Each list element of the first four members corresponds to a single
 #' inequality. That element is a vector of indices, with one index for each
 #' term in that inequality.
+#'
+#' @param marketMates A list with members:
+#' \tabular{ll}{
+#'   \code{$UpStream} \tab A vector of the unique indices of upstreams for this
+#'     market.\cr
+#'   \code{$DownMates} \tab A list with n elements, where n is the number of
+#'     upstreams. Element \code{$DownMates[[i]]} is a vector of the downstream
+#'     indices which the \code{i}-th upstream is matched to.
+#' }
+#'
+#' @return See the section "Inequality members structure".
+#'
+#' @keywords internal
 CineqmembersSingle <- function(marketMates) {
     uIdxs <- marketMates$UpStream
     n <- length(uIdxs)
@@ -78,16 +83,21 @@ CineqmembersSingle <- function(marketMates) {
         numIneqs  = numIneqs))
 }
 
-# Cinequalities(payoffFunction, ineqmembers) computes, for each inequality,
-# the value
+#' Evaluate inequalities
+#'
+#' Computes for each inequality the value
 #   (sum of payoff function values over LHS terms) -
 #   (sum of payoff function values over RHS terms).
-# payoffFunction is a function which takes three arguments (mIdx, uIdx, dIdx)
-# and returns the value of the payoff function for that triple.
-# For the structure ineqmembers, see the function Cineqmembers.
-#
-# Returns a list of vectors, one for each market. Each vector element
-# corresponds to a single inequality.
+#'
+#' @param payoffFunction A function which takes three arguments
+#'   (\code{mIdx}, \code{uIdx}, \code{dIdx}) and returns the value of the payoff
+#'   function for that triple.
+#' @param ineqmembers The output of \code{Cineqmembers}.
+#'
+#' @return A list of vectors, one for each market. Each vector element
+#'   corresponds to a single inequality.
+#'
+#' @export
 Cinequalities <- function(payoffFunction, ineqmembers) {
     g <- function(mIdx, ineqmembersSingle) {
         f <- function(ineqIdx) {
@@ -114,7 +124,7 @@ Cinequalities <- function(payoffFunction, ineqmembers) {
 }
 
 # The next functions convert between the old and the new representations.
-# FIXME check if both work correctly. Use unit tests.
+# TODO check if both work correctly. Use unit tests.
 
 # TODO docs
 ineqmembersOldToNew <- function(ineqmembersOld) {
@@ -179,11 +189,39 @@ ineqmembersNewToOld <- function(ineqmembersNew) {
 # terms the given inequality has. The columns of the array have names
 # fctUpIdxs, fctDnIdxs, ,cfcUpIdxs, cfcDnIdxs. For information on those names,
 # see the documentation of CineqmembersSingle.
+
+#' Get indices for inequality
+#'
+#' Returns, for a given inequality, the 4-tuple of indices defining each term in
+#' that inequality. A convenience function.
+#'
+#' @param ineqmembersSingle An element of the list constructed by
+#'   \code{Cineqmembers},corresponding to a single market.
+#' @param ineqIdx The index of the inequality within that market.
+#'
+#' @return An array of dimension \code{(numTerms, 4)}, where \code{numTerms} is
+#'   the number of terms the given inequality has. The columns of the array have
+#'   names \code{fctUpIdxs}, \code{fctDnIdxs}, \code{cfcUpIdxs},
+#'   \code{cfcDnIdxs}. For information on those names, see the documentation of
+#'   \code{Cineqmembers}.
+#'
+#' @export
 getIneqTermsIdxs <- function(ineqmembersSingle, ineqIdx) {
     # [1:4] drops the $numIneqs member.
     return(do.call(cbind, lapply(ineqmembersSingle[1:4], "[[", ineqIdx)))
 }
 
+#' Get indices for all inequalities
+#'
+#' Similar to \code{getIneqTermsIdxs}, but works on all inequalities. A
+#' convenience function.
+#'
+#' @inheritParams getIneqTermsIdxs
+#'
+#' @return A list of arrays, one for each inequality. For the structure of those
+#'   arrays, see the return value of \code{getIneqTermsIdxs}.
+#'
+#' @export
 getAllIneqTermsIdxs <- function(ineqmembersSingle) {
     lapply(1:ineqmembersSingle$numIneqs,
            function(ineqIdx) { getIneqTermsIdxs(ineqmembersSingle, ineqIdx) })

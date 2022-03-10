@@ -17,18 +17,7 @@ indices which the \code{i}-th upstream is matched to.
 }}
 }
 \value{
-A list with members:
-\tabular{ll}{
-\code{$fctUpIdxs} \tab A list of upstream index vectors for the factual case.\cr
-\code{$fctDnIdxs} \tab A list of downstream index vectors for the factual case.\cr
-\code{$cfcUpIdxs} \tab A list of upstream index vectors for the counterfactual case.\cr
-\code{$cfcDnIdxs} \tab A list of downstream index vectors for the counterfactual case.\cr
-\code{$numIneqs}  \tab The number of inequalities for this market. Also the
-common length of the above lists.
-}
-Each list element of the first four members corresponds to a single
-inequality. That element is a vector of indices, with one index for each
-term in that inequality.
+See the section "Inequality members structure".
 }
 \description{
 Computes the upstream and downstream indices for each inequality term for a
@@ -44,6 +33,18 @@ where \eqn{i} and \eqn{j} switch partners.
 }
 \section{Inequality members structure}{
 
-TODO
+The inequality members structure is list with members:
+\tabular{ll}{
+\code{$fctUpIdxs} \tab A list of upstream index vectors for the factual case.\cr
+\code{$fctDnIdxs} \tab A list of downstream index vectors for the factual case.\cr
+\code{$cfcUpIdxs} \tab A list of upstream index vectors for the counterfactual case.\cr
+\code{$cfcDnIdxs} \tab A list of downstream index vectors for the counterfactual case.\cr
+\code{$numIneqs}  \tab The number of inequalities for this market. Also the
+common length of the above lists.
+}
+Each list element of the first four members corresponds to a single
+inequality. That element is a vector of indices, with one index for each
+term in that inequality.
 }
 
+\keyword{internal}

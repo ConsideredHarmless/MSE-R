@@ -7,13 +7,29 @@
 Cineqmembers(mate)
 }
 \arguments{
-\item{mate}{TODO}
+\item{mate}{See the return value of \code{importMatched}.}
 }
 \value{
-TODO A list of 4-tuples containing indices. For that structure, see
-CineqmembersSingle
+A list of structures for each market. See the appropriate section for
+its definition.
 }
 \description{
 Computes the upstream and downstream indices for each inequality term for all
 markets.
 }
+\section{Inequality members structure}{
+
+The inequality members structure is list with members:
+\tabular{ll}{
+\code{$fctUpIdxs} \tab A list of upstream index vectors for the factual case.\cr
+\code{$fctDnIdxs} \tab A list of downstream index vectors for the factual case.\cr
+\code{$cfcUpIdxs} \tab A list of upstream index vectors for the counterfactual case.\cr
+\code{$cfcDnIdxs} \tab A list of downstream index vectors for the counterfactual case.\cr
+\code{$numIneqs}  \tab The number of inequalities for this market. Also the
+common length of the above lists.
+}
+Each list element of the first four members corresponds to a single
+inequality. That element is a vector of indices, with one index for each
+term in that inequality.
+}
+
