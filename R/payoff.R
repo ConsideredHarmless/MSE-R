@@ -62,3 +62,42 @@ evaluatePayoffMatrix <- function(unevalPayoffMatrix, beta) {
 evaluatePayoffMatrices <- function(unevalPayoffMatrices, beta) {
     return(lapply(unevalPayoffMatrices, function(p) { evaluatePayoffMatrix(p, beta) }))
 }
+
+# TODO export
+# distanceMatricesMatrices[[m]][i, d, u] == attributeMatricesUp[[m]][i, u] * attributeMatricesDn[[m]][i, d]
+
+#' TODO
+#'
+#' @param attributeMatricesUp TODO
+#' @param attributeMatricesDn TODO
+#'
+#' @return TODO
+#' @export
+makeDistanceMatrices <- function(attributeMatricesUp, attributeMatricesDn) {
+    noM <- length(attributeMatricesUp)
+    distanceMatrices <- lapply(1:noM, function(mIdx) {
+        attrUp <- attributeMatricesUp[[mIdx]]
+        attrDn <- attributeMatricesDn[[mIdx]]
+        noAttr <- dim(attrUp)[1]
+        noU <- dim(attrUp)[2]
+        noD <- dim(attrDn)[2]
+        distList <- lapply(1:noAttr, function(k) { outer(attrDn[k, ], attrUp[k, ]) })
+        return(array(t(sapply(distList, as.vector)), c(noAttr, noD, noU)))
+    })
+    return(distanceMatrices)
+}
+
+# for (mIdx in 1:noM) {
+#     noU <- dataUnmatched$noU[[mIdx]]
+#     noD <- dataUnmatched$noD[[mIdx]]
+#     for (uIdx in 1:noU) {
+#         for (dIdx in 1:noD) {
+#             for (kIdx in 1:noAttr) {
+#                 u <- attributeMatricesUp[[mIdx]][kIdx, uIdx]
+#                 v <- attributeMatricesDn[[mIdx]][kIdx, dIdx]
+#                 w <- dms[[mIdx]][kIdx, dIdx, uIdx]
+#                 print(c(mIdx, uIdx, dIdx, kIdx, w - u * v))
+#             }
+#         }
+#     }
+# }

@@ -2,7 +2,10 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^\.github$
-^\.old-doc$
-^\.old-src$
-^\.old-testing$
-^\.old-examples$
+^doc$
+^Meta$
+^old-doc$
+^old-src$
+^old-testing$
+^old-examples$
+^maxscoreest.*pdf$

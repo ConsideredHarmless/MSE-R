@@ -1,6 +1,6 @@
 Package: maxscoreest
 Title: Maximum Score Estimator
-Version: 0.0.0.9000
+Version: 2.0.0.9000
 Authors@R: c(
     person("Theodore", "Chronis", email = "t.n.chronis@gmail.com",
         role = c("aut", "cre")),
@@ -23,7 +23,6 @@ Imports:
     lpSolve,
     stats
 Suggests: 
-    rmarkdown,
     knitr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

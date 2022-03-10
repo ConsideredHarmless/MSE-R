@@ -29,7 +29,7 @@ You can install the development version of **maxscoreest** from
 
 ```r
 install.packages("devtools")
-devtools::install_github("ConsideredHarmless/MSE-R")
+devtools::install_github("ConsideredHarmless/MSE-R", ref = "package")
 ```
 
 ## Example
@@ -42,18 +42,32 @@ filename <- system.file("extdata", "precomp_testdata.dat", package = "maxscorees
 data <- importMatched(filename)
 ineqmembers <- Cineqmembers(data$mate)
 dataArray <- CdataArray(data$distanceMatrices, ineqmembers)
-coefficient1 <- 1
-bounds <- makeBounds(data$noAttr, 100)
-optimParams <- list(lower=bounds$lower, upper=bounds$upper, NP=50, F=0.6, CR=0.5,
-                    itermax=100, trace=FALSE, reltol=1e-3)
-optimizeScoreArgs <- list(dataArray = dataArray,
-                          coefficient1 = coefficient1,
-                          optimParams = optimParams,
-                          getIneqSat = TRUE,
-                          permuteInvariant = TRUE)
-optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
-print(optResult)
+bounds <- makeBounds(matchedData$noAttr, 100)
+optimParams <- list(NP=50, F=0.6, CR=0.5, itermax=100, trace=FALSE, reltol=1e-3)
+set.seed(42)
+optResult <- optimizeScoreFunction(
+    dataArray = dataArray,
+    bounds = bounds,
+    optimParams = optimParams,
+    getIneqSat = TRUE,
+    permuteInvariant = TRUE
+)
+print(optResult$optArg)
+print(optResult$optVal)
 print(calcPerMarketStats(optResult$ineqSat, makeGroupIDs(ineqmembers)))
+```
+
+For an in-depth look, you can read the vignettes provided with the package:
+
+```r
+browseVignettes("maxscoreest")
+```
+
+or, using the RStudio browser,
+
+```r
+vignette("matched", package = "maxscoreest")
+vignette("unmatched", package = "maxscoreest")
 ```
 
 ## References

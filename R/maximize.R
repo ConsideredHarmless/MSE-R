@@ -5,14 +5,18 @@
 #'
 #' @section Optimization methods:
 #' TODO
+#' See \code{DEoptim::DEoptim.control}.
 #'
 #' @param dataArray The output of \code{CdataArray}.
+#' @param bounds A list with elements \code{$lower}, \code{$upper} which are
+#'   vectors defining lower and upper bounds for each variable in the objective
+#'   function.
 #' @param coefficient1 (optional) The first coefficient of the extended
 #'   parameter vector. See \code{makeObjFun} for more details.
 #' @param method (optional) A string denoting the optimization method.
 #'   Currently, only \code{"DEoptim"} (the default value) is supported.
 #' @param optimParams (optional) A list of parameters to be passed to the
-#'   optimization routine. Defaults to the empty list (TODO see do.call).
+#'   optimization routine. Defaults to the empty list (TODO see \code{do.call}).
 #' @param getIneqSat (optional) A boolean indicating whether to include the
 #'   \code{$ineqSat} member in the result. Defaults to \code{FALSE}.
 #' @param permuteInvariant (optional) TODO. Defaults to \code{FALSE}.
@@ -28,7 +32,8 @@
 #' }
 #' @export
 optimizeScoreFunction <- function(
-        dataArray, coefficient1 = NULL, method = NULL, optimParams = NULL,
+        dataArray, bounds,
+        coefficient1 = NULL, method = NULL, optimParams = NULL,
         getIneqSat = FALSE, permuteInvariant = FALSE) {
     if (is.null(method)) {
         method <- "DEoptim"
@@ -54,7 +59,7 @@ optimizeScoreFunction <- function(
                 makeObjFunArgs$coefficient1 <- coefficient1
             }
             objFun <- do.call(makeObjFun, makeObjFunArgs)
-            result <- maximizeDEoptim(objFun, optimParams)
+            result <- maximizeDEoptim(objFun, bounds$lower, bounds$upper, optimParams)
         },
         stop(sprintf("optimizeScoreFunction: method %s is not implemented",
                       method))
@@ -71,9 +76,9 @@ optimizeScoreFunction <- function(
     return(result)
 }
 
-maximizeDEoptim <- function(objective, params) {
-    control <- params[c("NP", "itermax", "trace", "reltol", "CR", "F")]
-    outDEoptim <- DEoptim::DEoptim(objective, params$lower, params$upper, control = control)
+# TODO unname?
+maximizeDEoptim <- function(objective, lower, upper, control) {
+    outDEoptim <- DEoptim::DEoptim(objective, lower, upper, control = control)
     optArg <-  outDEoptim$optim$bestmem
     optVal <- -outDEoptim$optim$bestval
     return(list(optVal = optVal, optArg = optArg))

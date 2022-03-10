@@ -38,5 +38,7 @@ examples/*
 !examples/*.Rmd
 
 # Manual
-maxscoreest*.pdf
-inst/doc
+/maxscoreest*.pdf
+
+/doc/
+/Meta/

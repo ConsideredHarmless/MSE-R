@@ -57,31 +57,34 @@ generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
 #               (numFreeAttrs, numSubsamples).
 
 #' TODO
+#' @param dataArray TODO
+#' @param groupIDs TODO
+#' @param pointEstimate TODO
 #' @param ssSize TODO
 #' @param numSubsamples TODO
-#' @param pointEstimate TODO
-#' @param numFreeAttrs TODO
-#' @param groupIDs TODO
-#' @param dataArray TODO
 #' @param optimizeScoreArgs TODO
 #' @param options TODO
 #' @return TODO
 #' @export
-pointIdentifiedCR <- function(ssSize, numSubsamples, pointEstimate,
-                                 numFreeAttrs, groupIDs, dataArray,
-                                 optimizeScoreArgs, options=list()) {
-    defaultOptions <- list(progressUpdate=0, confidenceLevel=0.95,
-                           asymptotics="nests")
+pointIdentifiedCR <- function(
+        dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,
+        optimizeScoreArgs, options = NULL) {
+    defaultOptions <- list(
+        progressUpdate = 0, confidenceLevel = 0.95, asymptotics = "nests")
+    if (is.null(options)) {
+        options <- list()
+    }
     for (name in names(defaultOptions)) {
         if (is.null(options[[name]])) {
             options[[name]] <- defaultOptions[[name]]
         }
     }
-    progress  <- options[["progressUpdate"]]
-    confLevel <- options[["confidenceLevel"]]
-    asymp     <- options[["asymptotics"]]
+    progress  <- options$progressUpdate
+    confLevel <- options$confidenceLevel
+    asymp     <- options$asymptotics
 
     alpha <- 1 - confLevel
+    numFreeAttrs <- dim(dataArray)[1] - 1
 
     # This block sets variables that are slightly different for each of the
     # two asymptotics. subNormalization is the standardization multiplier
@@ -105,7 +108,6 @@ pointIdentifiedCR <- function(ssSize, numSubsamples, pointEstimate,
         }
         return(ssEstimate)
     }
-    # TODO transpose
     ssEstimates <- sapply(1:numSubsamples, calcEstimate)
     estimates   <- subNormalization * (ssEstimates - pointEstimate)
 
@@ -136,7 +138,7 @@ pointIdentifiedCR <- function(ssSize, numSubsamples, pointEstimate,
     crSymm <- sapply(1:numFreeAttrs, calcConfRegionSymm)
     crAsym <- sapply(1:numFreeAttrs, calcConfRegionAsym)
 
-    result <- list(crSymm = crSymm, crAsym = crAsym, estimates = estimates)
+    result <- list(crSymm = crSymm, crAsym = crAsym, estimates = t(estimates))
     return(result)
 }
 
@@ -145,7 +147,7 @@ pointIdentifiedCR <- function(ssSize, numSubsamples, pointEstimate,
 #' @return TODO
 #' @export
 plotCR <- function(estimates) {
-    estimates <- t(estimates)
+    estimates <- estimates
     plot(c(col(estimates)), c(estimates), type="p", col="blue", xlab="", ylab="")
     graphics::abline(h=0, v=0)
 }

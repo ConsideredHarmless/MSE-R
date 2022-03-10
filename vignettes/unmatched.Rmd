@@ -1,0 +1,48 @@
+---
+title: "Calculating optimal matching from unmatched data"
+author: "Panaghis Mavrokefalos"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Calculating optimal matching from unmatched data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# A quick example
+
+```{r setup}
+library(maxscoreest)
+```
+
+```{r}
+filenameUp <- system.file("extdata", "unmatched_testdata_up.csv", package = "maxscoreest")
+filenameDn <- system.file("extdata", "unmatched_testdata_dn.csv", package = "maxscoreest")
+dataUnmatched <- importUnmatched(filenameUp, filenameDn)
+```
+
+```{r}
+unevalPayoffMatrices <- makeDistanceMatrices(
+    dataUnmatched$attributeMatricesUp,
+    dataUnmatched$attributeMatricesDn)
+```
+
+```{r}
+beta <- c(0.5, 1.5)
+```
+
+```{r}
+payoffMatrices <- evaluatePayoffMatrices(unevalPayoffMatrices, beta)
+```
+
+```{r}
+matchMatrices <- CmatchMatrices(
+    payoffMatrices, dataUnmatched$quotasUp, dataUnmatched$quotasDn)
+matchMatrices
+```

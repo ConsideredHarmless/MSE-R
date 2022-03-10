@@ -5,28 +5,25 @@
 \title{TODO}
 \usage{
 pointIdentifiedCR(
+  dataArray,
+  groupIDs,
+  pointEstimate,
   ssSize,
   numSubsamples,
-  pointEstimate,
-  numFreeAttrs,
-  groupIDs,
-  dataArray,
   optimizeScoreArgs,
-  options = list()
+  options = NULL
 )
 }
 \arguments{
-\item{ssSize}{TODO}
-
-\item{numSubsamples}{TODO}
-
-\item{pointEstimate}{TODO}
-
-\item{numFreeAttrs}{TODO}
+\item{dataArray}{TODO}
 
 \item{groupIDs}{TODO}
 
-\item{dataArray}{TODO}
+\item{pointEstimate}{TODO}
+
+\item{ssSize}{TODO}
+
+\item{numSubsamples}{TODO}
 
 \item{optimizeScoreArgs}{TODO}
 

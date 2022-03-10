@@ -38,6 +38,46 @@ importCommon <- function(filename) {
         upIdxs=upIdxs, dnIdxs=dnIdxs))
 }
 
+#' @import data.table
+#' @keywords internal
+importUnmatchedCommon <- function(filename, filetype) {
+    Market <- UpStream <- DownStream <- NULL
+    # Importing data
+    DT <- fread(filename, header=TRUE)
+    # Adding keys for fast filtering
+    streamCol <- switch(filetype, "up" = "UpStream", "dn" = "DownStream")
+    stopifnot(!is.null(streamCol))
+    keycols <- c("Market", streamCol)
+    setkeyv(DT, cols = keycols)
+    # Header names
+    header <- colnames(DT)
+    # Calculating number of attributes
+    attrColIdxs <- which(sapply(
+        header,
+        function(s) { startsWith(s, "Attribute") }))
+    noAttr <- length(attrColIdxs)
+    quotaColIdxs <- which(sapply(
+        header,
+        function(s) { s == "Quota" }))
+    stopifnot(length(quotaColIdxs) == 1)
+    quotaColIdx <- quotaColIdxs[1]
+    # Calculating number of markets
+    marketIdxs = unique(DT, by = "Market")[[1]]
+    checkIndices(marketIdxs)
+    noM <- length(marketIdxs)
+    # Calculating number of up streams and down streams in each market
+    streamIdxs <- switch(filetype,
+        "up" = DT[, list(x = list(unique(UpStream))),   by = Market]$x,
+        "dn" = DT[, list(x = list(unique(DownStream))), by = Market]$x
+    )
+    lapply(streamIdxs, checkIndices)
+    noS <- unlist(lapply(streamIdxs, length))
+    return(list(
+        DT=DT, header=header, noM=noM, noS=noS, noAttr=noAttr,
+        marketIdxs=marketIdxs, attrColIdxs=attrColIdxs, quotaColIdxs=quotaColIdxs,
+        streamIdxs=streamIdxs))
+}
+
 #' dimorder dummy
 #' @section Dimension ordering:
 #' Note the unexpected ordering of the dimensions. We use this convention in
@@ -156,24 +196,27 @@ extractMate <- function(marketData) {
     return(mate)
 }
 
-# TODO This is the same as extractMatchMatrices -- merge.
-extractPayoffMatrices <- function(marketData) {
-    # payoffMatrices is now a list of noM arrays (one for each market) of
-    # dimension (noD[mIdx], noU[mIdx]).
-    # payoffMatrices[[mIdx]][dIdx, uIdx] is the value of the payoff function
-    # for that index triple.
-    payoffMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
-        Market <- Payoff <- NULL
-        payoffTable <- marketData$DT[Market == mIdx, Payoff]
-        p <- marketData$noU[mIdx]
-        q <- marketData$noD[mIdx]
-        return(array(unlist(payoffTable), c(q, p)))
+extractAttributeMatrices <- function(marketData) {
+    attributeMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
+        Market <- NULL
+        # The unname is important!
+        colSel <- unname(marketData$attrColIdxs)
+        attrTable <- marketData$DT[Market == mIdx, colSel, with=FALSE]
+        p <- marketData$noS[mIdx]
+        q <- marketData$noAttr
+        arr <- array(unlist(attrTable), c(p, q))
+        return(t(arr))
     })
-    return(payoffMatrices)
+    return(attributeMatrices)
 }
 
-# TODO
-extractQuotas <- function(marketData) {}
+extractQuotas <- function(marketData) {
+    quotas <- lapply(marketData$marketIdxs, function(mIdx) {
+        Market <- Quota <- NULL
+        return(marketData$DT[Market == mIdx, Quota])
+    })
+    return(quotas)
+}
 
 #' Import matched market data
 #'
@@ -243,14 +286,35 @@ importMatched <- function(filename) {
 }
 
 # For the inverse problem.
-# TODO docs
-importUnmatched <- function(filename) {
-    marketData <- importCommon(filename)
-    payoffMatrices <- extractPayoffMatrices(marketData)
-    # TODO
-    quotas <- extractQuotas(marketData)
-    rest <- list(payoffMatrices=payoffMatrices, quotas=quotas)
-    return(c(marketData[2:6], rest))
+# TODO docs, export
+#' Title
+#'
+#' @param filenameUp TODO
+#' @param filenameDn TODO
+#'
+#' @return TODO
+#' @export
+importUnmatched <- function(filenameUp, filenameDn) {
+    marketDataUp <- importUnmatchedCommon(filenameUp, "up")
+    marketDataDn <- importUnmatchedCommon(filenameDn, "dn")
+    stopifnot(
+        marketDataUp$noM    == marketDataDn$noM,
+        marketDataUp$noAttr == marketDataDn$noAttr)
+    attributeMatricesUp <- extractAttributeMatrices(marketDataUp)
+    attributeMatricesDn <- extractAttributeMatrices(marketDataDn)
+    quotasUp <- extractQuotas(marketDataUp)
+    quotasDn <- extractQuotas(marketDataDn)
+    result <- list(
+        noM = marketDataUp$noM,
+        noU = marketDataUp$noS,
+        noD = marketDataDn$noS,
+        noAttr = marketDataUp$noAttr,
+        attributeMatricesUp = attributeMatricesUp,
+        attributeMatricesDn = attributeMatricesDn,
+        quotasUp = quotasUp,
+        quotasDn = quotasDn
+    )
+    return(result)
 }
 
 checkIndices <- function(idxs) {

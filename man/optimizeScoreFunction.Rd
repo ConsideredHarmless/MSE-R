@@ -6,6 +6,7 @@
 \usage{
 optimizeScoreFunction(
   dataArray,
+  bounds,
   coefficient1 = NULL,
   method = NULL,
   optimParams = NULL,
@@ -16,6 +17,10 @@ optimizeScoreFunction(
 \arguments{
 \item{dataArray}{The output of \code{CdataArray}.}
 
+\item{bounds}{A list with elements \code{$lower}, \code{$upper} which are
+vectors defining lower and upper bounds for each variable in the objective
+function.}
+
 \item{coefficient1}{(optional) The first coefficient of the extended
 parameter vector. See \code{makeObjFun} for more details.}
 
@@ -23,7 +28,7 @@ parameter vector. See \code{makeObjFun} for more details.}
 Currently, only \code{"DEoptim"} (the default value) is supported.}
 
 \item{optimParams}{(optional) A list of parameters to be passed to the
-optimization routine. Defaults to the empty list (TODO see do.call).}
+optimization routine. Defaults to the empty list (TODO see \code{do.call}).}
 
 \item{getIneqSat}{(optional) A boolean indicating whether to include the
 \code{$ineqSat} member in the result. Defaults to \code{FALSE}.}
@@ -48,5 +53,6 @@ function is created using \code{makeObjFun}.
 \section{Optimization methods}{
 
 TODO
+See \code{DEoptim::DEoptim.control}.
 }
 
