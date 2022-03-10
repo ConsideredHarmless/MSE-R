@@ -2,18 +2,61 @@
 % Please edit documentation in R/import.R
 \name{importUnmatched}
 \alias{importUnmatched}
-\title{Title}
+\title{Import unmatched market data}
 \usage{
 importUnmatched(filenameUp, filenameDn)
 }
 \arguments{
-\item{filenameUp}{TODO}
-
-\item{filenameDn}{TODO}
+\item{filenameUp, filenameDn}{Absolute or relative path to the files for the
+upstream and the downstream data respectively. See also the parameters to
+\code{\link[data.table]{fread}}.}
 }
 \value{
-TODO
+A list with members:
+\tabular{ll}{
+\code{$noM}                \tab The number of markets.\cr
+\code{$noU}, \code{$noD}   \tab Vectors of size \code{$noM}, whose
+\code{m}-th element is the number of upstreams and downstreams
+respectively in the \code{m}-th market.\cr
+\code{$noAttr}             \tab The number of distance attributes.\cr
+\code{$attributeMatricesUp}, \code{$attributeMatricesDn}
+\tab A list of arrays of upstream and downstream
+attribute values respectively, one for each market. See the appropriate
+section for their definition.\cr
+\code{$quotasUp}, \code{$quotasDn}
+\tab A list of vectors of quotas for the
+upstreams and downstreams respectively.\cr
+}
 }
 \description{
-Title
+Reads CSV files containing data for unmatched markets.
 }
+\section{File structure}{
+
+
+Each file must be a delimiter-separated file with a header. It must contain
+the following fields:
+\tabular{ll}{
+\code{Market} \tab The market index.\cr
+\code{UpStream} or \code{DownStream} \tab The stream index.\cr
+\code{Quota} \tab The quota for that stream.
+}
+It must also contain at least one field with a name starting with
+\code{Attribute}. These fields containg distance attribute values. The order
+they appear in, and not their full name, specifies their actual order.
+
+Indices should have consecutive values, starting from \code{1}. Distance
+attribute values should be numerical.
+
+Each row should correspond to a unique triple of market, upstream, and
+downstream indices.
+}
+
+\section{Attribute matrix structure}{
+
+Let \code{mIdx} index a market. Each \code{attributeMatrix} is an array
+of dimension \code{(noAttr, noS[mIdx])}, where \code{noS[mIdx]} is the size
+of the stream (up- or down-). The element indexed by \code{[i, sIdx]} gives
+the \code{i}-th attribute value for the pair \code{(mIdx, sIdx)}.
+}
+

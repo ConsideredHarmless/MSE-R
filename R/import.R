@@ -196,6 +196,20 @@ extractMate <- function(marketData) {
     return(mate)
 }
 
+#' Extract attributed matrices from imported table
+#'
+#' @param marketData The return value of \code{importCommonUnmatched}.
+#'
+#' @section Attribute matrix structure:
+#' Let \code{mIdx} index a market. Each \code{attributeMatrix} is an array
+#' of dimension \code{(noAttr, noS[mIdx])}, where \code{noS[mIdx]} is the size
+#' of the stream (up- or down-). The element indexed by \code{[i, sIdx]} gives
+#' the \code{i}-th attribute value for the pair \code{(mIdx, sIdx)}.
+#'
+#' @inheritSection dimorder Dimension ordering
+#'
+#' @return A list of attribute matrices.
+#' @keywords internal
 extractAttributeMatrices <- function(marketData) {
     attributeMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
         Market <- NULL
@@ -210,6 +224,12 @@ extractAttributeMatrices <- function(marketData) {
     return(attributeMatrices)
 }
 
+#' Extract quota vectors from imported table
+#'
+#' @param marketData The return value of \code{importUnmatchedCommon}.
+#'
+#' @return A list of quota vectors, on for each market.
+#' @keywords internal
 extractQuotas <- function(marketData) {
     quotas <- lapply(marketData$marketIdxs, function(mIdx) {
         Market <- Quota <- NULL
@@ -233,13 +253,13 @@ extractQuotas <- function(marketData) {
 #'   \code{Match} \tab \code{1} if this triple matches, \code{0} otherwise.
 #' }
 #' It must also contain at least one field with a name starting with
-#' \code{Distance}. These fields containg distance attribute values. The order
+#' \code{Distance}. These fields contain attribute values. The order
 #' they appear in, and not their full name, specifies their actual order.
 #'
 #' Indices should have consecutive values, starting from \code{1}. Distance
 #' attribute values should be numerical.
 #'
-#' Each row should correspond to a unique triple of market, upstream, and
+#' Each row should correspond to a unique pair of market and upstream or
 #' downstream indices.
 #'
 #' @inheritSection extractDistanceMatrices Distance matrix structure
@@ -285,14 +305,51 @@ importMatched <- function(filename) {
     return(c(marketData[2:6], rest))
 }
 
-# For the inverse problem.
-# TODO docs, export
-#' Title
+#' Import unmatched market data
 #'
-#' @param filenameUp TODO
-#' @param filenameDn TODO
+#' Reads CSV files containing data for unmatched markets.
 #'
-#' @return TODO
+#' @section File structure:
+#'
+#' Each file must be a delimiter-separated file with a header. It must contain
+#' the following fields:
+#' \tabular{ll}{
+#'   \code{Market} \tab The market index.\cr
+#'   \code{UpStream} or \code{DownStream} \tab The stream index.\cr
+#'   \code{Quota} \tab The quota for that stream.
+#' }
+#' It must also contain at least one field with a name starting with
+#' \code{Attribute}. These fields containg distance attribute values. The order
+#' they appear in, and not their full name, specifies their actual order.
+#'
+#' Indices should have consecutive values, starting from \code{1}. Distance
+#' attribute values should be numerical.
+#'
+#' Each row should correspond to a unique triple of market, upstream, and
+#' downstream indices.
+#'
+#' @inheritSection extractAttributeMatrices Attribute matrix structure
+#'
+#' @param filenameUp,filenameDn Absolute or relative path to the files for the
+#'   upstream and the downstream data respectively. See also the parameters to
+#'   \code{\link[data.table]{fread}}.
+#'
+#' @return A list with members:
+#' \tabular{ll}{
+#'   \code{$noM}                \tab The number of markets.\cr
+#'   \code{$noU}, \code{$noD}   \tab Vectors of size \code{$noM}, whose
+#'     \code{m}-th element is the number of upstreams and downstreams
+#'     respectively in the \code{m}-th market.\cr
+#'   \code{$noAttr}             \tab The number of distance attributes.\cr
+#'   \code{$attributeMatricesUp}, \code{$attributeMatricesDn}
+#'                              \tab A list of arrays of upstream and downstream
+#'     attribute values respectively, one for each market. See the appropriate
+#'     section for their definition.\cr
+#'   \code{$quotasUp}, \code{$quotasDn}
+#'                              \tab A list of vectors of quotas for the
+#'     upstreams and downstreams respectively.\cr
+#' }
+#'
 #' @export
 importUnmatched <- function(filenameUp, filenameDn) {
     marketDataUp <- importUnmatchedCommon(filenameUp, "up")
@@ -317,6 +374,14 @@ importUnmatched <- function(filenameUp, filenameDn) {
     return(result)
 }
 
+#' Check if indices are valid
+#'
+#' Checks if the given vector of index values is non-empty and consecutive,
+#' with values starting from \code{1}. Raises a warning otherwise.
+#'
+#' @param idxs A vector of index values to be checked.
+#'
+#' @keywords internal
 checkIndices <- function(idxs) {
     # Check if the index vector is not empty.
     if (length(idxs) == 0) {

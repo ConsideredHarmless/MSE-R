@@ -47,13 +47,13 @@ the following fields:
 \code{Match} \tab \code{1} if this triple matches, \code{0} otherwise.
 }
 It must also contain at least one field with a name starting with
-\code{Distance}. These fields containg distance attribute values. The order
+\code{Distance}. These fields contain attribute values. The order
 they appear in, and not their full name, specifies their actual order.
 
 Indices should have consecutive values, starting from \code{1}. Distance
 attribute values should be numerical.
 
-Each row should correspond to a unique triple of market, upstream, and
+Each row should correspond to a unique pair of market and upstream or
 downstream indices.
 }
 
