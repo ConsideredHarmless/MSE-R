@@ -1,10 +1,10 @@
-# makeGroupIDs(ineqmembers) creates the initial group IDs.
-# For the structure ineqmembers, see Cineqmembers.
-# Returns a vector containing noU[mIdx] repetitions of the value mIdx, for each
-# mIdx in the range 1:noM.
-#' TODO
-#' @param ineqmembers TODO
-#' @return TODO
+#' Assign market indices to inequality members
+#'
+#' @param ineqmembers The result of \code{Cineqmembers}.
+#' @return A vector \code{g} of market indices, with the same length as
+#'   \code{ineqmembers}, with the property that if \code{g[ineqIdx]} is equal to
+#'   \code{mIdx}, then the \code{ineqIdx}-th inequality belongs to the
+#'   \code{mIdx}-th market.
 #' @export
 makeGroupIDs <- function(ineqmembers) {
     f <- function(mIdx) {
@@ -21,6 +21,20 @@ makeGroupIDs <- function(ineqmembers) {
 # For the structure dataArray, see the function CdataArray.
 # Returns an array with the same structure as dataArray, containing only the
 # columns corresponding to inequalities in the (randomly) selected markets.
+
+#' Randomly subsample data array
+#'
+#' Generates a reduced data array, with columns corresponding to a randomly
+#' selected subset of the original markets.
+#'
+#' @param ssSize The size of the market subset. Must not be greater than the
+#'   number of markets.
+#' @param groupIDs The output of \code{makeGroupIDs}.
+#' @param dataArray The output of \code{CdataArray}.
+#'
+#' @return An array with the columns of \code{dataArray} belonging to the
+#'   selected subset of markets.
+#' @keywords internal
 generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
     uniqueGroups <- unique(groupIDs)
     selectedGroups <- sort(sample(uniqueGroups, ssSize))
@@ -30,41 +44,47 @@ generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
     return(dataArray[, qualifiedIndices])
 }
 
-# TODO update docs
-# pointIdentifiedCR(...) generates a confidence region estimate using
-# subsampling.
-#
-# Parameters:
-# ssSize          The size of each subsample to be estimated.
-# numSubsamples   The number of subsamples to use in estimating the confidence
-#                 region.
-# pointEstimate   The point estimate to build the confidence region around
-#                 (typically the output of pairwiseMSE).
-# numFreeAttrs    Should be equal to noAttr-1.
-# groupIDs        A data map used to generate the subsamples. See makeGroupIDs.
-# dataArray       The dataArray parameter used in pairwiseMSE.
-# optimParams     The parameters passed to the maximize function.
-# options         An optional parameter specifying options. Available options are:
-#   progressUpdate      How often to print progress (0 to disable). Default=0.
-#   confidenceLevel     The confidence level of the region. Default=.95.
-#   asymptotics         Type of asymptotics to use (nests or coalitions). Default=nests.
-#
-# Returns a list with elements:
-#   crSymm      The confidence regions of each parameter for the symmetric case,
-#               as an array of dimension (2, numFreeAttrs).
-#   crAsym      Same as above, for the asymmetric case.
-#   estimates   The estimates for each parameters, as an array of dimension
-#               (numFreeAttrs, numSubsamples).
-
-#' TODO
-#' @param dataArray TODO
-#' @param groupIDs TODO
-#' @param pointEstimate TODO
-#' @param ssSize TODO
-#' @param numSubsamples TODO
-#' @param optimizeScoreArgs TODO
-#' @param options TODO
-#' @return TODO
+#' Calculate confidence region
+#'
+#' Generates a confidence region estimate using subsampling.
+#'
+#' The estimates are calculated by running the score optimization procedure for
+#' many different randomly selected subsets of markets.
+#'
+#' This function calls \code{optimizeScoreFunction}, therefore we require a list
+#' with arguments to be passed to it. The argument \code{optimizeScoreArgs}
+#' should contain those arguments contained in a list, except \code{dataArray},
+#' such that when \code{dataArray} is assigned to \code{optimizeScoreArgs}, the
+#' call \code{do.call(optimizeScoreFunction, optimizeScoreArgs)} is valid.
+#'
+#' @param dataArray The output of \code{dataArray}.
+#' @param groupIDs The output of \code{makeGroupIDs}.
+#' @param pointEstimate The optimal parameters, as calculated by
+#'   \code{optimizeScoreFunction}.
+#' @param ssSize The size of the market subset used in subsampling. Must not be
+#'   greater than the number of markets.
+#' @param numSubsamples The number of subsamples.
+#' @param optimizeScoreArgs A list with the keyword arguments to be used when
+#'   \code{optimizeScoreFunction} is called. All non-optional arguments should
+#'   be present, except \code{dataArray}.
+#' @param options A list of options:
+#'   \tabular{ll}{
+#'     \code{progressUpdate}  \tab How often to print progress. Defaults to
+#'       \code{0} (never). \cr
+#'     \code{confidenceLevel} \tab The confidence level of the region. Defaults
+#'       to \code{0.95}. \cr
+#'     \code{asymptotics}     \tab Type of asymptotics to use. Supported values
+#'       are "nests" (default) or "coalitions".
+#'   }
+#' @return A list with members:
+#' \tabular{ll}{
+#'   \code{$crSymm}    \tab The confidence regions of each parameter for the
+#'     symmetric case, as an array of dimension \code{(2, numFreeAttrs)}, where
+#'     \code{numFreeAttrs} is the total number of attributes minus 1. \cr
+#'   \code{$crAsym}    \tab Same as above, for the asymmetric case. \cr
+#'   \code{$estimates} \tab The estimates for each parameter, as an array of
+#'     dimension \code{(numSubsamples, numFreeAttrs)}.
+#' }
 #' @export
 pointIdentifiedCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,
@@ -142,9 +162,10 @@ pointIdentifiedCR <- function(
     return(result)
 }
 
-#' TODO
-#' @param estimates TODO
-#' @return TODO
+#' Plots confidence region estimates
+#'
+#' A convenience function that creates a plot of each parameter estimate.
+#' @param estimates See the output of \code{pointIdentifiedCR}.
 #' @export
 plotCR <- function(estimates) {
     estimates <- estimates

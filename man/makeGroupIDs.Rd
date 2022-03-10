@@ -2,16 +2,19 @@
 % Please edit documentation in R/confidence.R
 \name{makeGroupIDs}
 \alias{makeGroupIDs}
-\title{TODO}
+\title{Assign market indices to inequality members}
 \usage{
 makeGroupIDs(ineqmembers)
 }
 \arguments{
-\item{ineqmembers}{TODO}
+\item{ineqmembers}{The result of \code{Cineqmembers}.}
 }
 \value{
-TODO
+A vector \code{g} of market indices, with the same length as
+\code{ineqmembers}, with the property that if \code{g[ineqIdx]} is equal to
+\code{mIdx}, then the \code{ineqIdx}-th inequality belongs to the
+\code{mIdx}-th market.
 }
 \description{
-TODO
+Assign market indices to inequality members
 }

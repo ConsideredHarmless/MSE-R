@@ -2,16 +2,13 @@
 % Please edit documentation in R/confidence.R
 \name{plotCR}
 \alias{plotCR}
-\title{TODO}
+\title{Plots confidence region estimates}
 \usage{
 plotCR(estimates)
 }
 \arguments{
-\item{estimates}{TODO}
-}
-\value{
-TODO
+\item{estimates}{See the output of \code{pointIdentifiedCR}.}
 }
 \description{
-TODO
+A convenience function that creates a plot of each parameter estimate.
 }
