@@ -105,6 +105,7 @@ pointIdentifiedCR <- function(
 
     alpha <- 1 - confLevel
     numFreeAttrs <- dim(dataArray)[1] - 1
+    pointEstimate <- as.numeric(pointEstimate)
 
     # This block sets variables that are slightly different for each of the
     # two asymptotics. subNormalization is the standardization multiplier

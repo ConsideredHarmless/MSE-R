@@ -84,12 +84,43 @@ optimizeScoreFunction <- function(
     return(result)
 }
 
-# TODO unname?
-maximizeDEoptim <- function(objective, lower, upper, control) {
+#' Helper function for Differential Evolution
+#'
+#' An adapter function over \code{DEoptim::DEoptim}. When other methods are
+#' implemented, they should follow this signature (for the three required
+#' arguments).
+#'
+#' @param objective The objective function, produced by \code{makeObjFun}.
+#' @param lower,upper The lower and upper bounds in the box constraints.
+#' @param control A list passed to \code{DEoptim::DEoptim}. See also
+#'   \code{DEoptim::DEoptim.control}.
+#' @return A list with elements:
+#' \tabular{ll}{
+#'   \code{$optVal} \tab The optimal value of the objective function. \cr
+#'   \code{$optArg} \tab The argument for which the objective function attains
+#'     that value, as a vector.
+#' }
+#' @keywords internal
+maximizeDEoptim <- function(objective, lower, upper, control = list()) {
     outDEoptim <- DEoptim::DEoptim(objective, lower, upper, control = control)
     optArg <-  outDEoptim$optim$bestmem
     optVal <- -outDEoptim$optim$bestval
     return(list(optVal = optVal, optArg = optArg))
+}
+
+#' Get default values for the \code{optimParams} argument of \code{optimizeScoreFunction}
+#'
+#' @inheritParams optimizeScoreFunction
+#' @return A list of parameters.
+#' @export
+getDefaultOptimParams <- function(method = NULL) {
+    if (is.null(method)) {
+        method = "DEoptim"
+    }
+    if (method == "DEoptim") {
+        return(list(NP=50, F=0.6, CR=0.5, itermax=100, trace=FALSE, reltol=1e-3))
+    }
+    stop()
 }
 
 #' Create box constraints
