@@ -109,19 +109,3 @@ makeDistanceMatrices <- function(attributeMatricesUp, attributeMatricesDn) {
     })
     return(distanceMatrices)
 }
-
-# TODO move to unit tests
-# for (mIdx in 1:noM) {
-#     noU <- dataUnmatched$noU[[mIdx]]
-#     noD <- dataUnmatched$noD[[mIdx]]
-#     for (uIdx in 1:noU) {
-#         for (dIdx in 1:noD) {
-#             for (kIdx in 1:noAttr) {
-#                 u <- attributeMatricesUp[[mIdx]][kIdx, uIdx]
-#                 v <- attributeMatricesDn[[mIdx]][kIdx, dIdx]
-#                 w <- dms[[mIdx]][kIdx, dIdx, uIdx]
-#                 print(c(mIdx, uIdx, dIdx, kIdx, w - u * v))
-#             }
-#         }
-#     }
-# }
