@@ -21,11 +21,22 @@ knitr::opts_chunk$set(
 library(maxscoreest)
 ```
 
+First, we need to import the data into R. Let's use some synthetic data provided
+with the package.
+
 ```{r}
 filenameUp <- system.file("extdata", "unmatched_testdata_up.csv", package = "maxscoreest")
 filenameDn <- system.file("extdata", "unmatched_testdata_dn.csv", package = "maxscoreest")
+```
+
+We import this using the function `importUnmatched`.
+
+```{r}
 dataUnmatched <- importUnmatched(filenameUp, filenameDn)
 ```
+
+Next, we need to construct the (unevaluated) payoff matrices from the
+attribute matrices of the data.
 
 ```{r}
 unevalPayoffMatrices <- makeDistanceMatrices(
@@ -33,13 +44,22 @@ unevalPayoffMatrices <- makeDistanceMatrices(
     dataUnmatched$attributeMatricesDn)
 ```
 
-```{r}
-beta <- c(0.5, 1.5)
-```
+Now, we can use a known parameter vector to evaluate them.
+
+---
+
+Note that `beta` is the free parameter vector, and therefore has length one less
+than the total number of attributes, which in this case is $3$.
+
+---
 
 ```{r}
+beta <- c(0.5, 1.5)
 payoffMatrices <- evaluatePayoffMatrices(unevalPayoffMatrices, beta)
 ```
+
+Now we are ready to calculate the optimal matching. We provide the calculated
+payoff matrices, as well as the quotas both for upstreams and for downstreams.
 
 ```{r}
 matchMatrices <- CmatchMatrices(
