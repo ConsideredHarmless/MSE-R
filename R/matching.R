@@ -178,12 +178,19 @@ formulateLP <- function(payoffMatrix, numU, numD, quotaU, quotaD) {
 
 #' Calculate optimal matchings for all markets
 #'
-#' TODO docs
+#' Finds the optimal matching for all markets for the given payoffs and quotas.
 #'
-#' @param payoffMatrices TODO See \code{evaluatePayoffMatrices}.
-#' @param quotasU,quotasD TODO
+#' @param payoffMatrices A list of arrays, one for each market. Each array
+#'   should have dimension \code{(noD[mIdx], noU[mIdx])}, and its element
+#'   indexed by \code{[dIdx, uIdx]} should give the value of the payoff function
+#'   for that downstream-upstream pair. See also the return value of the
+#'   function \code{evaluatePayoffMatrices}.
+#' @param quotasU,quotasD Vectors of quotas for the upstreams and downstreams
+#'   respectively. See also the arguments of the function
+#'   \code{generateAssignmentMatrix}.
 #'
-#' @return TODO
+#' @return A list of match matrices, one for each market. See the return value
+#'   of \code{generateAssignmentMatrix} and \code{importMatched}.
 #'
 #' @export
 CmatchMatrices <- function(payoffMatrices, quotasU, quotasD) {
