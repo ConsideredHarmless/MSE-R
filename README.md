@@ -39,11 +39,11 @@ A demonstration using synthetic data:
 ```r
 library(maxscoreest)
 filename <- system.file("extdata", "precomp_testdata.dat", package = "maxscoreest")
-data <- importMatched(filename)
-ineqmembers <- Cineqmembers(data$mate)
-dataArray <- CdataArray(data$distanceMatrices, ineqmembers)
+matchedData <- importMatched(filename)
+ineqmembers <- Cineqmembers(matchedData$mate)
+dataArray <- CdataArray(matchedData$distanceMatrices, ineqmembers)
 bounds <- makeBounds(matchedData$noAttr, 100)
-optimParams <- list(NP=50, F=0.6, CR=0.5, itermax=100, trace=FALSE, reltol=1e-3)
+optimParams <- getDefaultOptimParams()
 set.seed(42)
 optResult <- optimizeScoreFunction(
     dataArray = dataArray,
