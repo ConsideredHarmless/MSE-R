@@ -14,7 +14,7 @@
 #'   \item \eqn{a_k} is the \eqn{k}-th column of \code{dataArray}.
 #' }
 #'
-#' @param dataArray TODO See \code{CdataArray}.
+#' @param dataArray See the result of the function \code{CdataArray}.
 #' @param coefficient1 The first coefficient in the extended vector of
 #'   parameters. Should typically be \code{1} (the default) or \code{-1}.
 #' @param objSign Use \code{-1} (the default) when passing the result to an

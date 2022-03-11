@@ -28,12 +28,15 @@ parameter vector. See \code{makeObjFun} for more details.}
 Currently, only \code{"DEoptim"} (the default value) is supported.}
 
 \item{optimParams}{(optional) A list of parameters to be passed to the
-optimization routine. Defaults to the empty list (TODO see \code{do.call}).}
+optimization routine. Defaults to the empty list.
+See the section "Optimization methods" for more information.}
 
 \item{getIneqSat}{(optional) A boolean indicating whether to include the
 \code{$ineqSat} member in the result. Defaults to \code{FALSE}.}
 
-\item{permuteInvariant}{(optional) TODO. Defaults to \code{FALSE}.}
+\item{permuteInvariant}{(optional) Whether to reorder the parameters before
+and after the optimization, such that the parameter with the smallest
+standard deviation comes first. Defaults to \code{FALSE}.}
 }
 \value{
 A list with members:
@@ -52,7 +55,12 @@ function is created using \code{makeObjFun}.
 }
 \section{Optimization methods}{
 
-TODO
-See \code{DEoptim::DEoptim.control}.
+The optimization method is not bound to the problem. Any method that can
+optimize a non-convex, non-smooth function is valid. However, we currently
+only support the \emph{Differential Evolution} method, as implemented in the
+package \strong{DEoptim}. In case the user wants to pass parameters to the solver,
+we provide the parameter \code{optimParams}, which is forwarded to the
+\code{control} parameter of the function \code{DEoptim::DEoptim}.
+See \code{DEoptim::DEoptim.control} for more information.
 }
 

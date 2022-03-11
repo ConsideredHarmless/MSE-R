@@ -7,7 +7,7 @@
 makeObjFun(dataArray, coefficient1 = 1, objSign = -1)
 }
 \arguments{
-\item{dataArray}{TODO See \code{CdataArray}.}
+\item{dataArray}{See the result of the function \code{CdataArray}.}
 
 \item{coefficient1}{The first coefficient in the extended vector of
 parameters. Should typically be \code{1} (the default) or \code{-1}.}

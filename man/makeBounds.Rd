@@ -2,18 +2,26 @@
 % Please edit documentation in R/maximize.R
 \name{makeBounds}
 \alias{makeBounds}
-\title{TODO}
+\title{Create box constraints}
 \usage{
-makeBounds(numAttrs, b)
+makeBounds(numAttrs, hi, lo = NULL)
 }
 \arguments{
-\item{numAttrs}{TODO}
+\item{numAttrs}{The total number of attributes in the data.}
 
-\item{b}{TODO}
+\item{hi}{The upper bound for all attributes.}
+
+\item{lo}{(optional) The lower bound for all attributes. If not given,
+defaults to \code{-hi}.}
 }
 \value{
-TODO
+A list with elements \code{$upper}, \code{$lower}.
 }
 \description{
-TODO
+Creates a pair of vectors to be used as box constraints in
+\code{optimizeScoreFunction}.
+}
+\examples{
+makeBounds(5, 10)
+makeBounds(5, 3, -4)
 }

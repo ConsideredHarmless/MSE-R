@@ -4,8 +4,13 @@
 #' function is created using \code{makeObjFun}.
 #'
 #' @section Optimization methods:
-#' TODO
-#' See \code{DEoptim::DEoptim.control}.
+#' The optimization method is not bound to the problem. Any method that can
+#' optimize a non-convex, non-smooth function is valid. However, we currently
+#' only support the *Differential Evolution* method, as implemented in the
+#' package **DEoptim**. In case the user wants to pass parameters to the solver,
+#' we provide the parameter \code{optimParams}, which is forwarded to the
+#' \code{control} parameter of the function \code{DEoptim::DEoptim}.
+#' See \code{DEoptim::DEoptim.control} for more information.
 #'
 #' @param dataArray The output of \code{CdataArray}.
 #' @param bounds A list with elements \code{$lower}, \code{$upper} which are
@@ -16,10 +21,13 @@
 #' @param method (optional) A string denoting the optimization method.
 #'   Currently, only \code{"DEoptim"} (the default value) is supported.
 #' @param optimParams (optional) A list of parameters to be passed to the
-#'   optimization routine. Defaults to the empty list (TODO see \code{do.call}).
+#'   optimization routine. Defaults to the empty list.
+#'   See the section "Optimization methods" for more information.
 #' @param getIneqSat (optional) A boolean indicating whether to include the
 #'   \code{$ineqSat} member in the result. Defaults to \code{FALSE}.
-#' @param permuteInvariant (optional) TODO. Defaults to \code{FALSE}.
+#' @param permuteInvariant (optional) Whether to reorder the parameters before
+#'   and after the optimization, such that the parameter with the smallest
+#'   standard deviation comes first. Defaults to \code{FALSE}.
 #'
 #' @return A list with members:
 #' \tabular{ll}{
@@ -84,23 +92,45 @@ maximizeDEoptim <- function(objective, lower, upper, control) {
     return(list(optVal = optVal, optArg = optArg))
 }
 
-# makeBounds(3, 10) -> list(lower = c(-10, -10), upper = c(10, 10))
-#' TODO
-#' @param numAttrs TODO
-#' @param b TODO
-#' @return TODO
+#' Create box constraints
+#'
+#' Creates a pair of vectors to be used as box constraints in
+#' \code{optimizeScoreFunction}.
+#'
+#' @param numAttrs The total number of attributes in the data.
+#' @param hi The upper bound for all attributes.
+#' @param lo (optional) The lower bound for all attributes. If not given,
+#'   defaults to \code{-hi}.
+#' @return A list with elements \code{$upper}, \code{$lower}.
 #' @export
-makeBounds <- function(numAttrs, b) {
-    stopifnot(numAttrs >= 2)
+#' @examples
+#' makeBounds(5, 10)
+#' makeBounds(5, 3, -4)
+makeBounds <- function(numAttrs, hi, lo = NULL) {
+    stopifnot(numAttrs >= 2, hi > 0, is.null(lo) || lo < 0)
     n <- numAttrs - 1
-    upper <- rep(b, n)
-    return(list(lower = -upper, upper = upper))
+    if (is.null(lo)) {
+        lo <- -hi
+    }
+    upper <- rep(hi, n)
+    lower <- rep(lo, n)
+    return(list(lower = lower, upper = upper))
 }
 
-#' TODO
-#' @param ineqSat TODO
-#' @param groupIDs TODO
-#' @return TODO
+#' Calculate per market statistics
+#'
+#' @param ineqSat The element \code{$ineqSat} from the return value of the
+#'   function \code{optimizeScoreFunction}.
+#' @param groupIDs A vector assigning each inequality to its market. See the
+#'   function \code{makeGroupIDs}.
+#' @return An array of dimension \code{(noM, 4)}. Its rows correspond to
+#'   markets, and its columns are:
+#'   \itemize{
+#'     \item The market index.
+#'     \item The total number of inequalities for that market.
+#'     \item The number of inequalities satisfied by the calculated solution.
+#'     \item The ratio of the two values above.
+#'   }
 #' @export
 calcPerMarketStats <- function(ineqSat, groupIDs) {
     calcRow <- function (mIdx) {
