@@ -30,29 +30,32 @@ filename <- system.file("extdata", "precomp_testdata.dat", package = "maxscorees
 
 We import this using the function `importMatched`.
 
-<!--TODO-->
 ```{r}
 matchedData <- importMatched(filename)
 ```
 
-First, we need to calculate the *inequality members*; lists of indices of the
+Next, we need to calculate the *inequality members*; lists of indices of the
 pairings which participate in the inequalities defining the objective function.
+The function `Cineqmembers` uses the matching information, contained in the
+list member `$mate`, to create these indices.
 
 ```{r}
 ineqmembers <- Cineqmembers(matchedData$mate)
 ```
 
-Now we can create the *data array*.
+Now we can create use inequality members to create the *data array*. The
+function `CdataArray` uses these indices to gather and combine values from the
+distance matrices.
 
 ```{r}
 dataArray <- CdataArray(matchedData$distanceMatrices, ineqmembers)
 ```
 
-Next, we need to set up the optimization parameters.
+Next, we need to set up the optimization procedure.
 
 ---
 
-### An important note regarding optimization
+## An important note regarding optimization
 
 We are optimizing a non-smooth, non-convex objective function, so the
 general-purpose optimization methods are ill-suited for this problem. We are
@@ -75,12 +78,12 @@ global optimum or approximating it very closely.
 
 ---
 
-Let's use the default parameters for Differential Evolution.
+Let's use the default parameters for Differential Evolution, and select a box
+constraint of $[-100, 100]$.
 
-<!--TODO turn into function, TODO echo, TODO what is bounds-->
 ```{r}
 bounds <- makeBounds(matchedData$noAttr, 100)
-optimParams <- list(NP=50, F=0.6, CR=0.5, itermax=100, trace=FALSE, reltol=1e-3)
+optimParams <- getDefaultOptimParams()
 ```
 
 We might also want to fix the RNG for reproducibility across runs. See the
@@ -93,12 +96,18 @@ set.seed(randomSeed)
 
 We are now ready to perform the optimization. The function
 `optimizeScoreFunction` creates and optimizes the objective.
+Note that we don't have to pass the arguments via `do.call`, but since we'll
+need the argument list later when calculating the confidence region, this way is
+more convenient.
 
-<!--TODO unname-->
 ```{r}
-optResult <- optimizeScoreFunction(
-    dataArray = dataArray, bounds = bounds, optimParams = optimParams, getIneqSat = TRUE, permuteInvariant = TRUE
-)
+optimizeScoreArgs <- list(
+    dataArray = dataArray,
+    bounds = bounds,
+    optimParams = optimParams,
+    getIneqSat = TRUE,
+    permuteInvariant = TRUE)
+optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
 ```
 
 We can now see the optimal parameter vector, and how many inequalities are
@@ -110,24 +119,41 @@ optResult$optVal
 calcPerMarketStats(optResult$ineqSat, makeGroupIDs(ineqmembers))
 ```
 
-## Taking a closer look
-
 # Calculating the confidence intervals
+
+Now that we have an optimal solution for the parameters, we can use it to
+calculate an estimate for the confidence regions.
+
+Let's choose a number of iterations for the confidence regions calculation
+procedure, and the size of the market subsets of each iteration.
+
+```{r}
+ssSize <- 2
+numSubsamples <- 50
+```
+
+We also need to map each inequality to its market, using the function
+`makeGroupIDs`.
 
 ```{r}
 groupIDs <- makeGroupIDs(ineqmembers)
-ssSize <- 2
-optionsCR <- list(progressUpdate=1, confidenceLevel=0.95, asymptotics="nests")
-numSubsamples <- 50
-pointEstimate <- as.numeric(optResult$optArg)
-optimizeScoreArgs <- list(dataArray = dataArray, bounds = bounds, optimParams = optimParams, getIneqSat = TRUE, permuteInvariant = TRUE)
-optimizeScoreArgs$dataArray <- NULL
-optimizeScoreArgs$getIneqSat <- FALSE
-cr <- pointIdentifiedCR(
-    dataArray, groupIDs, pointEstimate,
-    ssSize, numSubsamples,
-    optimizeScoreArgs = optimizeScoreArgs,
-    options = optionsCR)
-plotCR(cr$estimates)
-print(t(cr$estimates))
 ```
+
+Now we are ready to calculate the confidence regions. Note that by default, the
+confidence level is $0.95$, but this can be changed by passing the argument
+`options` to the function.
+
+```{r}
+cr <- pointIdentifiedCR(
+    dataArray, groupIDs, optResult$optArg,
+    ssSize, numSubsamples,
+    optimizeScoreArgs)
+```
+
+We can use the function `plotCR` to visualize the confidence region estimates.
+
+```{r}
+plotCR(cr$estimates)
+```
+
+# Taking a closer look

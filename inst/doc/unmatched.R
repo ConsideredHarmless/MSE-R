@@ -10,6 +10,8 @@ library(maxscoreest)
 ## -----------------------------------------------------------------------------
 filenameUp <- system.file("extdata", "unmatched_testdata_up.csv", package = "maxscoreest")
 filenameDn <- system.file("extdata", "unmatched_testdata_dn.csv", package = "maxscoreest")
+
+## -----------------------------------------------------------------------------
 dataUnmatched <- importUnmatched(filenameUp, filenameDn)
 
 ## -----------------------------------------------------------------------------
@@ -19,8 +21,6 @@ unevalPayoffMatrices <- makeDistanceMatrices(
 
 ## -----------------------------------------------------------------------------
 beta <- c(0.5, 1.5)
-
-## -----------------------------------------------------------------------------
 payoffMatrices <- evaluatePayoffMatrices(unevalPayoffMatrices, beta)
 
 ## -----------------------------------------------------------------------------
