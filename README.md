@@ -1,63 +1,81 @@
 # Maximum Score Estimator
 
-This code was designed by Theodore Chronis and Christina Tatli in collaboration with Denisa Mindruta.
+<!-- badges: start -->
+<!-- badges: end -->
 
-The code builds upon Jeremy Fox’s theoretical work on the “pairwise maximum score estimator” (Fox 2010; Fox 2016) and the original Match Estimation toolkit (Santiago and Fox, 2009) which can be downloaded from http://fox.web.rice.edu/
+The **maxscoreest** R package solves the *pairwise maximum score estimation*
+problem.
 
-To understand the present code the user needs to be familiar with the maximum score estimator and formal matching games. To ease the exposition, this documentation and the code itself follow closely the terminology used by Jeremy Fox. Unless stated otherwise, please refer back to the original sources for definitions and technical details accessible via the links at the bottom of this document.  
+The code builds upon Jeremy Fox’s theoretical work on the “pairwise maximum
+score estimator” (Fox 2010; Fox 2016) and the original Match Estimation toolkit
+(Santiago and Fox, 2009) which can be downloaded from <http://fox.web.rice.edu/>.
 
-## Installation Instructions
+To understand the present code the user needs to be familiar with the maximum
+score estimator and formal matching games. To ease the exposition, this
+documentation and the code itself follow closely the terminology used by Jeremy
+Fox. Unless stated otherwise, please refer back to the original sources for
+definitions and technical details accessible via the links at the bottom of this
+document.
 
-1. Download the zip file (https://github.com/tatlchri/MSE-R/archive/master.zip)
+## Authors
 
-2. Extract the downloaded compressed file MSE-R-master.zip
+This package was designed by Theodore Chronis, Christina Tatli, and Panaghis
+Mavrokefalos, in collaboration with Denisa Mindruta.
 
-3. Install the libraries: knitr, tinytex
+## Installation
 
-4. Install libxml2-devel in your OS. ie. in Fedora Linux sudo dnf install libxml2-devel
+You can install the development version of **maxscoreest** from
+[GitHub](https://github.com/) with:
 
-5. For Knit, that is pdf exporting install texlive-titling, texlive-framed in your OS.
+```r
+install.packages("devtools")
+devtools::install_github("ConsideredHarmless/MSE-R", ref = "package")
+```
 
-6. Goto examples/ and open any of the examples to experiment with specific cases
+## Example
 
-7. Make sure you have set the correct library path at the beginning of your notebooks
+A demonstration using synthetic data:
 
+```r
+library(maxscoreest)
+filename <- system.file("extdata", "precomp_testdata.dat", package = "maxscoreest")
+matchedData <- importMatched(filename)
+ineqmembers <- Cineqmembers(matchedData$mate)
+dataArray <- CdataArray(matchedData$distanceMatrices, ineqmembers)
+bounds <- makeBounds(matchedData$noAttr, 100)
+optimParams <- getDefaultOptimParams()
+set.seed(42)
+optResult <- optimizeScoreFunction(
+    dataArray = dataArray,
+    bounds = bounds,
+    optimParams = optimParams,
+    getIneqSat = TRUE,
+    permuteInvariant = TRUE
+)
+print(optResult$optArg)
+print(optResult$optVal)
+print(calcPerMarketStats(optResult$ineqSat, makeGroupIDs(ineqmembers)))
+```
 
-## Documentation
+For an in-depth look, you can read the vignettes provided with the package:
 
-A full description of all upgrades can be found under doc/MSE-R.docx
+```r
+browseVignettes("maxscoreest")
+```
 
-https://github.com/tatlchri/MSE-R/blob/master/doc/MSE-R.docx
+or, using the RStudio browser,
 
-The code is broken down to several files that are all tied together through the main library file **mse.R** , which must be loaded before calling any MSE function described in doc/functions-reference.docx
-
-https://github.com/tatlchri/MSE-R/blob/master/doc/functions-reference.docx 
-
-For a more complete
-
-
-## Files List
-
- ## Directory Structure
-
- | Directory     | Description   |
- | ------------- | -------------- |
- | doc/          | Documentation Files |
- | import/       | Data files used in examples |
- | examples/     | Various flows examples |
- | testing/      | Testing routines |
- | .gitignore    | Exclude certain files and directories in your working directory |
- | LICENSE       | A short and simple permissive license with conditions only requiring preservation of copyright and license notices. |
- | README.md     | This file |
- | import.R      | Importing data routines |
- | mse.R         | Main Library file to load |
- 
-
-
+```r
+vignette("matched", package = "maxscoreest")
+vignette("unmatched", package = "maxscoreest")
+```
 ## References
 
-David Santiago and Fox, Jeremy. “A Toolkit for Matching Maximum Score Estimation and Point and Set Identified Subsampling Inference”. 2009. Last accessed from http://fox.web.rice.edu/computer-code/matchestimation-452-documen.pdf
-
-Fox, Jeremy, “Estimating Matching Games with Transfers,” 2016. Last accessed from http://fox.web.rice.edu/working-papers/fox-matching-maximum-score.pdf
-
-Fox J. 2010. Identification in matching games. Quantitative Economics 1: 203–254
+- David Santiago and Fox, Jeremy. “A Toolkit for Matching Maximum Score
+Estimation and Point and Set Identified Subsampling Inference”. 2009. Last
+accessed from 
+<http://fox.web.rice.edu/computer-code/matchestimation-452-documen.pdf>
+- Fox, Jeremy, “Estimating Matching Games with Transfers,” 2016. Last accessed
+from <http://fox.web.rice.edu/working-papers/fox-matching-maximum-score.pdf>
+- Fox J. 2010. Identification in matching games. Quantitative Economics 1:
+203–254

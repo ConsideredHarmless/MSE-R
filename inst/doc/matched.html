@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Panaghis Mavrokefalos" />
+
+
+<title>Calculating optimal parameters from matched data</title>
+
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Calculating optimal parameters from matched data</h1>
+<h4 class="author">Panaghis Mavrokefalos</h4>
+
+
+
+<div id="a-quick-example" class="section level1">
+<h1>A quick example</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(maxscoreest)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Loading required package: data.table</span></span></code></pre></div>
+<p>First, we need to import the data into R. Let’s use some synthetic data provided with the package.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>filename <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;precomp_testdata.dat&quot;</span>, <span class="at">package =</span> <span class="st">&quot;maxscoreest&quot;</span>)</span></code></pre></div>
+<p>We import this using the function <code>importMatched</code>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>matchedData <span class="ot">&lt;-</span> <span class="fu">importMatched</span>(filename)</span></code></pre></div>
+<p>Next, we need to calculate the <em>inequality members</em>; lists of indices of the pairings which participate in the inequalities defining the objective function. The function <code>Cineqmembers</code> uses the matching information, contained in the list member <code>$mate</code>, to create these indices.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>ineqmembers <span class="ot">&lt;-</span> <span class="fu">Cineqmembers</span>(matchedData<span class="sc">$</span>mate)</span></code></pre></div>
+<p>Now we can create use inequality members to create the <em>data array</em>. The function <code>CdataArray</code> uses these indices to gather and combine values from the distance matrices.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dataArray <span class="ot">&lt;-</span> <span class="fu">CdataArray</span>(matchedData<span class="sc">$</span>distanceMatrices, ineqmembers)</span></code></pre></div>
+<p>Next, we need to set up the optimization procedure.</p>
+<hr />
+<div id="an-important-note-regarding-optimization" class="section level2">
+<h2>An important note regarding optimization</h2>
+<p>We are optimizing a non-smooth, non-convex objective function, so the general-purpose optimization methods are ill-suited for this problem. We are currently supporting only the <em>Differential Evolution</em> method (implemented in the package <code>DEoptim</code>), but this is a <strong>non-deterministic</strong> method. A user can fix the RNG seed on their setup, but there is no guarantee of reproducibility across different machines, operating systems, R versions, or package versions.</p>
+<p>The two facts stated above are also complicating things:</p>
+<ul>
+<li>The objective is non-convex: this means that there is no guarantee of reaching the global optimum using local search methods.</li>
+<li>The objective is non-smooth, and actually piecewise constant: this means that the objective attains its (global) optimum for infinitely many points. Even worse, there are potentially many disconnected subsets of the search space on which the objective attains its optimum.</li>
+</ul>
+<p>Differential Evolution works very well in practice however, either finding the global optimum or approximating it very closely.</p>
+<hr />
+<p>Let’s use the default parameters for Differential Evolution, and select a box constraint of <span class="math inline">\([-100, 100]\)</span>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>bounds <span class="ot">&lt;-</span> <span class="fu">makeBounds</span>(matchedData<span class="sc">$</span>noAttr, <span class="dv">100</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>optimParams <span class="ot">&lt;-</span> <span class="fu">getDefaultOptimParams</span>()</span></code></pre></div>
+<p>We might also want to fix the RNG for reproducibility across runs. See the <em>note regarding optimization</em> above.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>randomSeed <span class="ot">&lt;-</span> <span class="dv">42</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(randomSeed)</span></code></pre></div>
+<p>We are now ready to perform the optimization. The function <code>optimizeScoreFunction</code> creates and optimizes the objective. Note that we don’t have to pass the arguments via <code>do.call</code>, but since we’ll need the argument list later when calculating the confidence region, this way is more convenient.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>optimizeScoreArgs <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">dataArray =</span> dataArray,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">bounds =</span> bounds,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">optimParams =</span> optimParams,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">getIneqSat =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">permuteInvariant =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>optResult <span class="ot">&lt;-</span> <span class="fu">do.call</span>(optimizeScoreFunction, optimizeScoreArgs)</span></code></pre></div>
+<p>We can now see the optimal parameter vector, and how many inequalities are satisfied across each market.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>optResult<span class="sc">$</span>optArg</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      par4      par1      par2      par3 </span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   1.81745  -2.75489  87.03322 -17.54139</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>optResult<span class="sc">$</span>optVal</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 96</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">calcPerMarketStats</span>(optResult<span class="sc">$</span>ineqSat, <span class="fu">makeGroupIDs</span>(ineqmembers))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      Market ID Total inequalities Satisfied inequalities Satisfied/Total ratio</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]         1                 45                     34             0.7555556</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]         2                 45                     28             0.6222222</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]         3                 45                     34             0.7555556</span></span></code></pre></div>
+</div>
+</div>
+<div id="calculating-the-confidence-intervals" class="section level1">
+<h1>Calculating the confidence intervals</h1>
+<p>Now that we have an optimal solution for the parameters, we can use it to calculate an estimate for the confidence regions.</p>
+<p>Let’s choose a number of iterations for the confidence regions calculation procedure, and the size of the market subsets of each iteration.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>ssSize <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>numSubsamples <span class="ot">&lt;-</span> <span class="dv">50</span></span></code></pre></div>
+<p>We also need to map each inequality to its market, using the function <code>makeGroupIDs</code>.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>groupIDs <span class="ot">&lt;-</span> <span class="fu">makeGroupIDs</span>(ineqmembers)</span></code></pre></div>
+<p>Now we are ready to calculate the confidence regions. We choose a confidence level is equal to <span class="math inline">\(0.95\)</span>.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>confidenceLevel <span class="ot">&lt;-</span> <span class="fl">0.95</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>cr <span class="ot">&lt;-</span> <span class="fu">pointIdentifiedCR</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, optResult<span class="sc">$</span>optArg,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    ssSize, numSubsamples, confidenceLevel,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    optimizeScoreArgs)</span></code></pre></div>
+<p>We can use the function <code>plotCR</code> to visualize the confidence region estimates.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotCR</span>(cr<span class="sc">$</span>estimates)</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAIAAACb4TnXAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAgAElEQVR4nO3de1hVdb4/8PfaF5CL3O+0AwRvo+DBK2qW5mh5aRLNSsOGNLKcnBlKc+A5XcbnVJPY2MVzJrVC0aNFahIZVlhKCs6YB0lTGzVRBEVkI9e92bfv74+1RETxV7C/fBfyeT0+PbA2z1qfdL9Za3+vEmMMhBA+NKILIOR2RgEjhCMKGCEcUcAI4YgCRghHFDBCOKKAEcIRBYwQjihghHBEASOEIwoYIRxRwAjhiAJGCEcUMEI4ooARwhEFjBCOKGCEcEQBI4QjChghHFHACOGIAkYIRxQwQjiigBHCEQWMEI4oYIRwRAEjhCMKGCEcUcAI4YgCRghHFDBCOKKAEcIRBYwQjihghHBEASOEIwoYIRxRwAjhiAJGCEcUMEI4ooARwhEFjBCOKGCEcEQBI4QjChghHFHACOGIAkYIRxQwQjiigBHCEQWMEI4oYIRwRAEjhCMKGCEcUcAI4YgCRghHFDBCOKKAEcIRBYwQjihghHBEASOEIwoYIRxRwAjhiAJGCEcUMEI4ooARwhEFjBCOKGCEcEQBI4QjChghHFHACOGIAkYIRxQwQjiigBHCEQWMEI4oYIRwRAEjhCMKGCEcUcAI4YgCRghHOtEFdJ3nn39+7969oqsgfFmtsFjg6gpdq7e2m5vb1q1bg4ODu76eHhSwwsLCZ599NjY2VnQhhIszZ/D66zh7Ft7eKCvDmDFYsgT+/gAwZ86cyspKChh3AwYMGDZsmOgqiPNdvoz774ckwcMDOh3c3HDsGFJTUVIif+smqjA1fgaz2+1VVVU2m010IaTbePNN1NbCasVvf4tJk3Dvvairw6lT2LFDcGEqClhJSUlKSkpoaKiLi0tQUJCrq2toaOiCBQt++OEH0aURtdu6FZKEkBAUF6OiAgcPYsAA2Gz43/8VXJhaHhH37ds3efLkiIiI5OTkyMhIb2/v2tra8+fP5+bmJiQk7N69e/To0aJrJOpVWQnGMG0avv4aRUWIjsaoUfi//8NPP4mujKnDuHHjZs6cabPZ2hx3OBwpKSn33HNP5y+RkJBQVFTU+fMQFfL0ZBoNA677I0lswADGGIuLiyspKRFSmFoeEUtKSpKSkrRabZvjkiQlJycfPnxYSFWku5AkOByQJDzwAJ59FmPHAgBj8PISXJhaHhGjo6OLiooSExNvfKmwsDAmJqbrSyLdSGMjAOj12LkTGg0cDuj1sFrFPyKqJWCLFy+eP39+eXn5rFmzIiMjvby86uvry8rKcnNzP/zww8zMTNEFElWTb18aDSIiYLNBknDpEqxWNDUJLkwtAXviiSf0ev2KFSs2b97c+nhsbGxWVtZjjz0mqjDSLUgSAAwYgJEjYbVCkrBnD37+WTkukFoCBiApKSkpKamsrKyiosJoNPr5+YWFhRkMBtF1kW7AxQXNzZgwAadP49w59OuHUaPw888Q/vZRUcBkBoMhLCzMaDT6+vrqdKorj6jTxIn44gusWgVPT/j44PhxNDcDQFKS4MLU0ooI6mgmnfDIIwgLA4CGBpw/j+ZmSBL8/fHAA4ILU8stgjqaSWeMHImqKowZg3Hj0NgINzfs2IGKCvTvL7gwtQQsPT19ypQp2dnZbbrCli9fvnDhwrS0tD179ggqjXQDGzciNRU+PtiyRfkMlpaGnBzk5EBsA5laAlZSUrJ+/fr2OpqnTp36S06yd+/e+fPnt/fq2bNnDx8+nJCQ0KlCiSr9/DOmTUN5ObRa6PXQaKDRYMgQnDoluDC1BMwpHc3jxo3Lz89njN301bi4OGo1uV35+ODllzFkCN5/HxEROHoU6emoqcGzzwouTC1vOKd0NGs0mqioqPZelYT3iRBuvL1x8SKKi5WxUePHIzMTgwYhIkJwYWoJGHU0k864dAljxqBPH3h6or4e3t6oqcH48ThxAtOniyxMLQEDdTSTTmhuxoULiImBiwtqahAYCHd3XLkCs1lwYSoKmMxgMFCoyK/FGC5cgE4HiwV2O86dQ1AQTp5EcrLgwlTU0UxIh5lMMBpRWwuLBUFBaG5GaSmsVtTVCS6MAkZuB99/D40GYWFwOFBVBUBp3vjuO7F1qeYRcenSpbf+gYyMjK6phHRHRiP0epw9e91ToiRRP9hVNptt7dq1TU1NBoPB1dX1xh+ggJFbYAzNzfD3x+rViIxEcTFSU2G1wuEQXJhaArZq1apJkyZNmzYtLy9v0KBBossh3YzdDgADByI1FZGR+OknTJiAXbtgsQguTC0BAzBlyhQPDw/RVZBuSZIgSTh7Fn/5C3Q61NXhjTdE1wRAVQGTJGnjxo3h4eGiCyHdj5sbNBpcvIjUVDAGSYKLC1xc4OMjuDB1tSImJib6CP8rId3Q8OEwmfCb3yAiAu7u6NsX4eGwWPDoo4ILU1fACOmYiRMhSTh6FIMGYdEiBAejtBQaDYTPIqSAkdvB8eNIS0NgIHbvxrvv4uBBDByIBQtw8KDgwihg5HbAGPr3x7lzKCjAli34179w5Aj8/ZXWRYEoYOR2MGIEvvgCej1GjEBiImJjwRjy8iB8ei0FjNwO5s9HcTHS09HQAAAXL2LePAQHY8IEwYVRwMjtwMMDe/eiogIhIQgNxYABMBiwfTstPOpUJ0+e/OCDD9p71WKxNAlfSfkXs1phs0HczozdT0gI1q/HBx+gqgohIaKrueq2uoO5u7v7tk+SpJZFdUpLMW4c/P0REICJE1FRIbbw6+TmIjgYrq5wd4eHB155RXRB3cf+/fjzn/H001i6VPy2DwohmyYJ4enpuW7dOsbY558zjYa5uzOdjul0zN2dabWsoEB0fYwxxrKzmUbD5s5l5eWsro69+irT61lysuiyuoPnn2d9+rBVq9iOHeyvf2XBwWzNGuUlgfuD9cSAeXoyvZ5ptdf+6HTMz090fYwxxkJCWFLSdUdyc5lGw0wmQQV1E/n5rH9/Vld37UhpKQsMZKWljNEGfF3p0iU0NCgTGRgDY3A4YLPBaBQ/8louLy3tuiPTp0Ovx65dggrqJj79FAsXIicHYWHo1Qt9+qCyEjNmYOdOwYXdVo0cv8SJEwAgSQgNxaxZcDiQna3Mgb1wQfwqX4zhxrUbJQk2m4hquo/qamzYoLTRAzhzBqNGITQUwoeO97g7mPxOjY/H2bN45x2sXo3z5yEvpnizeZ5dzd8fb7553ZGCAjQ34777BBXUTRw+rKTL1xcDByqtrxcuoL5ebF09L2Dl5QBw6hRKS5UjJ0/i4kUAyn1MrDfewPvvIzUVFgscDqxfj/vuQ2IievcWXZm6yQ8mGRkwGnHsGJqaMHMmALz7rti6et4jYt++ANDYiH79EBQEAJcuQaMBgMBAkYXJ5KX1//xnvP02AGi1SEnBf/+32KK6jbfewp496NMHhw8rvy6Ff67ucQEbMgQA7Hb4+MBoBAAfH9TUAEBwsMjCWsyfj/nzUVWF+nr06SO6mu5DknD8OL75BufOYfp0TJgAFxfRNfXAgLm5IS4OR47gyhWlOUFO1113iR9W01pgoCruqN2FJIEx7Nx5bYalvOSop6e4mgD0wM9gAL76CnfeCZ1OaanX6dC/Pz77THRZ12tsxOXLoovoPp5/HgDmzIGLC8LCoNViwwYA4rs3emLAgoOxfTuio5VdpAYMwNat8PUVXdZVhYVKE/PAgYiIUN4o5NYyMpTNLK1WXLigrNY2cybGjhVbV48M2Bdf4K67UF2NuXPxyCMoL8fIkeKXgJUVFeGhh7BsGWprUVWFTz/FqlX4+99Fl3XV5ct45hlERMDNDSNG4JNPRBfUyokT2LwZgwYhIABDh6KoCNu2ia6pB34GA/D732PUKOTloVcvAGhsxPjxmDsXZWWiKwNeeQUZGUoTM4ChQ5GTg6FD8Yc/iO+mu3wZw4fD1RX19ZAklJdjyRIcO4aXXxZcWIvf/Q7+/jh/HtHRGDFCdDUAemDAqqpQXY2PP1bSBcDDAx99hL59YbGIb3c6eBDXb5CGiAiEh+OnnxAXJ6imq/7rv1BRAa0WjMFmQ20tzGa8/jqefloVDbBffomnnsIdd8DHBxUVcDiQlaU0GgvU4x4RKyshSfD1xcqVmDwZU6Zg9WpERIAxXLkiujhAq1XGmlRV4cwZyLvh2my4YfNqATZsgM0GsxlaLdzcYLUqC1Z//rnoyoDTpzFnDnQ6/Pgjvv8ep07B4cDUqdcGT4mixoDZ7faqqiobn+F3ffqAMfTujaVL8fXX2LULixfD2xsaDQICeFzw17nrLixbBjc3BAcjOho6HR55BEaj8glerNpaMIZx4/DJJ8jPR0aG8tSakyO6MmD1ajQ2oqwM9fWoqoLJhBMnYDRixw7BhakoYCUlJSkpKaGhoS4uLkFBQa6urqGhoQsWLPjhhx+ceBV3dwBobgaurrcMoKlJaVEULjYWGzbAbIarKzw9lbHI/v43GQHc9RiDmxveegs7d+KNN9DcrLQMycOUxPrsM1gsys3f3R2MwW6H2Sy+nUMF/24AgH379k2ePDkiIiI5OTkyMtLb27u2tvb8+fO5ubkJCQm7d+8e7aQlJBsbleeuXr2UfwmTCWYzbDY4HOIz9vrrkCSMHYsjR2C1YtgwHDuGY8fQ2Ag1rNtvNmPYMKVXd8cO5deT8KXRAKWB6qmn8PbbcHVFTQ1mzEBBgfh1EdUSsPT09ClTpmRnZ2uv/7SxfPnyhQsXpqWl7dmz5/97ErPZ/OOPP7b3qt1uP3v2bGrqIQBz52LXLuVDV0AARo3C3r3YvBkDB3by/6OzbDY8+CBefBGAEvjKSkybhrQ0/P73gmuTc6XRXPuv3N1kMODQIcG12WyQJCQl4ehR5ciyZSgoQFUVDh2CRdyQRInJv89F8/b2Xr9+fWJi4o0vFRYWTp069covaIIoKipavHhxe68WFxeHhYXV1ga3N4UhPFz8YimHDiEmBt7ebQ/6+SlzagRqL0WBgbjzzq4t5QZybTqdEnu5qdNuh0aD+HicO3cuPz8/Tkg7rJB51DeKj49funTpTV/KyMgYNmxY5y8hLxmwbx8DlD9eXqx372vfNjV1/iKdBbCEhOuO5OQwgH38saCCWmn5i2rzJz5edGWMubvfvLZ+/RgTumSAWh4RFy9ePH/+/PLy8lmzZkVGRnp5edXX15eVleXm5n744YeZmZnOulDL71oXF9x7LxwOfPGF8uFYDYN9vb1x4ADmzMGbb8LDA++9h7Q0SBJmzxZdWfsqK0VXAPTvj+JiANBolEdr+fFV+O4qarmDMcY2btwYGxvbprzY2NhNmzY55fzyHezFF9v9Tbxnj1Ou0ylHjjCNhgFMkpgkKYWtXCm6LMbY1TuYJLFevZirK9PplCP+/qIrY8zH5+b/pkOHMkZ3MFlSUlJSUlJZWVlFRYXRaPTz8wsLCzMYDM69itkMAJmZWLRI+drDAy+9hBdeQGOjcy/VEYMH4+JFzJqFQ4dgsyEyEhs3YuRI0WVdb/Ro3HknvvoKFy4AV/s8xKqrAwCNBpIEux06Hex2MEaboN/AYDA4PVSt/elPyMjAk09i3z5lZ4BvvsFvfwsAkyfzu+yvEBiIggLRRbRPkvDtt8rXLi6wWKCGZjJ5V0t50eyICBw9CqMRp07RjOYuFx6u/JIbPRq9eimDfQBoNKrozG1RWgqzGdHR0OtFl3I9+bONTH77qmS9EMZw//34xz+g16O+Hvfdh1OnxHdsir6+CF9+qXxhNl97vCkqElVOWzt3IiYGEyYgMRGhoVi58rr3tAoNGiS6AihBysyEhwfCw+HnhwMHAFwb0i1KTwzYpEmoqUFCgrL4+z33oL5eLZ9zvv4azzyDzEycOYPjx3HwID77DH/9q+iybkleO0gsDw9IEtzdYbcrEy7lvkThC132xIAB8PFBUREaG9HQgD17xK/c0OLVV/HWWxg3Tvk2KgrZ2Xj7bZhMQsu6QesujZIScXVcJe8DZrFAp0NAALRaNDSoonujhwZMtUpKMGECGhqQn49t23DpEkJCEBWllr1CXF2h1Sp/JEmZBiZ8SgiARYsQGKiMimxoAGPQauHlJb4fTE2f6wng6ooXX8TatUpvqd2OiRPR0CB+OrOsuRkhIaiuhlYLnU5pHA8LE10WMHkyHn4YeXmIjVUGRv/zn0hLEz++jAKmLkFB+Mc/4OurdOaYzSgoUHb4Fk4eHiGvgmy1Xjs+apSoiq7z7rvYvRsffQSTCeHh+PJL3DBsQQAKmLrIU3GNRqVzSf6owxiMRvHzQbXam7dn+vl1eSntmDgREyeKLuJ69BlMXeTGjOBgeHnB3f3aWhfC1/fD1X0zdDrodNDrlY9hAA4fFluXqlHAVMfHBzYbXF3h5gbGlEbwc+dElwUwBhcX6PWw2WC1wm5Xps+pagNetaFHRNWprYVeD1dXZeFh+Z5WXS26LABXh260tNEfOwZAFUOlVIsCpjpyE7P8hTxxGOrozG2tdaiEb3KnZhQwNbqxW9nLS0Qd7Whzy6I19G+BAqZGknTt3iU33MmN4+p0+rToClTstgpYQUHBE0880d6rTU1NRnlHMHWT15ZpWaqpZYquSvTqpbRwuLgoS3E1NYmuScVuq4CNHTv266+/bu/VuLg4P/V02bRPntrU+ltARW/isWORmYmQEGzbhuRkNDerYqkF1bqtAqbVavu0vyek1K3eCL6+0OtRVaU8IrZZZ0qgb75R1jVp+etUyTAudbqtAnZ7kCT4+6O5GTab0hXW1KSiyaA3/pr6j/8QUUc3oZpHexFqa9HeGokCSZIymtbFRVl1GNeP/RMlNBRA2zFcAJYsEVeT6qkxYFw3f5Bt2oSAAAQEwNdX2fBSPVxcEBICSYLFgpAQZU7ub34juixg06Zrq/nj6sr+BoPqhv+piooC1jWbPwBYsQLJyZg0CVu2YMsWjB6Nhx/G2rXOvUgHBQbCakV9PUJDYTAoOxhIEu67T3RlwL334qOP4OYGAIyBMWUNfXILanm077LNHwC8/DKmT0dBAYqK4HBAkjBpEpYuxVNPOesKHffOO3jsMfj7w2iExQIvL2g0mDtX2RRGuIcfxqxZOH0aZWUYOlRFG1url5DVGG80bty4mTNn2my2NscdDkdKSso999zT+UvIC4+WljJJYn37soceYvHxbNgwNns2i4xkAGto6PxFnGDrVubvzzQaptUyV1eWns4cDtE1dXMCFx5VyyNiSUlJUlKS9oaNHCVJSk5OPuy8GRFNTcr0qthYfPAB1qxB377KzFy5OUG4WbNw+bKyw6XZjFdfpY6mbkwtj4jR0dFFRUXt7a4SExPjrAvJTzWPPoqXXlKODBuG06fx8cdqeQyTeXioYttY0klqCViXbf4gbyT1/vuorER1NTQaeHsjNxdQzbSLwkI8/DAqKpR1yDIy8PTTomsiHaWWgD3xxBN6vX7FihWbN29ufTw2NjYrK+uxxx5z1oXkqbgOB7ZuvdaZ4+Ki7CglXF4epk0DAHd36HSor8eiRTh8GO+9J7oy0iFqCRi6avOHwECl5XDFCkREQJLw73/jpZeg1apij9bZs5Xl0Dw84O6Os2dhtWLNGrzzDlxcRBdHfj0VBUxmMBjCwsKMRqOvr6+OwwChxkY4HBg4EDt3orgYWi3i4xEZiTNnVDFovbERXl7Ytg0JCbDZcOEC5sxBYSE2b0ZysuDaSAeIfkO10jUdzadPQ6OBvz8KCtDQgNpafPst5DYUNWwkB2DePMyeDZ0Orq4YPFhZm1b4Zt6kY9RyB+uyjuaoKDgc2L8fQUHKevSFhcjPB2PXlnAS63/+By4uCA+H3Y6GBqSmAkC/fqLLIh2iloClp6dPmTIlOzu7TVfY8uXLFy5cmJaWtmfPHqdcSF6G3tMTFy4ojRw2G3r3RnOz+OdDGWOwWFBWBrQauk7j/bopdbynurCj+eRJAHA44OOD3/0O06crM68Yw5UrzrpIZ7WMWG9p2JQ3ICbdjloCJnc03/Ql53Y019QAwOXLSElBeTkqK/GnPylboaphEwNcXZBD3g1V3mYBwKFDossiHaKWR0SndDSfPn163bp17b1qsVhMJpM8O3DhQhw5gn//W1ka7cQJSJJalh+T99q0WsEYdDplCwg1zAcjHaCWgDmlo1mv1/u2P8Db29s7KirKzQ1hYcjKwv33IyUFAD75BNu2oW9ftQz5s9vhcCgLU8sxA+DjI7os0iFqCRic0dF85513Llu2rL1Xd+zYERAQAMDVFZ6e2LULX30FQNkNUVUDERlThnS1fAZz3jMy6VIqCpjMYDA4ffRGa9XVqKxUpgzL5OGIx47BbBa/pa9Mo1H2PrfZlPXbLl0SWxHpILU0cnQZhwMmE1xccOAA6upQV4dvv4VGA54LFPw6kgSHA83NaG6G3a78IigvF10W6ZAeFzC7HYwhLe3aKhfx8Vi8+Lq1PsViDL16YehQDBsGf3/lKZHmDndTanlEXLp06a1/ICMjwykXamyEJOE//xN+fhg1CpKEPXuwciUAFd3EXFzQ3AwAej10OthsiIgQXRPpELUEzGazrV27tqmpyWAwuN5sJUtnBSwgABoNRo/G7NnKm9jNDVOnYvt2FbVzNDXhzBlotTCZlPtqSYnomkiHqCVgq1atmjRp0rRp0/Ly8gYNGsTvQt7eCArC1q1YsACLFoEx/P3v2LwZ0dFKu4JwvXvDbIbFouxj5OuLqioEBooui3SIWgIGYMqUKR5dNSWrd2/8+CMeeQQaDfz84OmpitmWALRa2Gzw8kJkJDQalJUpa/rKXXak21FRI4ckSRs3bgznPJ7i8mVYLPjnPxEeDrMZZjOionDoEMrLb7IrV9f7wx9gMqGpCT4+CAiAw4Hz59G3r1pG+pNfS0V3MAA3XfTGueSRR/36ITv72kG5aVENo+nffhvNzVi3Drt3A4AkYcQIfPut6LJIR6ngPdWOtLS0qqoqp5/Wzw9hYW3fsp9/jiFD1LJLyHvvobwcW7diwwYcP45//UsVaxmQjlFvwP72t79x2i9v5UrMm4ePP0ZTExobkZWFp5/GihU8LtVBISGYNQuPP47+/UWXQjpHXY+IvOXk5MgLEMybh5dewrx5Rxk7FxjYOz4e69ah/YH4v0hDQ4PNZvNx0rBck8lkMpmctWOgxWKpra0NdFJbpM1mq66uDnbS50KHw1FZWRkq793SaYyxmpqaBx98sPXB6upqp5y8A3pQwBYsWHDw4MGWu+L48WDs2ytXan18/EtLUVra2fNXV1fbbDZnve1qa2sbGxvDwsKccraGhoaamhpnDfI0mUyVlZWRkZFOOVtzc/P58+ejo6Odcja73f7zzz/fcccdrQ/Kc6Cccv5fTciC3b9Efn5+Y2Mj10ukp6e/+uqrzjrbypUrn3/+eWedLTMzMzk52Vln++yzzx544AFnnW3//v1jxoxx1tlOnDjRv39/Z52tqqoqICDAWWfrPPXewSbSMhSk+1NvIwchtwEKGCEcUcAI4YgCRghHFDBCOKKAEcJRjw6YTqfTO28SmF6vd+J2MGo+m06n6yFn6zyJqWQilAhNTU2SJLm5uTnlbGaz2W63O2tKm9VqNZlMXl5eTjmb3W6vr6931jAuxlhNTY2zhnEBqK6u9vf3V+fZOqlHB4wQ3nr0IyIhvFHACOGIAkYIRxQwQjiigBHCEQWMEI4oYIRwRAEjhCMKGCEcUcAI4YgCRghHFDBCOOpBAUtNTb31Nn/r168fPny4j4/P+PHj9+/f3wUlWSyW1157beDAgR4eHoMGDcrIyLBarSqpra6ubvHixVFRUZ6enkOHDv3oo4/a+8mur62FzWa766675s2bp8LaFIKXjesSDocjLy/Pw8NjyZIl7f3Mpk2bADz33HPbt29PTEx0c3M7fPgw78L+8pe/9OrV67XXXtu1a9crr7zi6ur6xz/+USW1zZ49Ozg4eO3atbt27XryyScB7Ny5UyW1tViyZAmApKSkm74qtjbZ7R+wTz/9tHfv3vJvk1sELC4ubs6cOfLXNpttwIABKSkpXAuz2+1ubm7p6ektR5YvX67X600mk/Da5LWm169f33Jk8ODBN30fd31tLXJycnx9fSMiItoLmMDaWtz+j4jjx48vKio6evToLRaOLisr++GHHx566CH5W61WO2PGjM8//5xrYRUVFREREVOnTm05EhUVZbVaL126JLy2urq65OTk8ePHtxwJCAjQ3LC/k5DaZKWlpcnJyR9++GF7i9oLrK01FU2u5sTHx0eeyXvTrZ9lFRUVACJa7TQeGRlZWVlpt9u1Wi2nwu64447jx4+3fGsymdatWxcTE9NmXXUhtUVGRmZmZgK4dOnSyZMnv/nmm0OHDr388sttfkxIbQAsFsvs2bOTk5NnzJjxxhtv3PRnRNXWxu1/B/sl5B0hvL29W454e3s7HA5O+yfdqLi4+O677y4uLs7KympzoxBbW2Zm5qRJk959993ExMSRI0e2eVVUbc8995xWq20vWmJra4MCBgDy8hL19fUtR+rq6jQajbMWsbgFo9E4f/784cOHGwyGI0eOjB49Wj21AVi2bFlTU1NlZaXVap07d64aatu+ffuWLVuys7NvvWCR2L+3FhQwAJB3CSorK2s5UlZWFhQU5MQ1p27q5MmTsbGxBw8ePHDgwPbt21s/z4itLS8v7/HHH2/5VpKkiRMn5uTkOBwO4bV99913RqMxIiJCkiRJkg4cOLBp0yZJknJycoTXdiMKGAAYDIbBgwfn5ubK3zLGcnNzWzc/8MAYS0xMjIuLO3jw4IgRI1RVm16v37hxY3FxccuR77//PiwsrM3jq5DannnmmfxWBg4cOHHixPz8/DFjxgiv7Sa6uNVSoJiYmDbN9GvWrHn00UfNZjNjbOPGjRqN5s033ywsLHzqqafc3NxKSkq41rNv3z4Aqamp71+vqalJeG0Wi2XIkCExMTFZWVlffvnlCy+8oNVqV69eLb8qtrY2EhISWj8pMu4AAAFxSURBVDfTq6o21hP6wVrcGDC5/7ShoUH+dv369fHx8V5eXnfffXdhYSHvetasWXPTX3kXL14UXhtjrKysbO7cuWFhYR4eHkOHDs3Kymp5SXhtrbUJmKpqY4zRuoiEcESfwQjhiAJGCEcUMEI4ooARwhEFjBCOKGCEcEQBI4QjChghHFHACOGIAkYIRxQwQjiigBHCEQWMEI4oYIRwRAEjhCMKGCEcUcAI4YgCRghHFDBCOKKAEcIRBYwQjihghHBEASOEIwoYIRxRwAjhiAJGCEcUMEI4ooARwhEFjBCOKGCEcEQBI4QjChghHFHACOGIAkYIRxQwQjiigBHCEQWMEI4oYIRwRAEjhCMKGCEcUcAI4YgCRghHFDBCOKKAEcIRBYwQjihghHBEASOEIwoYIRxRwAjhiAJGCEcUMEI4ooARwhEFjBCOKGCEcEQBI4QjChghHFHACOGIAkYIRxQwQjiigBHCEQWMEI4oYIRw9P8A1i0U6g2zmrUAAAAASUVORK5CYII=" /><!-- --></p>
+<p>We can also see which market subsets were chosen at each iteration.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>cr<span class="sc">$</span>samples</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       [,1] [,2]</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]    1    3</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]    1    3</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]    1    3</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]    1    3</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]    2    3</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]    1    3</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]    1    3</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,]    1    3</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,]    1    3</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]    2    3</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [11,]    2    3</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [12,]    1    3</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13,]    1    3</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [14,]    2    3</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [15,]    1    3</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [16,]    1    3</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [17,]    1    3</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [18,]    1    3</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [19,]    1    3</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [20,]    2    3</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [21,]    1    2</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [22,]    2    3</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [23,]    2    3</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [24,]    1    3</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [25,]    1    2</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [26,]    1    2</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [27,]    2    3</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [28,]    2    3</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [29,]    1    3</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [30,]    2    3</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [31,]    1    3</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [32,]    1    3</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [33,]    1    2</span></span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [34,]    1    2</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [35,]    1    2</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [36,]    1    3</span></span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [37,]    2    3</span></span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [38,]    1    3</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [39,]    1    2</span></span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [40,]    2    3</span></span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [41,]    1    2</span></span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [42,]    1    2</span></span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [43,]    2    3</span></span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [44,]    1    3</span></span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [45,]    2    3</span></span>
+<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [46,]    1    2</span></span>
+<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [47,]    1    3</span></span>
+<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [48,]    1    3</span></span>
+<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [49,]    1    2</span></span>
+<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [50,]    1    3</span></span></code></pre></div>
+</div>
+<div id="taking-a-closer-look" class="section level1">
+<h1>Taking a closer look</h1>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
