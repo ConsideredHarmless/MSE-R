@@ -148,9 +148,7 @@ formulateLP <- function(payoffMatrix, numU, numD, quotaU, quotaD) {
     # Let x = vec(X) the flattened variables. We will convert the constraints to
     # the form M*x <= b, where M is a matrix, b is a vector, and the inequality
     # is element-wise.
-    # We construct M and b from three blocks:
-    # M_D and M_U correspond to the constraints above. M_S constrains the values
-    # of the variables in the set {0,1}.
+    # We construct M and b from the blocks corresponding to M_D and M_U.
     # See the function documentation for more information on these values.
     onesD = t(matrix(rep(1, numD)))
     onesU = t(matrix(rep(1, numU)))
@@ -158,22 +156,17 @@ formulateLP <- function(payoffMatrix, numU, numD, quotaU, quotaD) {
     idU = diag(numU)
     mD <- kronecker(onesU, idD)
     mU <- kronecker(idU, onesD)
-    mS <- diag(numD*numU)
-    m <- rbind(mD, mU, mS)
-    b <- c(quotaD, quotaU, rep(1, numD*numU))
+    m <- rbind(mD, mU)
+    b <- c(quotaD, quotaU)
     # Reminder that payoffMatrix is indexed as [dIdx, uIdx]. No transposition is
     # needed here.
-    f.obj <- as.vector(payoffMatrix)
-    f.con <- m
-    f.dir <- rep("<=", numD + numU + numD*numU)
-    f.rhs <- b
-    argList <- list(
-        direction="max",
-        objective.in=f.obj,
-        const.mat=f.con,
-        const.dir=f.dir,
-        const.rhs=f.rhs)
-    return(argList)
+    return(list(
+        direction    = "max",
+        objective.in = as.vector(payoffMatrix),
+        const.mat    = m,
+        const.dir    = rep("<=", numD + numU),
+        const.rhs    = b,
+        all.bin      = TRUE))
 }
 
 #' Calculate optimal matchings for all markets
