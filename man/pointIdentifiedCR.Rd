@@ -51,7 +51,10 @@ symmetric case, as an array of dimension \code{(2, numFreeAttrs)}, where
 \code{numFreeAttrs} is the total number of attributes minus 1. \cr
 \code{$crAsym}    \tab Same as above, for the asymmetric case. \cr
 \code{$estimates} \tab The estimates for each parameter, as an array of
-dimension \code{(numSubsamples, numFreeAttrs)}.
+dimension \code{(numSubsamples, numFreeAttrs)}. \cr
+\code{$samples} \tab The market subsets chosen at each iteration, as an
+array of dimension \code{(numSubsamples, ssSize)}, containing their
+respective indices.
 }
 }
 \description{

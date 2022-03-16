@@ -32,8 +32,14 @@ makeGroupIDs <- function(ineqmembers) {
 #' @param groupIDs The output of \code{makeGroupIDs}.
 #' @param dataArray The output of \code{CdataArray}.
 #'
-#' @return An array with the columns of \code{dataArray} belonging to the
-#'   selected subset of markets.
+#' @return A list with members:
+#' \tabular{ll}{
+#'   \code{$ssDataArray} \tab An array with the columns of \code{dataArray}
+#'     belonging to the selected subset of markets. \cr
+#'   \code{$selectedGroups} \tab A vector of length \code{ssSize}, containing
+#'     the indices of the chosen markets.
+#' }
+#'
 #' @keywords internal
 generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
     uniqueGroups <- unique(groupIDs)
@@ -41,7 +47,8 @@ generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
     # Get the indices of the dataArray columns that correspond to the selected
     # groups.
     qualifiedIndices <- which(groupIDs %in% selectedGroups)
-    return(dataArray[, qualifiedIndices])
+    ssDataArray <- dataArray[, qualifiedIndices]
+    return(list(ssDataArray = ssDataArray, selectedGroups = selectedGroups))
 }
 
 #' Calculate confidence region
@@ -83,7 +90,10 @@ generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
 #'     \code{numFreeAttrs} is the total number of attributes minus 1. \cr
 #'   \code{$crAsym}    \tab Same as above, for the asymmetric case. \cr
 #'   \code{$estimates} \tab The estimates for each parameter, as an array of
-#'     dimension \code{(numSubsamples, numFreeAttrs)}.
+#'     dimension \code{(numSubsamples, numFreeAttrs)}. \cr
+#'   \code{$samples} \tab The market subsets chosen at each iteration, as an
+#'     array of dimension \code{(numSubsamples, ssSize)}, containing their
+#'     respective indices.
 #' }
 #' @export
 pointIdentifiedCR <- function(
@@ -118,11 +128,14 @@ pointIdentifiedCR <- function(
     # Note: these arrays are transposed compared to the old function.
     # estimates[paramIdx, iterIdx] gives the estimate for the parameter with
     # index paramIdx in iteration with index iterIdx.
+    samples <- array(0, dim = c(numSubsamples, ssSize))
     calcEstimate <- function(iterIdx) {
-        ssDataArray <- generateRandomSubsample(ssSize, groupIDs, dataArray)
-        optimizeScoreArgs$dataArray <- ssDataArray
+        sample <- generateRandomSubsample(ssSize, groupIDs, dataArray)
+        optimizeScoreArgs$dataArray <- sample$ssDataArray
         optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
         ssEstimate <- optResult$optArg
+        # The <<- operator is required to modify objects outside the closure.
+        samples[iterIdx, ] <<- sample$selectedGroups
         if (progress > 0 && iterIdx %% progress == 0) {
             cat(sprintf("[pointIdentifiedCR] Iterations completed: %d\n", iterIdx))
         }
@@ -158,7 +171,9 @@ pointIdentifiedCR <- function(
     crSymm <- sapply(1:numFreeAttrs, calcConfRegionSymm)
     crAsym <- sapply(1:numFreeAttrs, calcConfRegionAsym)
 
-    result <- list(crSymm = crSymm, crAsym = crAsym, estimates = t(estimates))
+    result <- list(
+        crSymm = crSymm, crAsym = crAsym, estimates = t(estimates),
+        samples = samples)
     return(result)
 }
 

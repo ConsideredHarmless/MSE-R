@@ -15,8 +15,13 @@ number of markets.}
 \item{dataArray}{The output of \code{CdataArray}.}
 }
 \value{
-An array with the columns of \code{dataArray} belonging to the
-selected subset of markets.
+A list with members:
+\tabular{ll}{
+\code{$ssDataArray} \tab An array with the columns of \code{dataArray}
+belonging to the selected subset of markets. \cr
+\code{$selectedGroups} \tab A vector of length \code{ssSize}, containing
+the indices of the chosen markets.
+}
 }
 \description{
 Generates a reduced data array, with columns corresponding to a randomly
