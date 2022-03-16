@@ -29,7 +29,7 @@ You can install the development version of **maxscoreest** from
 
 ```r
 install.packages("devtools")
-devtools::install_github("ConsideredHarmless/MSE-R", ref = "package")
+devtools::install_github("MaximumScoreEstimator/MSE-R")
 ```
 
 ## Example
