@@ -139,14 +139,14 @@ We also need to map each inequality to its market, using the function
 groupIDs <- makeGroupIDs(ineqmembers)
 ```
 
-Now we are ready to calculate the confidence regions. Note that by default, the
-confidence level is $0.95$, but this can be changed by passing the argument
-`options` to the function.
+Now we are ready to calculate the confidence regions. We choose a confidence
+level is equal to $0.95$.
 
 ```{r}
+confidenceLevel <- 0.95
 cr <- pointIdentifiedCR(
     dataArray, groupIDs, optResult$optArg,
-    ssSize, numSubsamples,
+    ssSize, numSubsamples, confidenceLevel,
     optimizeScoreArgs)
 ```
 

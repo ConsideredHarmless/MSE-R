@@ -10,6 +10,7 @@ pointIdentifiedCR(
   pointEstimate,
   ssSize,
   numSubsamples,
+  confidenceLevel,
   optimizeScoreArgs,
   options = NULL
 )
@@ -27,6 +28,9 @@ greater than the number of markets.}
 
 \item{numSubsamples}{The number of subsamples.}
 
+\item{confidenceLevel}{The confidence level of the region. Must be a number
+in the range \eqn{(0, 1)}.}
+
 \item{optimizeScoreArgs}{A list with the keyword arguments to be used when
 \code{optimizeScoreFunction} is called. All non-optional arguments should
 be present, except \code{dataArray}.}
@@ -35,8 +39,6 @@ be present, except \code{dataArray}.}
 \tabular{ll}{
 \code{progressUpdate}  \tab How often to print progress. Defaults to
 \code{0} (never). \cr
-\code{confidenceLevel} \tab The confidence level of the region. Defaults
-to \code{0.95}. \cr
 \code{asymptotics}     \tab Type of asymptotics to use. Supported values
 are "nests" (default) or "coalitions".
 }}

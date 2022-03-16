@@ -49,9 +49,10 @@ numSubsamples <- 50
 groupIDs <- makeGroupIDs(ineqmembers)
 
 ## -----------------------------------------------------------------------------
+confidenceLevel <- 0.95
 cr <- pointIdentifiedCR(
     dataArray, groupIDs, optResult$optArg,
-    ssSize, numSubsamples,
+    ssSize, numSubsamples, confidenceLevel,
     optimizeScoreArgs)
 
 ## -----------------------------------------------------------------------------
