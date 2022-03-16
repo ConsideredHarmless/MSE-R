@@ -11,7 +11,7 @@ optimizeScoreFunction(
   method = NULL,
   optimParams = NULL,
   getIneqSat = FALSE,
-  permuteInvariant = FALSE
+  permuteInvariant = TRUE
 )
 }
 \arguments{
@@ -36,7 +36,7 @@ See the section "Optimization methods" for more information.}
 
 \item{permuteInvariant}{(optional) Whether to reorder the parameters before
 and after the optimization, such that the parameter with the smallest
-standard deviation comes first. Defaults to \code{FALSE}.}
+standard deviation comes first. Defaults to \code{TRUE}.}
 }
 \value{
 A list with members:

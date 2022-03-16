@@ -27,7 +27,7 @@
 #'   \code{$ineqSat} member in the result. Defaults to \code{FALSE}.
 #' @param permuteInvariant (optional) Whether to reorder the parameters before
 #'   and after the optimization, such that the parameter with the smallest
-#'   standard deviation comes first. Defaults to \code{FALSE}.
+#'   standard deviation comes first. Defaults to \code{TRUE}.
 #'
 #' @return A list with members:
 #' \tabular{ll}{
@@ -42,7 +42,7 @@
 optimizeScoreFunction <- function(
         dataArray, bounds,
         coefficient1 = NULL, method = NULL, optimParams = NULL,
-        getIneqSat = FALSE, permuteInvariant = FALSE) {
+        getIneqSat = FALSE, permuteInvariant = TRUE) {
     if (is.null(method)) {
         method <- "DEoptim"
     }
