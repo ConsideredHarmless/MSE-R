@@ -4,16 +4,27 @@
 \alias{importUnmatched}
 \title{Import unmatched market data}
 \usage{
-importUnmatched(filenameUp, filenameDn)
+importUnmatched(filenameUp, filenameDn, fieldMode = "position")
 }
 \arguments{
 \item{filenameUp, filenameDn}{Absolute or relative path to the files for the
 upstream and the downstream data respectively. See also the parameters to
 \code{\link[data.table]{fread}}.}
+
+\item{fieldMode}{A string denoting how to identify the fields of the file.
+Options are:
+\tabular{ll}{
+\code{"position"} \tab (default) Identify each field based on its order
+in the field list. \cr
+\code{"name"} \tab Identify each field based on its name.
+}
+See the section "File structure" for more information.}
 }
 \value{
 A list with members:
 \tabular{ll}{
+\code{$headerUp}, \code{$headerDn} \tab Character vectors of the headers
+of the tables. \cr
 \code{$noM}                \tab The number of markets.\cr
 \code{$noU}, \code{$noD}   \tab Vectors of size \code{$noM}, whose
 \code{m}-th element is the number of upstreams and downstreams
@@ -34,16 +45,24 @@ Reads CSV files containing data for unmatched markets.
 \section{File structure}{
 
 
-Each file must be a delimiter-separated file with a header. It must contain
-the following fields:
+Each file must be a delimiter-separated file with a header.
+
+If \code{fieldMode} is \code{"name"}, the file must contain the following
+fields:
 \tabular{ll}{
 \code{Market} \tab The market index.\cr
 \code{UpStream} or \code{DownStream} \tab The stream index.\cr
 \code{Quota} \tab The quota for that stream.
 }
 It must also contain at least one field with a name starting with
-\code{Attribute}. These fields containg distance attribute values. The order
+\code{Attribute}. These fields contain attribute values. The order
 they appear in, and not their full name, specifies their actual order.
+
+If \code{fieldMode} is \code{"position"}, then the fields mentioned above
+are identified by the order they appear in the header, and not their names.
+The first two fields correspond to \code{Market} and \code{UpStream} or
+\code{DownStream} respectively, and the last field corresponds to
+\code{Quota}. All other fields are considered to be attribute fields.
 
 Indices should have consecutive values, starting from \code{1}. Distance
 attribute values should be numerical.

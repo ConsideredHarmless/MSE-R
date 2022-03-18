@@ -12,7 +12,6 @@ importMatchedMain <- function(filename, fieldMode) {
     Market <- UpStream <- DownStream <- NULL
     DT <- fread(filename, header=TRUE)
     header <- colnames(DT)
-    numCols <- length(header)
     colIdxs <- checkHeaderMatched(header, fieldMode)
     if (fieldMode == "position") {
         newColNames <- c(
@@ -23,9 +22,6 @@ importMatchedMain <- function(filename, fieldMode) {
             "Match")
         setnames(DT, newColNames)
     }
-    # keyColIdxs <- do.call(c, unname(colIdxs[1:3]))
-    # keyColNames <- header[keyColIdxs]
-    # setkeyv(DT, keyColNames)
     # Adding keys for fast filtering
     setkey(DT, Market, UpStream, DownStream)
     # Calculating number of attributes
@@ -48,42 +44,37 @@ importMatchedMain <- function(filename, fieldMode) {
 
 #' @import data.table
 #' @keywords internal
-importUnmatchedMain <- function(filename, filetype) {
-    Market <- UpStream <- DownStream <- NULL
-    # Importing data
+importUnmatchedMain <- function(filename, fieldMode, filetype) {
+    Market <- Stream <- NULL
     DT <- fread(filename, header=TRUE)
-    # Adding keys for fast filtering
-    streamCol <- switch(filetype, "up" = "UpStream", "dn" = "DownStream")
-    stopifnot(!is.null(streamCol))
-    keycols <- c("Market", streamCol)
-    setkeyv(DT, cols = keycols)
-    # Header names
     header <- colnames(DT)
+    colIdxs <- checkHeaderUnmatched(header, fieldMode, filetype)
+    if (fieldMode == "position") {
+        newColNames <- c(
+            "Market", "Stream",
+            sapply(
+                1:length(colIdxs$attributeColIdxs),
+                function(i) { sprintf("Attribute%d", i)} ),
+            "Quota")
+        setnames(DT, newColNames)
+    } else if (fieldMode == "name") {
+        setnames(DT, colIdxs$streamColIdx, "Stream")
+    }
+    # Adding keys for fast filtering
+    setkey(DT, Market, Stream)
     # Calculating number of attributes
-    attrColIdxs <- which(sapply(
-        header,
-        function(s) { startsWith(s, "Attribute") }))
-    noAttr <- length(attrColIdxs)
-    quotaColIdxs <- which(sapply(
-        header,
-        function(s) { s == "Quota" }))
-    stopifnot(length(quotaColIdxs) == 1)
-    quotaColIdx <- quotaColIdxs[1]
+    noAttr <- length(colIdxs$attributeColIdxs)
     # Calculating number of markets
     marketIdxs = unique(DT, by = "Market")[[1]]
     checkIndices(marketIdxs)
     noM <- length(marketIdxs)
     # Calculating number of up streams and down streams in each market
-    streamIdxs <- switch(filetype,
-        "up" = DT[, list(x = list(unique(UpStream))),   by = Market]$x,
-        "dn" = DT[, list(x = list(unique(DownStream))), by = Market]$x
-    )
+    streamIdxs <- DT[, list(x = list(unique(Stream))), by = Market]$x
     lapply(streamIdxs, checkIndices)
     noS <- unlist(lapply(streamIdxs, length))
     return(list(
         DT=DT, header=header, noM=noM, noS=noS, noAttr=noAttr,
-        marketIdxs=marketIdxs, attrColIdxs=attrColIdxs, quotaColIdxs=quotaColIdxs,
-        streamIdxs=streamIdxs))
+        colIdxs=colIdxs, marketIdxs=marketIdxs, streamIdxs=streamIdxs))
 }
 
 #' dimorder dummy
@@ -222,7 +213,7 @@ extractAttributeMatrices <- function(marketData) {
     attributeMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
         Market <- NULL
         # The unname is important!
-        colSel <- unname(marketData$attrColIdxs)
+        colSel <- unname(marketData$colIdxs$attributeColIdxs)
         attrTable <- marketData$DT[Market == mIdx, colSel, with=FALSE]
         p <- marketData$noS[mIdx]
         q <- marketData$noAttr
@@ -337,16 +328,24 @@ importMatched <- function(filename, fieldMode = "position") {
 #'
 #' @section File structure:
 #'
-#' Each file must be a delimiter-separated file with a header. It must contain
-#' the following fields:
+#' Each file must be a delimiter-separated file with a header.
+#'
+#' If \code{fieldMode} is \code{"name"}, the file must contain the following
+#' fields:
 #' \tabular{ll}{
 #'   \code{Market} \tab The market index.\cr
 #'   \code{UpStream} or \code{DownStream} \tab The stream index.\cr
 #'   \code{Quota} \tab The quota for that stream.
 #' }
 #' It must also contain at least one field with a name starting with
-#' \code{Attribute}. These fields containg distance attribute values. The order
+#' \code{Attribute}. These fields contain attribute values. The order
 #' they appear in, and not their full name, specifies their actual order.
+#'
+#' If \code{fieldMode} is \code{"position"}, then the fields mentioned above
+#' are identified by the order they appear in the header, and not their names.
+#' The first two fields correspond to \code{Market} and \code{UpStream} or
+#' \code{DownStream} respectively, and the last field corresponds to
+#' \code{Quota}. All other fields are considered to be attribute fields.
 #'
 #' Indices should have consecutive values, starting from \code{1}. Distance
 #' attribute values should be numerical.
@@ -359,9 +358,12 @@ importMatched <- function(filename, fieldMode = "position") {
 #' @param filenameUp,filenameDn Absolute or relative path to the files for the
 #'   upstream and the downstream data respectively. See also the parameters to
 #'   \code{\link[data.table]{fread}}.
+#' @inheritParams importMatched
 #'
 #' @return A list with members:
 #' \tabular{ll}{
+#'   \code{$headerUp}, \code{$headerDn} \tab Character vectors of the headers
+#'     of the tables. \cr
 #'   \code{$noM}                \tab The number of markets.\cr
 #'   \code{$noU}, \code{$noD}   \tab Vectors of size \code{$noM}, whose
 #'     \code{m}-th element is the number of upstreams and downstreams
@@ -377,9 +379,9 @@ importMatched <- function(filename, fieldMode = "position") {
 #' }
 #'
 #' @export
-importUnmatched <- function(filenameUp, filenameDn) {
-    marketDataUp <- importUnmatchedMain(filenameUp, "up")
-    marketDataDn <- importUnmatchedMain(filenameDn, "dn")
+importUnmatched <- function(filenameUp, filenameDn, fieldMode = "position") {
+    marketDataUp <- importUnmatchedMain(filenameUp, fieldMode, "up")
+    marketDataDn <- importUnmatchedMain(filenameDn, fieldMode, "dn")
     stopifnot(
         marketDataUp$noM    == marketDataDn$noM,
         marketDataUp$noAttr == marketDataDn$noAttr)
@@ -388,6 +390,8 @@ importUnmatched <- function(filenameUp, filenameDn) {
     quotasUp <- extractQuotas(marketDataUp)
     quotasDn <- extractQuotas(marketDataDn)
     result <- list(
+        headerUp = marketDataUp$header,
+        headerDn = marketDataDn$header,
         noM = marketDataUp$noM,
         noU = marketDataUp$noS,
         noD = marketDataDn$noS,
@@ -466,3 +470,48 @@ checkHeaderMatched <- function(header, fieldMode) {
         distanceColIdxs  = distanceColIdxs,
         matchColIdx      = matchColIdx))
 }
+
+#' Check if header is valid
+#'
+#' Checks if the given vector of field names satisfies the conditions stated in
+#' \code{importUnmatched}, stopping execution if they are not met.
+#'
+#' @inheritParams importUnmatched
+#' @inheritParams checkHeaderUnmatched
+#'
+#' @keywords internal
+checkHeaderUnmatched <- function(header, fieldMode, filetype) {
+    n = length(header)
+    if (fieldMode == "position") {
+        # Two fields for market/stream, at least one attribute
+        # column, and a quota column.
+        stopifnot(n >= 4)
+        marketColIdx     <- 1
+        streamColIdx     <- 2
+        attributeColIdxs <- 3:(n-1)
+        quotaColIdx      <- n
+    } else if (fieldMode == "name") {
+        streamColName = switch(filetype, "up" = "UpStream", "dn" = "DownStream")
+        marketPositions     <- which(header == "Market")
+        streamPositions     <- which(header == streamColName)
+        quotaPositions      <- which(header == "Quota")
+        attributePositions  <- which(sapply(header,
+                                            function(s) { startsWith(s, "Attribute") }))
+        stopifnot(
+            length(marketPositions)     == 1,
+            length(streamPositions)     == 1,
+            length(quotaPositions)      == 1,
+            length(attributePositions)  == n - 3
+        )
+        marketColIdx     <- marketPositions
+        streamColIdx     <- streamPositions
+        attributeColIdxs <- attributePositions
+        quotaColIdx      <- quotaPositions
+    }
+    return(list(
+        marketColIdx     = marketColIdx,
+        streamColIdx     = streamColIdx,
+        attributeColIdxs = attributeColIdxs,
+        quotaColIdx      = quotaColIdx))
+}
+
