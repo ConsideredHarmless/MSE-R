@@ -7,7 +7,7 @@
 extractQuotas(marketData)
 }
 \arguments{
-\item{marketData}{The return value of \code{importUnmatchedCommon}.}
+\item{marketData}{The return value of \code{importUnmatchedMain}.}
 }
 \value{
 A list of quota vectors, on for each market.

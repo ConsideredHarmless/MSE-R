@@ -7,7 +7,7 @@
 extractMatchMatrices(marketData)
 }
 \arguments{
-\item{marketData}{The return value of \code{importCommon}.}
+\item{marketData}{The return value of \code{importMatchedMain}.}
 }
 \value{
 A list of match matrices.

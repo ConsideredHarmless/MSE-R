@@ -8,19 +8,28 @@
 
 #' @import data.table
 #' @keywords internal
-importCommon <- function(filename) {
+importMatchedMain <- function(filename, fieldMode) {
     Market <- UpStream <- DownStream <- NULL
-    # Importing data
     DT <- fread(filename, header=TRUE)
+    header <- colnames(DT)
+    numCols <- length(header)
+    colIdxs <- checkHeaderMatched(header, fieldMode)
+    if (fieldMode == "position") {
+        newColNames <- c(
+            "Market", "UpStream", "DownStream",
+            sapply(
+                1:length(colIdxs$distanceColIdxs),
+                function(i) { sprintf("Distance%d", i)} ),
+            "Match")
+        setnames(DT, newColNames)
+    }
+    # keyColIdxs <- do.call(c, unname(colIdxs[1:3]))
+    # keyColNames <- header[keyColIdxs]
+    # setkeyv(DT, keyColNames)
     # Adding keys for fast filtering
     setkey(DT, Market, UpStream, DownStream)
-    # Header names
-    header <- colnames(DT)
     # Calculating number of attributes
-    distColIdxs <- which(sapply(
-        colnames(DT),
-        function(s) { startsWith(s, "Distance") }))
-    noAttr <- length(distColIdxs)
+    noAttr <- length(colIdxs$distanceColIdxs)
     # Calculating number of markets
     marketIdxs = unique(DT, by = "Market")[[1]]
     checkIndices(marketIdxs)
@@ -34,13 +43,12 @@ importCommon <- function(filename) {
     noD <- unlist(lapply(dnIdxs, length))
     return(list(
         DT=DT, header=header, noM=noM, noU=noU, noD=noD, noAttr=noAttr,
-        marketIdxs=marketIdxs, distColIdxs=distColIdxs,
-        upIdxs=upIdxs, dnIdxs=dnIdxs))
+        colIdxs=colIdxs, marketIdxs=marketIdxs, upIdxs=upIdxs, dnIdxs=dnIdxs))
 }
 
 #' @import data.table
 #' @keywords internal
-importUnmatchedCommon <- function(filename, filetype) {
+importUnmatchedMain <- function(filename, filetype) {
     Market <- UpStream <- DownStream <- NULL
     # Importing data
     DT <- fread(filename, header=TRUE)
@@ -87,7 +95,7 @@ NULL
 
 #' Extract distance matrices from imported table
 #'
-#' @param marketData The return value of \code{importCommon}.
+#' @param marketData The return value of \code{importMatchedMain}.
 #'
 #' @section Distance matrix structure:
 #' Let \code{mIdx} index a market. Each \code{distanceMatrix} is an array
@@ -109,7 +117,7 @@ extractDistanceMatrices <- function(marketData) {
     distanceMatrices <- lapply(marketData$marketIdxs, function(mIdx) {
         Market <- NULL
         # The unname is important!
-        colSel <- unname(marketData$distColIdxs)
+        colSel <- unname(marketData$colIdxs$distanceColIdxs)
         distTable <- marketData$DT[Market == mIdx, colSel, with=FALSE]
         p <- marketData$noU[mIdx]
         q <- marketData$noD[mIdx]
@@ -130,7 +138,7 @@ extractDistanceMatrices <- function(marketData) {
 
 #' Extract match matrices from imported table
 #'
-#' @param marketData The return value of \code{importCommon}.
+#' @param marketData The return value of \code{importMatchedMain}.
 #'
 #' @section Match matrix structure:
 #' Let \code{mIdx} index a market. Each \code{matchMatrix} is an array of
@@ -164,7 +172,7 @@ extractMatchMatrices <- function(marketData) {
 
 #' Extract mate tables from imported table
 #'
-#' @param marketData The return value of \code{importCommon}.
+#' @param marketData The return value of \code{importMatchedMain}.
 #'
 #' @section Mate table structure:
 #' Let \code{mIdx} index a market. Each mate table is a \code{data.table} object
@@ -198,7 +206,7 @@ extractMate <- function(marketData) {
 
 #' Extract attributed matrices from imported table
 #'
-#' @param marketData The return value of \code{importCommonUnmatched}.
+#' @param marketData The return value of \code{importUnmatchedMain}.
 #'
 #' @section Attribute matrix structure:
 #' Let \code{mIdx} index a market. Each \code{attributeMatrix} is an array
@@ -226,7 +234,7 @@ extractAttributeMatrices <- function(marketData) {
 
 #' Extract quota vectors from imported table
 #'
-#' @param marketData The return value of \code{importUnmatchedCommon}.
+#' @param marketData The return value of \code{importUnmatchedMain}.
 #'
 #' @return A list of quota vectors, on for each market.
 #' @keywords internal
@@ -244,8 +252,10 @@ extractQuotas <- function(marketData) {
 #'
 #' @section File structure:
 #'
-#' The file must be a delimiter-separated file with a header. It must contain
-#' the following fields:
+#' The file must be a delimiter-separated file with a header.
+#'
+#' If \code{fieldMode} is \code{"name"}, the file must contain the following
+#' fields:
 #' \tabular{ll}{
 #'   \code{Market} \tab The market index.\cr
 #'   \code{UpStream} \tab The upstream index.\cr
@@ -255,6 +265,13 @@ extractQuotas <- function(marketData) {
 #' It must also contain at least one field with a name starting with
 #' \code{Distance}. These fields contain attribute values. The order
 #' they appear in, and not their full name, specifies their actual order.
+#'
+#' If \code{fieldMode} is \code{"position"}, then the fields mentioned above
+#' are identified by the order they appear in the header, and not their names.
+#' The first three fields correspond to \code{Market}, \code{UpStream}, and
+#' \code{DownStream} respectively, and the last field corresponds to
+#' \code{Match}. All other fields are considered to be distance attribute
+#' fields.
 #'
 #' Indices should have consecutive values, starting from \code{1}. Distance
 #' attribute values should be numerical.
@@ -270,6 +287,14 @@ extractQuotas <- function(marketData) {
 #'
 #' @param filename Absolute or relative path to the file. See also the
 #'   parameters to \code{\link[data.table]{fread}}.
+#' @param fieldMode A string denoting how to identify the fields of the file.
+#'   Options are:
+#'   \tabular{ll}{
+#'     \code{"position"} \tab (default) Identify each field based on its order
+#'       in the field list. \cr
+#'     \code{"name"} \tab Identify each field based on its name.
+#'   }
+#' See the section "File structure" for more information.
 #'
 #' @return A list with members:
 #' \tabular{ll}{
@@ -293,8 +318,9 @@ extractQuotas <- function(marketData) {
 #' expressed in different ways.
 #'
 #' @export
-importMatched <- function(filename) {
-    marketData <- importCommon(filename)
+importMatched <- function(filename, fieldMode = "position") {
+    stopifnot(fieldMode %in% c("position", "name"))
+    marketData <- importMatchedMain(filename, fieldMode)
     distanceMatrices <- extractDistanceMatrices(marketData)
     matchMatrices <- extractMatchMatrices(marketData)
     mate <- extractMate(marketData)
@@ -352,8 +378,8 @@ importMatched <- function(filename) {
 #'
 #' @export
 importUnmatched <- function(filenameUp, filenameDn) {
-    marketDataUp <- importUnmatchedCommon(filenameUp, "up")
-    marketDataDn <- importUnmatchedCommon(filenameDn, "dn")
+    marketDataUp <- importUnmatchedMain(filenameUp, "up")
+    marketDataDn <- importUnmatchedMain(filenameDn, "dn")
     stopifnot(
         marketDataUp$noM    == marketDataDn$noM,
         marketDataUp$noAttr == marketDataDn$noAttr)
@@ -391,4 +417,52 @@ checkIndices <- function(idxs) {
     if (!isTRUE(all.equal(idxs, seq_along(idxs)))) {
         warning("indices not consecutive")
     }
+}
+
+#' Check if header is valid
+#'
+#' Checks if the given vector of field names satisfies the conditions stated in
+#' \code{importMatched}, stopping execution if they are not met.
+#'
+#' @param header A vector of field names to be checked.
+#' @inheritParams importMatched
+#'
+#' @keywords internal
+checkHeaderMatched <- function(header, fieldMode) {
+    n = length(header)
+    if (fieldMode == "position") {
+        # Three fields for market/upstream/downstream, at least one distance
+        # column, and a match column.
+        stopifnot(n >= 5)
+        marketColIdx     <- 1
+        upstreamColIdx   <- 2
+        downstreamColIdx <- 3
+        distanceColIdxs  <- 4:(n-1)
+        matchColIdx      <- n
+    } else if (fieldMode == "name") {
+        marketPositions     <- which(header == "Market")
+        upstreamPositions   <- which(header == "UpStream")
+        downstreamPositions <- which(header == "DownStream")
+        matchPositions      <- which(header == "Match")
+        distancePositions   <- which(sapply(header,
+                                            function(s) { startsWith(s, "Distance") }))
+        stopifnot(
+            length(marketPositions)     == 1,
+            length(upstreamPositions)   == 1,
+            length(downstreamPositions) == 1,
+            length(matchPositions)      == 1,
+            length(distancePositions)   == n - 4
+        )
+        marketColIdx     <- marketPositions
+        upstreamColIdx   <- upstreamPositions
+        downstreamColIdx <- downstreamPositions
+        distanceColIdxs  <- distancePositions
+        matchColIdx      <- matchPositions
+    }
+    return(list(
+        marketColIdx     = marketColIdx,
+        upstreamColIdx   = upstreamColIdx,
+        downstreamColIdx = downstreamColIdx,
+        distanceColIdxs  = distanceColIdxs,
+        matchColIdx      = matchColIdx))
 }

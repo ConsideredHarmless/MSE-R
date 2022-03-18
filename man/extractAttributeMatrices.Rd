@@ -7,7 +7,7 @@
 extractAttributeMatrices(marketData)
 }
 \arguments{
-\item{marketData}{The return value of \code{importCommonUnmatched}.}
+\item{marketData}{The return value of \code{importUnmatchedMain}.}
 }
 \value{
 A list of attribute matrices.

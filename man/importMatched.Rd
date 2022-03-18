@@ -4,11 +4,20 @@
 \alias{importMatched}
 \title{Import matched market data}
 \usage{
-importMatched(filename)
+importMatched(filename, fieldMode = "position")
 }
 \arguments{
 \item{filename}{Absolute or relative path to the file. See also the
 parameters to \code{\link[data.table]{fread}}.}
+
+\item{fieldMode}{A string denoting how to identify the fields of the file.
+Options are:
+\tabular{ll}{
+\code{"position"} \tab (default) Identify each field based on its order
+in the field list. \cr
+\code{"name"} \tab Identify each field based on its name.
+}
+See the section "File structure" for more information.}
 }
 \value{
 A list with members:
@@ -38,8 +47,10 @@ Reads a CSV file containing data for matched markets.
 \section{File structure}{
 
 
-The file must be a delimiter-separated file with a header. It must contain
-the following fields:
+The file must be a delimiter-separated file with a header.
+
+If \code{fieldMode} is \code{"name"}, the file must contain the following
+fields:
 \tabular{ll}{
 \code{Market} \tab The market index.\cr
 \code{UpStream} \tab The upstream index.\cr
@@ -49,6 +60,13 @@ the following fields:
 It must also contain at least one field with a name starting with
 \code{Distance}. These fields contain attribute values. The order
 they appear in, and not their full name, specifies their actual order.
+
+If \code{fieldMode} is \code{"position"}, then the fields mentioned above
+are identified by the order they appear in the header, and not their names.
+The first three fields correspond to \code{Market}, \code{UpStream}, and
+\code{DownStream} respectively, and the last field corresponds to
+\code{Match}. All other fields are considered to be distance attribute
+fields.
 
 Indices should have consecutive values, starting from \code{1}. Distance
 attribute values should be numerical.
