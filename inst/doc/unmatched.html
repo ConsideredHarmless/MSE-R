@@ -151,11 +151,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>filenameUp <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;unmatched_testdata_up.csv&quot;</span>, <span class="at">package =</span> <span class="st">&quot;maxscoreest&quot;</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>filenameDn <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;unmatched_testdata_dn.csv&quot;</span>, <span class="at">package =</span> <span class="st">&quot;maxscoreest&quot;</span>)</span></code></pre></div>
 <p>We import this using the function <code>importUnmatched</code>.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dataUnmatched <span class="ot">&lt;-</span> <span class="fu">importUnmatched</span>(filenameUp, filenameDn)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>unmatchedData <span class="ot">&lt;-</span> <span class="fu">importUnmatched</span>(filenameUp, filenameDn)</span></code></pre></div>
 <p>Next, we need to construct the (unevaluated) payoff matrices from the attribute matrices of the data.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>unevalPayoffMatrices <span class="ot">&lt;-</span> <span class="fu">makeDistanceMatrices</span>(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    dataUnmatched<span class="sc">$</span>attributeMatricesUp,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    dataUnmatched<span class="sc">$</span>attributeMatricesDn)</span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    unmatchedData<span class="sc">$</span>attributeMatricesUp,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    unmatchedData<span class="sc">$</span>attributeMatricesDn)</span></code></pre></div>
 <p>Now, we can use a known parameter vector to evaluate them.</p>
 <hr />
 <p>Note that <code>beta</code> is the free parameter vector, and therefore has length one less than the total number of attributes, which in this case is <span class="math inline">\(3\)</span>.</p>
@@ -164,7 +164,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>payoffMatrices <span class="ot">&lt;-</span> <span class="fu">evaluatePayoffMatrices</span>(unevalPayoffMatrices, beta)</span></code></pre></div>
 <p>Now we are ready to calculate the optimal matching. We provide the calculated payoff matrices, as well as the quotas both for upstreams and for downstreams.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>matchMatrices <span class="ot">&lt;-</span> <span class="fu">CmatchMatrices</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    payoffMatrices, dataUnmatched<span class="sc">$</span>quotasUp, dataUnmatched<span class="sc">$</span>quotasDn)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    payoffMatrices, unmatchedData<span class="sc">$</span>quotasUp, unmatchedData<span class="sc">$</span>quotasDn)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>matchMatrices</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2] [,3]</span></span>
@@ -183,6 +183,113 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]    0    0    1    0</span></span>
 <span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]    0    1    0    0</span></span>
 <span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]    0    0    0    1</span></span></code></pre></div>
+</div>
+<div id="taking-a-closer-look" class="section level1">
+<h1>Taking a closer look</h1>
+<div id="importing" class="section level2">
+<h2>Importing</h2>
+<p>The <code>importUnmatched</code> function can handle delimiter-separated value files with headers. It supports two modes:</p>
+<ul>
+<li>identifying fields by their position (the default)</li>
+<li>identifying fields by their name</li>
+</ul>
+<p>The optional argument <code>fieldMode</code> switches between those modes. The exact format of the header and values is explained in more detail in the documentation.</p>
+</div>
+<div id="accessing-the-imported-data" class="section level2">
+<h2>Accessing the imported data</h2>
+<p>We can see how many markets are in the data, how many members each stream has in each market, and how many attributes there are.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>noM</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>noU</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3 2 4</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>noD</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2 3 4</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>noAttr</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span></code></pre></div>
+<p>We can also view the file headers, containing the field names.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>headerUp</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Market&quot;     &quot;Stream&quot;     &quot;Attribute1&quot; &quot;Attribute2&quot; &quot;Attribute3&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [6] &quot;Quota&quot;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>headerDn</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Market&quot;     &quot;Stream&quot;     &quot;Attribute1&quot; &quot;Attribute2&quot; &quot;Attribute3&quot;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [6] &quot;Quota&quot;</span></span></code></pre></div>
+<p>The <code>unmatchedData</code> structure exposes four elements, called <code>$attributeMatricesUp</code>, <code>$attributeMatricesDn</code>, <code>$quotasUp</code>, and <code>$quotasDn</code>. They are lists of size <code>noM</code> each, with each element containing an array with the relevant data for each market:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(unmatchedData<span class="sc">$</span>attributeMatricesUp)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(unmatchedData<span class="sc">$</span>attributeMatricesDn)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(unmatchedData<span class="sc">$</span>quotasUp)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(unmatchedData<span class="sc">$</span>quotasDn)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span></code></pre></div>
+<p>We can view the attribute values for the first upstream of the second market:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mIdx <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>uIdx <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>aIdx <span class="ot">&lt;-</span> <span class="dv">3</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>attributeMatricesUp[[mIdx]][aIdx, uIdx]</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.3462153</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>attributeMatricesUp[[mIdx]][, uIdx]</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.01767037 0.26026373 0.34621532</span></span></code></pre></div>
+<p>We can also view the quotas for the first market:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>mIdx <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>quotasUp[[mIdx]]</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1 1 1</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>unmatchedData<span class="sc">$</span>quotasDn[[mIdx]]</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1 1</span></span></code></pre></div>
+</div>
+<div id="accessing-the-payoff-matrices" class="section level2">
+<h2>Accessing the payoff matrices</h2>
+<p>The structure <code>payoffMatrices</code> contains the values of the payoff function, evaluated for the parameter vector <code>beta</code>, for all upstream-downstream pairs.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(payoffMatrices)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>mIdx <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(payoffMatrices[[mIdx]])</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2 3</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>payoffMatrices[[mIdx]]</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          [,1]      [,2]      [,3]</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 1.062660 0.5594662 0.4733458</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] 2.044589 1.5116481 0.7322521</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>uIdx <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>dIdx <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>payoffMatrices[[mIdx]][dIdx, uIdx]</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2.044589</span></span></code></pre></div>
+</div>
+<div id="accessing-the-match-matrices" class="section level2">
+<h2>Accessing the match matrices</h2>
+<p>Like <code>payoffMatrices</code>, the structure <code>matchMatrices</code> is a list of arrays, with one element for each market. Each element is an array with elements <code>0</code> or <code>1</code>.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>matchMatrices</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2] [,3]</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]    0    1    0</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]    1    0    0</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]]</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2]</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]    1    0</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]    0    0</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]    0    1</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[3]]</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2] [,3] [,4]</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]    1    0    0    0</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]    0    0    1    0</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]    0    1    0    0</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]    0    0    0    1</span></span></code></pre></div>
+<p>We can check if the upstream-downstream pair <span class="math inline">\((2, 3)\)</span> of the second market has a match:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mIdx <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>uIdx <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>dIdx <span class="ot">&lt;-</span> <span class="dv">3</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>matchMatrices[[mIdx]][dIdx, uIdx]</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<p>We can also view the matching information for a single stream.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Leaving an index blank takes all elements for that dimension.</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>matchMatrices[[mIdx]][, uIdx]</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0 0 1</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># `which` returns the indices where the elements above are `1` -- i.e. the</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># downstream matches of upstream &#39;2&#39;.</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span>(matchMatrices[[mIdx]][, uIdx] <span class="sc">==</span> <span class="dv">1</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span></code></pre></div>
+</div>
 </div>
 
 

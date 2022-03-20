@@ -32,7 +32,7 @@ filenameDn <- system.file("extdata", "unmatched_testdata_dn.csv", package = "max
 We import this using the function `importUnmatched`.
 
 ```{r}
-dataUnmatched <- importUnmatched(filenameUp, filenameDn)
+unmatchedData <- importUnmatched(filenameUp, filenameDn)
 ```
 
 Next, we need to construct the (unevaluated) payoff matrices from the
@@ -40,8 +40,8 @@ attribute matrices of the data.
 
 ```{r}
 unevalPayoffMatrices <- makeDistanceMatrices(
-    dataUnmatched$attributeMatricesUp,
-    dataUnmatched$attributeMatricesDn)
+    unmatchedData$attributeMatricesUp,
+    unmatchedData$attributeMatricesDn)
 ```
 
 Now, we can use a known parameter vector to evaluate them.
@@ -63,6 +63,114 @@ payoff matrices, as well as the quotas both for upstreams and for downstreams.
 
 ```{r}
 matchMatrices <- CmatchMatrices(
-    payoffMatrices, dataUnmatched$quotasUp, dataUnmatched$quotasDn)
+    payoffMatrices, unmatchedData$quotasUp, unmatchedData$quotasDn)
 matchMatrices
 ```
+
+# Taking a closer look
+
+## Importing
+
+The `importUnmatched` function can handle delimiter-separated value files with
+headers. It supports two modes:
+
+- identifying fields by their position (the default)
+- identifying fields by their name
+
+The optional argument `fieldMode` switches between those modes.
+The exact format of the header and values is explained in more detail in the
+documentation.
+
+## Accessing the imported data
+
+We can see how many markets are in the data, how many members each stream
+has in each market, and how many attributes there are.
+
+```{r}
+unmatchedData$noM
+unmatchedData$noU
+unmatchedData$noD
+unmatchedData$noAttr
+```
+
+We can also view the file headers, containing the field names.
+
+```{r}
+unmatchedData$headerUp
+unmatchedData$headerDn
+```
+
+The `unmatchedData` structure exposes four elements, called
+`$attributeMatricesUp`, `$attributeMatricesDn`, `$quotasUp`, and `$quotasDn`.
+They are lists of size `noM` each, with each element
+containing an array with the relevant data for each market:
+
+```{r}
+length(unmatchedData$attributeMatricesUp)
+length(unmatchedData$attributeMatricesDn)
+length(unmatchedData$quotasUp)
+length(unmatchedData$quotasDn)
+```
+
+We can view the attribute values for the first upstream of the second market:
+
+```{r}
+mIdx <- 2
+uIdx <- 1
+aIdx <- 3
+unmatchedData$attributeMatricesUp[[mIdx]][aIdx, uIdx]
+unmatchedData$attributeMatricesUp[[mIdx]][, uIdx]
+```
+
+We can also view the quotas for the first market:
+
+```{r}
+mIdx <- 1
+unmatchedData$quotasUp[[mIdx]]
+unmatchedData$quotasDn[[mIdx]]
+```
+
+## Accessing the payoff matrices
+
+The structure `payoffMatrices` contains the values of the payoff function,
+evaluated for the parameter vector `beta`, for all upstream-downstream pairs.
+
+```{r}
+length(payoffMatrices)
+mIdx <- 1
+dim(payoffMatrices[[mIdx]])
+payoffMatrices[[mIdx]]
+uIdx <- 1
+dIdx <- 2
+payoffMatrices[[mIdx]][dIdx, uIdx]
+```
+
+## Accessing the match matrices
+
+Like `payoffMatrices`, the structure `matchMatrices` is a list of arrays, with
+one element for each market. Each element is an array with elements `0` or `1`.
+
+```{r}
+matchMatrices
+```
+
+We can check if the upstream-downstream pair $(2, 3)$ of the second market
+has a match:
+
+```{r}
+mIdx <- 2
+uIdx <- 2
+dIdx <- 3
+matchMatrices[[mIdx]][dIdx, uIdx]
+```
+
+We can also view the matching information for a single stream.
+
+```{r}
+# Leaving an index blank takes all elements for that dimension.
+matchMatrices[[mIdx]][, uIdx]
+# `which` returns the indices where the elements above are `1` -- i.e. the
+# downstream matches of upstream '2'.
+which(matchMatrices[[mIdx]][, uIdx] == 1)
+```
+

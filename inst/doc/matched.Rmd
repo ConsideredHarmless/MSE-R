@@ -163,3 +163,200 @@ cr$samples
 ```
 
 # Taking a closer look
+
+## Importing
+
+The `importMatched` function can handle delimiter-separated value files with
+headers. It supports two modes:
+
+- identifying fields by their position (the default)
+- identifying fields by their name
+
+The optional argument `fieldMode` switches between those modes.
+The exact format of the header and values is explained in more detail in the
+documentation.
+
+## Accessing the imported data
+
+We can see how many markets are in the data, how many members each stream
+has in each market, and how many attributes there are.
+
+```{r}
+matchedData$noM
+matchedData$noU
+matchedData$noD
+matchedData$noAttr
+```
+
+We can also view the file header, containing the field names.
+
+```{r}
+matchedData$header
+```
+
+The `matchedData` structure exposes two elements, called `$distanceMatrices` and
+`$matchMatrices`. They are lists of size `noM` each, with each element
+containing an array with the relevant data for each market:
+
+```{r}
+length(matchedData$distanceMatrices)
+length(matchedData$matchMatrices)
+```
+
+Let's check whether, in the third market, there is match between the
+upstream-downstream pair indexed by $(4, 7)$. Note the order that the indices
+appear.
+
+```{r}
+mIdx <- 3
+uIdx <- 4
+dIdx <- 7
+matchedData$matchMatrices[[mIdx]][dIdx, uIdx]
+```
+
+We can also view the matching information for a single stream.
+
+```{r}
+# Leaving an index blank takes all elements for that dimension.
+matchedData$matchMatrices[[mIdx]][, uIdx]
+# `which` returns the indices where the elements above are `1` -- i.e. the
+# downstream matches of upstream '4'.
+which(matchedData$matchMatrices[[mIdx]][, uIdx] == 1)
+```
+
+We can view the distance attributes for a single attribute index, or for the
+entire attribute range.
+
+```{r}
+aIdx <- 3
+matchedData$distanceMatrices[[mIdx]][aIdx, dIdx, uIdx]
+matchedData$distanceMatrices[[mIdx]][, dIdx, uIdx]
+```
+
+## Accessing the inequality members
+
+The structure `ineqmembers` is a list of length `noM`. Each element contains
+the indices which define each inequality for that market, packaged in a list.
+
+```{r}
+mIdx <- 1
+length(ineqmembers)
+names(ineqmembers[[mIdx]])
+```
+
+The `numIneqs` element is the number of inequalities for that market. The
+other four elements are lists, with length equal to `numIneqs`.
+
+```{r}
+ineqmembers[[mIdx]]$numIneqs
+length(ineqmembers[[mIdx]]$fctUpIdxs)
+```
+
+Each inequality, when everything has been moved to the LHS, contains terms of
+the form $f_{\beta}(m, p, q) - f_{\beta}(m, r, s)$, where $f_{\beta}$ is the
+payoff function of the match evaluated at the parameter vector $\beta$, and
+$f_{\beta}(m, i, j)$ is its value for the upstream-downstream match $(i, j)$ of
+the $m$-th market. The indices $p, q, r, s$ are stored the vectors
+`$fctUpIdxs$`, `$fctDnIdxs`, `$cfcUpIdxs$`, and `$cfcDnIdxs`, respectively,
+where `fct` and `cfc` correspond to the factual/LHS $(p, q)$ and
+counterfactual/RHS $(r, s)$ indices, and `Up` and `Dn` to the upstream
+$(p, r)$ and downstream $(q, s)$ indices.
+
+For example, let's choose the first term of the first inequality for the
+previous match:
+
+```{r}
+mIdx <- 3
+uIdx <- 4
+dIdx <- 7
+ineqIdx <- 1
+termIdx <- 1
+ineqmembers[[mIdx]]$fctUpIdxs[[ineqIdx]][termIdx]
+ineqmembers[[mIdx]]$fctDnIdxs[[ineqIdx]][termIdx]
+ineqmembers[[mIdx]]$cfcUpIdxs[[ineqIdx]][termIdx]
+ineqmembers[[mIdx]]$cfcDnIdxs[[ineqIdx]][termIdx]
+```
+
+Since the above expressions are cumbersome, we provide the `getIneqTermsIdxs`
+and `getAllIneqTermsIdxs` functions, which provide the above information in a
+more user-friendly mode. `getIneqTermsIdxs` returns an array with all indices
+of a single inequality. `getAllIneqTermsIdxs` does the same for an entire
+market.
+
+```{r}
+getIneqTermsIdxs(ineqmembers[[mIdx]], ineqIdx)
+getAllIneqTermsIdxs(ineqmembers[[mIdx]])[[ineqIdx]]
+```
+
+## Accessing the data array
+
+The `dataArray` object is an array with precomputed values used in calculating
+the value of the objective function. Its rows correspond to attributes, and its
+columns to inequalities.
+
+```{r}
+dim(dataArray)
+```
+
+The `dataArray` is "flat", in the sense that there is no distinction between
+markets. To recover that distinction, we need to create a mapping from its
+column indices to the market indices. This is handled by the function
+`makeGroupIDs`
+
+```{r}
+groupIDs
+```
+
+We can now choose the columns corresponding to the second market...
+
+```{r}
+mIdx <- 2
+qualifiedIndices <- which(groupIDs == mIdx)
+qualifiedIndices
+dataArray[, qualifiedIndices]
+```
+
+...or, more generally, to a subset of market indices:
+
+```{r}
+selectedGroups <- c(1, 3)
+qualifiedIndices <- which(groupIDs %in% selectedGroups)
+qualifiedIndices
+```
+
+## Optimization
+
+The function `makeBounds` creates equal symmetrical box constraints for each
+variable:
+
+```{r}
+makeBounds(matchedData$noAttr, 100)
+```
+
+If non-symmetrical constraints are desired, we can pass a third argument to the
+function:
+
+```{r}
+makeBounds(matchedData$noAttr, 10, -20)
+```
+
+Otherwise, we can also create custom bounds. That object should be a list
+with elements named `$lower` and `$upper`. Each element is a vector defining
+lower and upper bounds for each variable.
+
+```{r}
+bounds <- list(lower=c(-1, -2, -3, -5), upper=c(2, 3, 5, 8))
+bounds
+```
+
+Note that since we have 5 distrance attributes, the number of free parameters
+is 4.
+
+`getDefaultOptimParams` returns a reasonable collection of parameters for the
+Differential Evolution method.
+
+```{r}
+optimParams
+```
+
+See the documentation of `DEoptim::DEoptim.control` for more information.
