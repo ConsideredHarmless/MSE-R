@@ -184,15 +184,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>optResult <span class="ot">&lt;-</span> <span class="fu">do.call</span>(optimizeScoreFunction, optimizeScoreArgs)</span></code></pre></div>
 <p>We can now see the optimal parameter vector, and how many inequalities are satisfied across each market.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>optResult<span class="sc">$</span>optArg</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      par4      par1      par2      par3 </span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   1.81745  -2.75489  87.03322 -17.54139</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>optResult<span class="sc">$</span>optVal</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 96</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">calcPerMarketStats</span>(optResult<span class="sc">$</span>ineqSat, <span class="fu">makeGroupIDs</span>(ineqmembers))</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      Market ID Total inequalities Satisfied inequalities Satisfied/Total ratio</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]         1                 45                     34             0.7555556</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]         2                 45                     28             0.6222222</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]         3                 45                     34             0.7555556</span></span></code></pre></div>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]   1.81745  -2.75489  87.03322 -17.54139</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>optResult<span class="sc">$</span>optVal</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 96</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">calcPerMarketStats</span>(optResult<span class="sc">$</span>ineqSat, <span class="fu">makeGroupIDs</span>(ineqmembers))</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      Market ID Total inequalities Satisfied inequalities Satisfied/Total ratio</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]         1                 45                     34             0.7555556</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]         2                 45                     28             0.6222222</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,]         3                 45                     34             0.7555556</span></span></code></pre></div>
 </div>
 </div>
 <div id="calculating-the-confidence-intervals" class="section level1">
@@ -495,6 +494,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $reltol</span></span>
 <span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.001</span></span></code></pre></div>
 <p>See the documentation of <code>DEoptim::DEoptim.control</code> for more information.</p>
+<p>We can also use the original names of the distance attributes for the optimal parameter vector.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>distNames <span class="ot">&lt;-</span> matchedData<span class="sc">$</span>header[matchedData<span class="sc">$</span>colIdxs<span class="sc">$</span>distanceColIdxs]</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop first value.</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>distNamesFree <span class="ot">&lt;-</span> distNames[<span class="sc">-</span><span class="dv">1</span>]</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(optResult<span class="sc">$</span>optArg) <span class="ot">&lt;-</span> distNamesFree</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>optResult<span class="sc">$</span>optArg</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Distance2 Distance3 Distance4 Distance5 </span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   1.81745  -2.75489  87.03322 -17.54139</span></span></code></pre></div>
 </div>
 </div>
 

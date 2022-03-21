@@ -11,7 +11,9 @@
 importMatchedMain <- function(filename, fieldMode) {
     Market <- UpStream <- DownStream <- NULL
     DT <- fread(filename, header=TRUE)
-    header <- colnames(DT)
+    # Copy the vector using c(), otherwise it will be modified after setnames()
+    # is called.
+    header <- c(colnames(DT))
     colIdxs <- checkHeaderMatched(header, fieldMode)
     if (fieldMode == "position") {
         newColNames <- c(
@@ -47,7 +49,9 @@ importMatchedMain <- function(filename, fieldMode) {
 importUnmatchedMain <- function(filename, fieldMode, filetype) {
     Market <- Stream <- NULL
     DT <- fread(filename, header=TRUE)
-    header <- colnames(DT)
+    # Copy the vector using c(), otherwise it will be modified after setnames()
+    # is called.
+    header <- c(colnames(DT))
     colIdxs <- checkHeaderUnmatched(header, fieldMode, filetype)
     if (fieldMode == "position") {
         newColNames <- c(
@@ -296,6 +300,7 @@ extractQuotas <- function(marketData) {
 #'     \code{m}-th element is the number of upstreams and downstreams
 #'     respectively in the \code{m}-th market.\cr
 #'   \code{$noAttr}             \tab The number of distance attributes.\cr
+#'   \code{$colIdxs}            \tab TODO\cr
 #'   \code{$distanceMatrices}   \tab A list of arrays of distance values, one
 #'     for each market. See the appropriate section for their definition.\cr
 #'   \code{$matchMatrices}      \tab A list of arrays of zeros or ones
@@ -319,7 +324,7 @@ importMatched <- function(filename, fieldMode = "position") {
         distanceMatrices=distanceMatrices,
         matchMatrices=matchMatrices,
         mate=mate)
-    return(c(marketData[2:6], rest))
+    return(c(marketData[2:7], rest))
 }
 
 #' Import unmatched market data
@@ -369,6 +374,7 @@ importMatched <- function(filename, fieldMode = "position") {
 #'     \code{m}-th element is the number of upstreams and downstreams
 #'     respectively in the \code{m}-th market.\cr
 #'   \code{$noAttr}             \tab The number of distance attributes.\cr
+#'   \code{$colIdxsUp}, \code{$colIdxsDn} \tab TODO \cr
 #'   \code{$attributeMatricesUp}, \code{$attributeMatricesDn}
 #'                              \tab A list of arrays of upstream and downstream
 #'     attribute values respectively, one for each market. See the appropriate
@@ -396,6 +402,8 @@ importUnmatched <- function(filenameUp, filenameDn, fieldMode = "position") {
         noU = marketDataUp$noS,
         noD = marketDataDn$noS,
         noAttr = marketDataUp$noAttr,
+        colIdxsUp = marketDataUp$colIdxs,
+        colIdxsDn = marketDataDn$colIdxs,
         attributeMatricesUp = attributeMatricesUp,
         attributeMatricesDn = attributeMatricesDn,
         quotasUp = quotasUp,

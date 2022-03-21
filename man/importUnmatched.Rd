@@ -30,6 +30,7 @@ of the tables. \cr
 \code{m}-th element is the number of upstreams and downstreams
 respectively in the \code{m}-th market.\cr
 \code{$noAttr}             \tab The number of distance attributes.\cr
+\code{$colIdxsUp}, \code{$colIdxsDn} \tab TODO \cr
 \code{$attributeMatricesUp}, \code{$attributeMatricesDn}
 \tab A list of arrays of upstream and downstream
 attribute values respectively, one for each market. See the appropriate

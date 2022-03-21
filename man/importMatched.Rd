@@ -29,6 +29,7 @@ table.\cr
 \code{m}-th element is the number of upstreams and downstreams
 respectively in the \code{m}-th market.\cr
 \code{$noAttr}             \tab The number of distance attributes.\cr
+\code{$colIdxs}            \tab TODO\cr
 \code{$distanceMatrices}   \tab A list of arrays of distance values, one
 for each market. See the appropriate section for their definition.\cr
 \code{$matchMatrices}      \tab A list of arrays of zeros or ones

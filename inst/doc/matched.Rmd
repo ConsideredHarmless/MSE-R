@@ -360,3 +360,14 @@ optimParams
 ```
 
 See the documentation of `DEoptim::DEoptim.control` for more information.
+
+We can also use the original names of the distance attributes for the
+optimal parameter vector.
+
+```{r}
+distNames <- matchedData$header[matchedData$colIdxs$distanceColIdxs]
+# Drop first value.
+distNamesFree <- distNames[-1]
+names(optResult$optArg) <- distNamesFree
+optResult$optArg
+```

@@ -146,3 +146,10 @@ bounds
 ## -----------------------------------------------------------------------------
 optimParams
 
+## -----------------------------------------------------------------------------
+distNames <- matchedData$header[matchedData$colIdxs$distanceColIdxs]
+# Drop first value.
+distNamesFree <- distNames[-1]
+names(optResult$optArg) <- distNamesFree
+optResult$optArg
+

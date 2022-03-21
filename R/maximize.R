@@ -81,6 +81,7 @@ optimizeScoreFunction <- function(
         objFunVec <- do.call(makeObjFunVec, makeObjFunArgs)
         result$ineqSat <- objSign * objFunVec(result$optArg)
     }
+    result$optArg <- unname(result$optArg)
     return(result)
 }
 
