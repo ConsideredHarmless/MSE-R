@@ -75,7 +75,7 @@ vignette("unmatched", package = "maxscoreest")
 Estimation and Point and Set Identified Subsampling Inference”. 2009. Last
 accessed from 
 <http://fox.web.rice.edu/computer-code/matchestimation-452-documen.pdf>
-- Fox, Jeremy, “Estimating Matching Games with Transfers,” 2016. Last accessed
+- Fox, Jeremy, “Estimating Matching Games with Transfers,” 2018. Last accessed
 from <http://fox.web.rice.edu/working-papers/fox-matching-maximum-score.pdf>
 - Fox J. 2010. Identification in matching games. Quantitative Economics 1:
 203–254
