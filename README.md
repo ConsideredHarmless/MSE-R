@@ -7,7 +7,7 @@ The **maxscoreest** R package solves the *pairwise maximum score estimation*
 problem.
 
 The code builds upon Jeremy Fox’s theoretical work on the “pairwise maximum
-score estimator” (Fox 2010; Fox 2016) and the original Match Estimation toolkit
+score estimator” (Fox 2010; Fox 2018) and the original Match Estimation toolkit
 (Santiago and Fox, 2009) which can be downloaded from <http://fox.web.rice.edu/>.
 
 To understand the present code the user needs to be familiar with the maximum
