@@ -5,7 +5,7 @@
 #' of inequalities satisfied) for a given parameter vector (\eqn{\beta}).
 #'
 #' The function created is:
-#'   \eqn{g(\beta) = \mathrm{objSign} \sum_{k=1}^{N_{\mathrm{ineqs}} (a_k \beta')}}
+#'   \eqn{g(\beta) = \mathrm{objSign} \sum_{k=1}^{N_{\mathrm{ineqs}} 1\{a_k \beta' \geq 0\}}}
 #' where
 #' \enumerate{
 #'   \item \eqn{\beta} is the vector of free parameters, of length \code{noAttr-1}.

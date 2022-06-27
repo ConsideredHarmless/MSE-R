@@ -21,7 +21,10 @@ Imports:
     graphics,
     DEoptim,
     lpSolve,
-    stats
+    stats,
+    pracma,
+    NMOF,
+    MASS
 Suggests: 
     knitr,
     rmarkdown,

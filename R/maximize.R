@@ -69,6 +69,17 @@ optimizeScoreFunction <- function(
             objFun <- do.call(makeObjFun, makeObjFunArgs)
             result <- maximizeDEoptim(objFun, bounds$lower, bounds$upper, optimParams)
         },
+        "TA" = {
+            objSign <- -1
+            makeObjFunArgs = list(dataArray = objDataArray, objSign = objSign)
+            if (!is.null(coefficient1)) {
+                makeObjFunArgs$coefficient1 <- coefficient1
+            }
+            objFun <- do.call(makeObjFun, makeObjFunArgs)
+            optArg <- maximizeTA(objDataArray, coefficient1, optimParams)
+            optVal <- objFun(optArg)
+            return(list(optVal = optVal, optArg = optArg))
+        },
         stop(sprintf("optimizeScoreFunction: method %s is not implemented",
                       method))
     )
@@ -107,6 +118,35 @@ maximizeDEoptim <- function(objective, lower, upper, control = list()) {
     optArg <-  outDEoptim$optim$bestmem
     optVal <- -outDEoptim$optim$bestval
     return(list(optVal = optVal, optArg = optArg))
+}
+
+#' TODO
+#'
+#' @param dataArray TODO
+#' @param coefficient1 TODO
+#' @param optimParams TODO
+#' @return TODO
+#' @keywords internal
+maximizeTA <- function(dataArray, coefficient1, optimParams) {
+    numIneqs <- dim(dataArray)[2]
+    TAargs <- list(
+        X = t(dataArray),
+        y = rep(1, numIneqs),
+        b0 = if (is.null(coefficient1)) { 1 } else { coefficient1 }
+    )
+    # TODO fix parameter passing and checking
+    defaults <- list(
+        trials = 1, nS = 1000, nT = 10, q = 0.5, stepUp = 0, nat0 = NULL)
+    keys <- c("trials", "nS", "nT", "q", "stepUp", "nat0")
+    f <- function(key) {
+        if (is.null(optimParams[[key]])) { defaults[[key]] } else { optimParams[[key]] }
+    }
+    for (key in keys) {
+        TAargs[[key]] <- f(key)
+    }
+    TAres <- do.call(TA_estimator, TAargs)
+    TAoptArg <- TAres[1][[1]]
+    return(TAoptArg)
 }
 
 #' Get default values for the \code{optimParams} argument of \code{optimizeScoreFunction}
