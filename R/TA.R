@@ -86,7 +86,7 @@ TA_estimator <- function(X,y,b0,trials,nS,nT,q,stepUp,nat0) {
   if (rcond(Af) > .Machine$double.eps) {
     argminTA=solve(Af,bmbf)
   } else {
-    argminTA<-as.vector(ginv(Af)%*%bmbf); names(argminTA)<-colnames(Af)
+    argminTA<-as.vector(MASS::ginv(Af)%*%bmbf); names(argminTA)<-colnames(Af)
   }
   #--------------------
 
@@ -180,12 +180,12 @@ objfun <- function(nat,X,y,b0) {
   # thetas=solve(mA,bmb)
   # }
   # if (abs(det(mA)) < 0.001) {
-  #   thetas=ginv(mA)%*%bmb
+  #   thetas=MASS::ginv(mA)%*%bmb
   # }
   if (rcond(mA) > .Machine$double.eps) {
     thetas=solve(mA,bmb)
   } else {
-    thetas=ginv(mA)%*%bmb
+    thetas=MASS::ginv(mA)%*%bmb
   }
 
 
