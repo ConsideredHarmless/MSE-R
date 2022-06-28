@@ -62,7 +62,7 @@ optimizeScoreFunction <- function(
     switch (method,
         "DEoptim" = {
             objSign <- -1
-            makeObjFunArgs = list(dataArray = objDataArray, objSign = objSign)
+            makeObjFunArgs <- list(dataArray = objDataArray, objSign = objSign)
             if (!is.null(coefficient1)) {
                 makeObjFunArgs$coefficient1 <- coefficient1
             }
@@ -71,14 +71,15 @@ optimizeScoreFunction <- function(
         },
         "TA" = {
             objSign <- -1
-            makeObjFunArgs = list(dataArray = objDataArray, objSign = objSign)
+            makeObjFunArgs <- list(dataArray = objDataArray, objSign = objSign)
             if (!is.null(coefficient1)) {
                 makeObjFunArgs$coefficient1 <- coefficient1
             }
             objFun <- do.call(makeObjFun, makeObjFunArgs)
             optArg <- maximizeTA(objDataArray, coefficient1, optimParams)
-            optVal <- objFun(optArg)
-            return(list(optVal = optVal, optArg = optArg))
+            # TODO The objective signs should be reworked.
+            optVal <- -objFun(optArg)
+            result <- list(optVal = optVal, optArg = optArg)
         },
         stop(sprintf("optimizeScoreFunction: method %s is not implemented",
                       method))
