@@ -21,9 +21,8 @@ standardizeX <- function(X) {
     return(list(X = X, mu = mu, sigma = sigma))
 }
 
-denormalizeEstimates <- function(estimatesNorm, mu, sigma) {
-    p <- length(estimatesNorm)
-    betaNorm <- estimatesNorm
+denormalizeEstimates <- function(betaNorm, mu, sigma) {
+    p <- length(betaNorm)
     betaRaw <- numeric(p)
     betaHelp <- numeric(p)
     for (j in 1:p) {
@@ -31,7 +30,7 @@ denormalizeEstimates <- function(estimatesNorm, mu, sigma) {
             betaHelp[j] <- betaNorm[j] / sigma[j]
         } else {
             for (jj in 1:p) {
-                if (sigma[jj] != 0) {
+                if (abs(sigma[j]) > 1e-6) {
                     betaHelp[j] <- betaHelp[j] - betaNorm[jj]*mu[jj]/sigma[jj]
                 }
                 else {
@@ -44,8 +43,7 @@ denormalizeEstimates <- function(estimatesNorm, mu, sigma) {
     for (j in 1:p) {
         betaRaw[j] <- betaHelp[j] / betaHelp[1]
     }
-    estimatesRaw <- betaRaw
-    return(list(estimatesRaw = estimatesRaw))
+    return(betaRaw)
 }
 
 definecAb <- function(X, y, w) {
@@ -96,25 +94,11 @@ solvemip <- function(dataArray) {
     k <- n + p
     y <- rep(1, n)
     w <- rep(1, n)
-    # cAb <- definecAb(X, Xyw$y, Xyw$w)
-    # lbub <- definelbub(X)
-    # k <- length(cAb$c)
-    # lpArgs <- list(
-    #     direction = "min",
-    #     objective.in = cAb$c,
-    #     const.mat = rbind(cAb$A, diag(k)),
-    #     const.dir = rep("<=", length(cAb$c)),
-    #     const.rhs = c(cAb$b - cAb$A %*% t(lbub$lb), lbub$ub - lbub$lb),
-    #     binary.vec = 1:n,
-    #     num.bin.solns = lbub$n) # TODO maybe set to 1
-    # lpSol <- do.call(lpSolve::lp, lpArgs)
-    # v <- lpSol$solution
-    # u <- v + lbub$lb
     sol <- solvetest(Xunstd, y, w)
     stdized <- sol$stdized
     u <- sol$u
     betaNorm <- u[(n+1):k]
-    beta <- denormalizeEstimates(betaNorm, stdized$mu, stdized$sigma)$estimatesRaw
+    beta <- denormalizeEstimates(betaNorm, stdized$mu, stdized$sigma)
     return(beta[2:p])
 }
 
