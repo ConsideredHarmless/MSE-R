@@ -81,6 +81,18 @@ optimizeScoreFunction <- function(
             optVal <- -objFun(optArg)
             result <- list(optVal = optVal, optArg = optArg)
         },
+        "MIP" = {
+            objSign <- -1
+            makeObjFunArgs = list(dataArray = objDataArray, objSign = objSign)
+            if (!is.null(coefficient1)) {
+                makeObjFunArgs$coefficient1 <- coefficient1
+            }
+            objFun <- do.call(makeObjFun, makeObjFunArgs)
+            optArg <- maximizeMIP(objDataArray, coefficient1, optimParams)
+            # TODO The objective signs should be reworked.
+            optVal <- -objFun(optArg)
+            result <- list(optVal = optVal, optArg = optArg)
+        },
         stop(sprintf("optimizeScoreFunction: method %s is not implemented",
                       method))
     )
@@ -148,6 +160,18 @@ maximizeTA <- function(dataArray, coefficient1, optimParams) {
     TAres <- do.call(TA_estimator, TAargs)
     TAoptArg <- TAres[1][[1]]
     return(TAoptArg)
+}
+
+#' TODO
+#'
+#' @param dataArray TODO
+#' @param coefficient1 TODO
+#' @param optimParams TODO
+#' @return TODO
+#' @keywords internal
+maximizeMIP <- function(dataArray, coefficient1, optimParams) {
+    optArg <- solvemip(dataArray)
+    return(optArg)
 }
 
 #' Get default values for the \code{optimParams} argument of \code{optimizeScoreFunction}
