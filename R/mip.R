@@ -110,20 +110,14 @@ solvetest <- function(Xunstd, y, w) {
     cAb <- definecAb(X, y, w)
     lbub <- definelbub(X)
     k <- length(cAb$c)
-    # Convert to standardized LP (new variable v := u - lb, constraint v >= 0).
-    # This is done because lpSolve can only handle that case.
-    Astd <- rbind(cAb$A, diag(k))
-    bstd <- c(cAb$b - cAb$A %*% t(lbub$lb), lbub$ub - lbub$lb)
-    cstd <- cAb$c
-    lpArgs <- list(
-        direction = "min",
-        objective.in = cstd,
-        const.mat = Astd,
-        const.dir = rep("<=", k),
-        const.rhs = bstd,
-        binary.vec = 1:n)
-    lpSol <- do.call(lpSolve::lp, lpArgs)
-    v <- lpSol$solution
-    u <- v + lbub$lb
-    return(list(stdized=stdized, lpSol=lpSol, u=u, v=v))
+    glpkArgs <- list(
+        obj = cAb$c, mat = cAb$A, dir = rep("<=", n), rhs = cAb$b,
+        bounds = list(
+            lower = list(ind = 1:k, val = as.vector(lbub$lb)),
+            upper = list(ind = 1:k, val = as.vector(lbub$ub))),
+        types = c(rep("B", n), rep("C", p)), max = FALSE,
+        control = list(verbose = TRUE))
+    sol <- do.call(Rglpk::Rglpk_solve_LP, glpkArgs)
+    u <- sol$solution
+    return(list(stdized=stdized, u=u))
 }
