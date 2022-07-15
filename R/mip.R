@@ -94,7 +94,7 @@ solvemip <- function(dataArray) {
     k <- n + p
     y <- rep(1, n)
     w <- rep(1, n)
-    sol <- solvetest(Xunstd, y, w)
+    sol <- solvemiphelper(Xunstd, y, w)
     stdized <- sol$stdized
     u <- sol$u
     betaNorm <- u[(n+1):k]
@@ -102,7 +102,7 @@ solvemip <- function(dataArray) {
     return(beta[2:p])
 }
 
-solvetest <- function(Xunstd, y, w) {
+solvemiphelper <- function(Xunstd, y, w) {
     n <- dim(Xunstd)[1]
     p <- dim(Xunstd)[2]
     stdized <- standardizeX(Xunstd)
