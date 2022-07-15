@@ -24,7 +24,8 @@ Imports:
     stats,
     pracma,
     NMOF,
-    MASS
+    MASS,
+    Rglpk
 Suggests: 
     knitr,
     rmarkdown,
