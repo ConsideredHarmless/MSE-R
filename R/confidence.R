@@ -229,8 +229,29 @@ newBootstrapCR <- function(
     subNormalization  <- ssSize^normExponent
     fullNormalization <- length(unique(groupIDs))^normExponent
 
-    grids <- NA # TODO
-    H <- NA # TODO
+    objFun <- makeObjFun(dataArray, objSign = 1)
+    makeH <- function(betaEst, eps) {
+        f <- function(idx1d) {
+            # Convert 1d index to 2d -- remember, *column-major* order.
+            col <- (idx1d - 1) %/% numFreeAttrs + 1
+            row <- (idx1d - 1) %%  numFreeAttrs + 1
+            # Use formula in section 3.1 of Cattaneo et al. paper.
+            # Might not be computationally optimal.
+            rowArgTerm <- rep(0, numFreeAttrs)
+            rowArgTerm[row] <- eps
+            rowColTerm <- rep(0, numFreeAttrs)
+            rowColTerm[col] <- eps
+            term1 <- objFun(betaEst + rowArgTerm + rowColTerm)
+            term2 <- objFun(betaEst + rowArgTerm - rowColTerm)
+            term3 <- objFun(betaEst - rowArgTerm + rowColTerm)
+            term4 <- objFun(betaEst - rowArgTerm - rowColTerm)
+            element <- (-term1 + term2 + term3 - term4) / (4*eps^2)
+        }
+        H <- sapply(numFreeAttrs*numFreeAttrs, f)
+        H <- matrix(H, numFreeAttrs, numFreeAttrs)
+    }
+    eps <- 1 # TODO maybe use ROT?
+    H <- makeH(pointEstimate, eps)
     boot_ms <- function(dataArray, sample, grids, H, pointEstimate) {} # TODO
 
     # Standardized and raw subsample estimates.
