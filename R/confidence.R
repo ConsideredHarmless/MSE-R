@@ -229,16 +229,20 @@ newBootstrapCR <- function(
     subNormalization  <- ssSize^normExponent
     fullNormalization <- length(unique(groupIDs))^normExponent
 
+    grids <- NA # TODO
+    H <- NA # TODO
+    boot_ms <- function(dataArray, sample, grids, H, pointEstimate) {} # TODO
+
     # Standardized and raw subsample estimates.
     # Note: these arrays are transposed compared to the old function.
     # estimates[paramIdx, iterIdx] gives the estimate for the parameter with
     # index paramIdx in iteration with index iterIdx.
     samples <- array(0, dim = c(numSubsamples, ssSize))
     calcEstimate <- function(iterIdx) {
-        sample <- generateRandomSubsample(ssSize, groupIDs, dataArray)
+        sample <- sampleBootstrap(groupIDs, dataArray)
         optimizeScoreArgs$dataArray <- sample$ssDataArray
         optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
-        ssEstimate <- optResult$optArg
+        ssEstimate <- boot_ms(dataArray, sample, grids, H, pointEstimate)
         # The <<- operator is required to modify objects outside the closure.
         samples[iterIdx, ] <<- sample$selectedGroups
         if (progress > 0 && iterIdx %% progress == 0) {
