@@ -25,12 +25,12 @@
 #'   and returning an integer (the score).
 #'
 #' @export
-makeObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
-    objFun <- function(b) {
+makeScoreObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
+    scoreObjFun <- function(b) {
         u <- t(dataArray) %*% c(coefficient1, b)
         return(objSign * sum(u >= 0))
     }
-    return(objFun)
+    return(scoreObjFun)
 }
 
 #' Create vector-valued score function
@@ -39,16 +39,29 @@ makeObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
 #' of this function is not to be passed to an optimization routine, but to track
 #' which inequalities were satisfied.
 #'
-#' @inheritParams makeObjFun
+#' @inheritParams makeScoreObjFun
 #'
 #' @return A function taking a vector of length \code{noAttr-1} (the parameters)
 #'   and returning a vector of integers (the scores for each market).
 #'
 #' @export
-makeObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
-    objFunVec <- function(b) {
+makeScoreObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
+    scoreObjFunVec <- function(b) {
         u <- t(dataArray) %*% c(coefficient1, b)
         return(objSign * as.vector(u >= 0))
     }
-    return(objFunVec)
+    return(scoreObjFunVec)
+}
+
+makeBootstrapObjFun <- function(
+    fullDataArray, sampleDataArray, betaEst, H,
+    coefficient1 = 1, objSign = -1) {
+    fullScoreObjFun   <- makeScoreObjFun(fullDataArray,   coefficient1, objSign = 1)
+    sampleScoreObjFun <- makeScoreObjFun(sampleDataArray, coefficient1, objSign = 1)
+    bootstrapObjFun <- function(b) {
+        v <- b - betaEst
+        q <- 0.5 * as.numeric(t(v) %*% H %*% v)
+        u <- sampleScoreObjFun(b) - fullScoreObjFun(b) - q
+        return(objSign * u)
+    }
 }

@@ -1,7 +1,7 @@
 #' Calculate maximum score
 #'
 #' Optimizes the maximum score function defined by the data array. The objective
-#' function is created using \code{makeObjFun}.
+#' function is created using \code{makeScoreObjFun}.
 #'
 #' @section Optimization methods:
 #' The optimization method is not bound to the problem. Any method that can
@@ -17,7 +17,7 @@
 #'   vectors defining lower and upper bounds for each variable in the objective
 #'   function.
 #' @param coefficient1 (optional) The first coefficient of the extended
-#'   parameter vector. See \code{makeObjFun} for more details.
+#'   parameter vector. See \code{makeScoreObjFun} for more details.
 #' @param method (optional) A string denoting the optimization method.
 #'   Currently, only \code{"DEoptim"} (the default value) is supported.
 #' @param optimParams (optional) A list of parameters to be passed to the
@@ -62,12 +62,12 @@ optimizeScoreFunction <- function(
     switch (method,
         "DEoptim" = {
             objSign <- -1
-            makeObjFunArgs = list(dataArray = objDataArray, objSign = objSign)
+            makeScoreObjFunArgs = list(dataArray = objDataArray, objSign = objSign)
             if (!is.null(coefficient1)) {
-                makeObjFunArgs$coefficient1 <- coefficient1
+                makeScoreObjFunArgs$coefficient1 <- coefficient1
             }
-            objFun <- do.call(makeObjFun, makeObjFunArgs)
-            result <- maximizeDEoptim(objFun, bounds$lower, bounds$upper, optimParams)
+            scoreObjFun <- do.call(makeScoreObjFun, makeScoreObjFunArgs)
+            result <- maximizeDEoptim(scoreObjFun, bounds$lower, bounds$upper, optimParams)
         },
         stop(sprintf("optimizeScoreFunction: method %s is not implemented",
                       method))
@@ -75,12 +75,45 @@ optimizeScoreFunction <- function(
     if (permuteInvariant) {
         # Return parameters with the original order.
         result$optArg <- result$optArg[invPerm]
-        makeObjFunArgs$dataArray <- dataArray
+        makeScoreObjFunArgs$dataArray <- dataArray
     }
     if (getIneqSat) {
-        objFunVec <- do.call(makeObjFunVec, makeObjFunArgs)
-        result$ineqSat <- objSign * objFunVec(result$optArg)
+        scoreObjFunVec <- do.call(makeScoreObjFunVec, makeScoreObjFunArgs)
+        result$ineqSat <- objSign * scoreObjFunVec(result$optArg)
     }
+    result$optArg <- unname(result$optArg)
+    return(result)
+}
+
+# Computes the argmax of the function
+# B(beta) = S_sample(beta) - S_full(beta) - q_{H,betaEst}(beta),
+# where q(beta) is the quadratic form
+# 1/2 (beta - betaEst)^T * H * (beta - betaEst)
+# and S_data(beta) is the score function, parametrized on the data array.
+# See newBootstrapCR.
+optimizeBootstrapFunction <- function(
+        fullDataArray, sampleDataArray, betaEst, H,
+        bounds,
+        coefficient1 = NULL, method = NULL, optimParams = NULL) {
+    if (is.null(method)) {
+        method <- "DEoptim"
+    }
+    switch (method,
+            "DEoptim" = {
+                objSign <- -1
+                makeBootstrapObjFunArgs = list(
+                    fullDataArray = fullDataArray,
+                    sampleDataArray = sampleDataArray,
+                    betaEst = betaEst, H = H, objSign = objSign)
+                if (!is.null(coefficient1)) {
+                    makeBootstrapObjFunArgs$coefficient1 <- coefficient1
+                }
+                scoreObjFun <- do.call(makeBootstrapObjFun, makeBootstrapObjFunArgs)
+                result <- maximizeDEoptim(scoreObjFun, bounds$lower, bounds$upper, optimParams)
+            },
+            stop(sprintf("optimizeBootstrapFunction: method %s is not implemented",
+                         method))
+    )
     result$optArg <- unname(result$optArg)
     return(result)
 }
@@ -91,7 +124,7 @@ optimizeScoreFunction <- function(
 #' implemented, they should follow this signature (for the three required
 #' arguments).
 #'
-#' @param objective The objective function, produced by \code{makeObjFun}.
+#' @param objective The objective function, produced by \code{makeScoreObjFun}.
 #' @param lower,upper The lower and upper bounds in the box constraints.
 #' @param control A list passed to \code{DEoptim::DEoptim}. See also
 #'   \code{DEoptim::DEoptim.control}.

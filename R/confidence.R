@@ -229,7 +229,7 @@ newBootstrapCR <- function(
     subNormalization  <- ssSize^normExponent
     fullNormalization <- length(unique(groupIDs))^normExponent
 
-    objFun <- makeObjFun(dataArray, objSign = 1)
+    scoreObjFun <- makeScoreObjFun(dataArray, objSign = 1)
     makeH <- function(betaEst, eps) {
         f <- function(idx1d) {
             # Convert 1d index to 2d -- remember, *column-major* order.
@@ -241,29 +241,39 @@ newBootstrapCR <- function(
             rowArgTerm[row] <- eps
             rowColTerm <- rep(0, numFreeAttrs)
             rowColTerm[col] <- eps
-            term1 <- objFun(betaEst + rowArgTerm + rowColTerm)
-            term2 <- objFun(betaEst + rowArgTerm - rowColTerm)
-            term3 <- objFun(betaEst - rowArgTerm + rowColTerm)
-            term4 <- objFun(betaEst - rowArgTerm - rowColTerm)
+            term1 <- scoreObjFun(betaEst + rowArgTerm + rowColTerm)
+            term2 <- scoreObjFun(betaEst + rowArgTerm - rowColTerm)
+            term3 <- scoreObjFun(betaEst - rowArgTerm + rowColTerm)
+            term4 <- scoreObjFun(betaEst - rowArgTerm - rowColTerm)
             element <- (-term1 + term2 + term3 - term4) / (4*eps^2)
         }
         H <- sapply(numFreeAttrs*numFreeAttrs, f)
         H <- matrix(H, numFreeAttrs, numFreeAttrs)
     }
-    eps <- 1 # TODO maybe use ROT?
+    eps <- 1 # TODO maybe use ROT? maybe use the options list
     H <- makeH(pointEstimate, eps)
-    boot_ms <- function(dataArray, sample, grids, H, pointEstimate) {} # TODO
 
     # Standardized and raw subsample estimates.
     # Note: these arrays are transposed compared to the old function.
     # estimates[paramIdx, iterIdx] gives the estimate for the parameter with
     # index paramIdx in iteration with index iterIdx.
-    samples <- array(0, dim = c(numSubsamples, ssSize))
+    # IMPORTANT NOTE:
+    # We currently follow Cattaneo's implemenetation and sample N_market groups
+    # each time, rather than ssSize groups. This might later change.
+    # samples <- array(0, dim = c(numSubsamples, ssSize))
+    samples <- array(0, dim = c(numSubsamples, max(groupIDs)))
     calcEstimate <- function(iterIdx) {
-        sample <- sampleBootstrap(groupIDs, dataArray)
-        optimizeScoreArgs$dataArray <- sample$ssDataArray
-        optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
-        ssEstimate <- boot_ms(dataArray, sample, grids, H, pointEstimate)
+        sample <- sampleBootstrap(groupIDs, dataArray) # TODO `sample` shadows stdlib function
+        optimizeBootstrapArgs = list(
+            fullDataArray = dataArray, sampleDataArray = sample$ssDataArray,
+            betaEst = pointEstimate, H = H,
+            bounds = optimizeScoreArgs$bounds,
+            coefficient1 = optimizeScoreArgs$coefficient1,
+            method = optimizeScoreArgs$method,
+            optimParams = optimizeScoreArgs$optimParams
+        )
+        optResult <- do.call(optimizeBootstrapFunction, optimizeBootstrapArgs)
+        ssEstimate <- optResult$optArg
         # The <<- operator is required to modify objects outside the closure.
         samples[iterIdx, ] <<- sample$selectedGroups
         if (progress > 0 && iterIdx %% progress == 0) {
@@ -271,8 +281,15 @@ newBootstrapCR <- function(
         }
         return(ssEstimate)
     }
+    # TODO Perhaps we should supply both the raw and the normalized estimates.
     ssEstimates <- sapply(1:numSubsamples, calcEstimate)
     estimates   <- subNormalization * (ssEstimates - pointEstimate)
+
+    # IMPORTANT: Should we use the raw or the normalized estimates to compute
+    # the confidence intervals?
+    # Fox uses the normalized estimates (see pointIdentifiedCR), but Cattaneo
+    # simply subtracts the point estimate from the raw estimates. This should
+    # be confirmed.
 
     # For the symmetric case, we want to add and subtract the (1 - alpha')-th
     # quantile from the point estimate. We take the Abs here for simplicity:
@@ -302,7 +319,8 @@ newBootstrapCR <- function(
     crAsym <- sapply(1:numFreeAttrs, calcConfRegionAsym)
 
     result <- list(
-        crSymm = crSymm, crAsym = crAsym, estimates = t(estimates),
+        crSymm = crSymm, crAsym = crAsym,
+        estimates = t(estimates), rawEstimates = t(ssEstimates),
         samples = samples)
     return(result)
 }
