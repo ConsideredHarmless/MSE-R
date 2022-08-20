@@ -51,6 +51,7 @@ generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
     return(list(ssDataArray = ssDataArray, selectedGroups = selectedGroups))
 }
 
+# TODO document and refactor with generateRandomSubsample.
 sampleBootstrap <- function(groupIDs, dataArray) {
     uniqueGroups <- unique(groupIDs)
     selectedGroups <- sample(uniqueGroups, replace = TRUE)
@@ -200,6 +201,7 @@ plotCR <- function(estimates) {
     graphics::abline(h=0, v=0)
 }
 
+# TODO document and refactor with pointIdentifiedCR.
 #' @export
 newBootstrapCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,

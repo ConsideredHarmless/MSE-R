@@ -85,12 +85,30 @@ optimizeScoreFunction <- function(
     return(result)
 }
 
-# Computes the argmax of the function
-# B(beta) = S_sample(beta) - S_full(beta) - q_{H,betaEst}(beta),
-# where q(beta) is the quadratic form
-# 1/2 (beta - betaEst)^T * H * (beta - betaEst)
-# and S_data(beta) is the score function, parametrized on the data array.
-# See newBootstrapCR.
+#' Calculate bootstrap estimates
+#'
+#' Optimizes the objective function created be \code{makeBootstrapObjFun}. Its
+#' argmax is used internally in the implementation of Cattaneo's bootstrap
+#' method.
+#'
+#' @section Optimization methods:
+#' The optimization method is not bound to the problem. Any method that can
+#' optimize a non-convex, non-smooth function is valid. However, we currently
+#' only support the *Differential Evolution* method, as implemented in the
+#' package **DEoptim**. In case the user wants to pass parameters to the solver,
+#' we provide the parameter \code{optimParams}, which is forwarded to the
+#' \code{control} parameter of the function \code{DEoptim::DEoptim}.
+#' See \code{DEoptim::DEoptim.control} for more information.
+#'
+#' @inheritParams optimizeScoreFunction
+#' @inheritParams makeBootstrapObjFun
+#'
+#' @return A list with members:
+#' \tabular{ll}{
+#'   \code{$optVal}  \tab The optimal value of the objective function.\cr
+#'   \code{$optArg}  \tab The argument vector which achieves that value.\cr
+#' }
+#' @export
 optimizeBootstrapFunction <- function(
         fullDataArray, sampleDataArray, betaEst, H,
         bounds,

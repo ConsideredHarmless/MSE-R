@@ -2,6 +2,7 @@
 # Adapted from https://github.com/mdcattaneo/replication-CJN_2020_ECMA.
 # See Supplement, A.2.3.2.
 
+# TODO document
 polyeval <- function(p, x) {
     s <- 0
     y <- 1
@@ -43,6 +44,7 @@ polyeval <- function(p, x) {
 # Here, y is a vector of length n, x is an array of dimension (d+1, n), and par
 # contains both β and γ; par[1:d] correspond to the d non-unit elements of β,
 # and par[d+1:d+k+1] are the elements of γ.
+# TODO document
 loglikelihood <- function(y, x, par) {
     d <- dim(x)[1] - 1
     n <- dim(x)[2]
@@ -64,6 +66,7 @@ loglikelihood <- function(y, x, par) {
     return(min(-g, 1e3))
 }
 
+# TODO document
 rot <- function(y, x, k) {
     d <- dim(x)[1] - 1
     n <- dim(x)[2]

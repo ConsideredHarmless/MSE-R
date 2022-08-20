@@ -52,7 +52,42 @@ makeScoreObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
     }
     return(scoreObjFunVec)
 }
-
+#' Create objective function used in Cattaneo's bootstrap
+#'
+#' Creates an objective function from the given data, in a form suitable for
+#' passing to an optimization routine. This function is used internally in the
+#' implementation of Cattaneo's bootstrap method.
+#'
+#' Let:
+#' \enumerate{
+#'   \item \eqn{g_{X}(\beta)} be the score function defined the by data array
+#'     \eqn{X} (see \code{makeScoreObjFun}).
+#'   \item \eqn{\hat{\beta}} be the estimate of \eqn{\beta}, obtained by
+#'     maximizing \eqn{g_{X}}.
+#'   \item \eqn{H} be the H-matrix defined in Cattaneo's paper.
+#'   \item \eqn{q_{H,\hat{\beta}}(\beta)} be the quadratic form:
+#'     \eqn{\frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})}
+#' }
+#' The function created is:
+#'   \eqn{B(\beta) = \mathrm{objSign} (
+#'     g_{X_\mathrm{sample}}(\beta) -
+#'     g_{X_\mathrm{full}}(\beta) -
+#'     q_{H,\hat{\beta}}(\beta)
+#'   )}.
+#'
+#' See \code{makeScoreObjFun} for the definition of \eqn{\beta} and
+#' \eqn{\mathrm{objSign}}.
+#'
+#' @param fullDataArray The full data array.
+#' @param sampleDataArray The sample data array.
+#' @param betaEst The estimate of \eqn{\beta}. This should have been obtained
+#'   by calling \code{optimizeScoreFunction} on \code{fullDataArray}.
+#' @inheritParams makeScoreObjFun
+#'
+#' @return A function taking a vector of length \code{noAttr-1} (the parameters)
+#'   and returning a real number.
+#'
+#' @export
 makeBootstrapObjFun <- function(
     fullDataArray, sampleDataArray, betaEst, H,
     coefficient1 = 1, objSign = -1) {
