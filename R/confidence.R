@@ -252,7 +252,7 @@ newBootstrapCR <- function(
         if (is.atomic(eps) && length(eps) == 1) {
             eps <- matrix(eps, numFreeAttrs, numFreeAttrs)
         }
-        H <- sapply(numFreeAttrs*numFreeAttrs, f)
+        H <- sapply(1:(numFreeAttrs*numFreeAttrs), f)
         H <- matrix(H, numFreeAttrs, numFreeAttrs)
     }
     eps <- options$eps
