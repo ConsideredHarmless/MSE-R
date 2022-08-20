@@ -238,19 +238,16 @@ newBootstrapCR <- function(
             row <- (idx1d - 1) %%  numFreeAttrs + 1
             # Use formula in section 3.1 of Cattaneo et al. paper.
             # Might not be computationally optimal.
+            epsV <- eps[row, col]
             rowArgTerm <- rep(0, numFreeAttrs)
-            rowArgTerm[row] <- eps
+            rowArgTerm[row] <- epsV
             rowColTerm <- rep(0, numFreeAttrs)
-            rowColTerm[col] <- eps
+            rowColTerm[col] <- epsV
             term1 <- scoreObjFun(betaEst + rowArgTerm + rowColTerm)
             term2 <- scoreObjFun(betaEst + rowArgTerm - rowColTerm)
             term3 <- scoreObjFun(betaEst - rowArgTerm + rowColTerm)
             term4 <- scoreObjFun(betaEst - rowArgTerm - rowColTerm)
-            element <- (-term1 + term2 + term3 - term4) / (4*eps^2)
-        }
-        # If eps is a scalar, replace it with a matrix with the same elements.
-        if (is.atomic(eps) && length(eps) == 1) {
-            eps <- matrix(eps, numFreeAttrs, numFreeAttrs)
+            element <- (-term1 + term2 + term3 - term4) / (4*epsV^2)
         }
         H <- sapply(1:(numFreeAttrs*numFreeAttrs), f)
         H <- matrix(H, numFreeAttrs, numFreeAttrs)
@@ -263,7 +260,12 @@ newBootstrapCR <- function(
         y <- rep(1, n)
         eps <- rot(y, x, k)$bw.nd
     }
+    # If eps is a scalar, replace it with a matrix with the same elements.
+    else if (is.atomic(eps) && length(eps) == 1) {
+        eps <- matrix(eps, numFreeAttrs, numFreeAttrs)
+    }
     H <- makeH(pointEstimate, eps)
+    print(eps)
     print(H)
 
     # Standardized and raw subsample estimates.
