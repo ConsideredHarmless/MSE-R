@@ -205,7 +205,8 @@ newBootstrapCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
-        progressUpdate = 0, confidenceLevel = 0.95, asymptotics = "nests")
+        progressUpdate = 0, confidenceLevel = 0.95, asymptotics = "nests",
+        eps = 1)
     if (is.null(options)) {
         options <- list()
     }
@@ -247,11 +248,23 @@ newBootstrapCR <- function(
             term4 <- scoreObjFun(betaEst - rowArgTerm - rowColTerm)
             element <- (-term1 + term2 + term3 - term4) / (4*eps^2)
         }
+        # If eps is a scalar, replace it with a matrix with the same elements.
+        if (is.atomic(eps) && length(eps) == 1) {
+            eps <- matrix(eps, numFreeAttrs, numFreeAttrs)
+        }
         H <- sapply(numFreeAttrs*numFreeAttrs, f)
         H <- matrix(H, numFreeAttrs, numFreeAttrs)
     }
-    eps <- 1 # TODO maybe use ROT? maybe use the options list
+    eps <- options$eps
+    if (tolower(eps) == "rot") {
+        x <- dataArray
+        n <- dim(x)[1]
+        k <- 4
+        y <- rep(1, n)
+        eps <- rot(y, x, k)$bw.nd
+    }
     H <- makeH(pointEstimate, eps)
+    print(H)
 
     # Standardized and raw subsample estimates.
     # Note: these arrays are transposed compared to the old function.
