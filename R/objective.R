@@ -82,6 +82,9 @@ makeScoreObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
 #' @param sampleDataArray The sample data array.
 #' @param betaEst The estimate of \eqn{\beta}. This should have been obtained
 #'   by calling \code{optimizeScoreFunction} on \code{fullDataArray}.
+#' @param H The matrix \eqn{H}, as defined in Cattaneo's paper. Should have
+#'   dimensions \eqn{d \times d}, where \eqn{d} is the number of free
+#'   parameters.
 #' @inheritParams makeScoreObjFun
 #'
 #' @return A function taking a vector of length \code{noAttr-1} (the parameters)

@@ -17,7 +17,7 @@ polyeval <- function(p, x) {
 # Note that we define, as per Cattaneo:
 #   y = 1{x^T β + u >= 0}, where 1{.} is the indicator function/Iverson bracket,
 #   x is a (d+1)-D vector of regressors, β is a (d+1)-D vector of parameters
-#   (which Cattaneo calls θ_0), with its first element equal to 0, and u is a
+#   (which Cattaneo calls β_0), with its first element equal to 0, and u is a
 #   random variable with conditional distribution:
 #   u | x ~ Normal(0, s_u(x)), with
 #   s_u(x) = γ^T p(x)
@@ -55,8 +55,8 @@ loglikelihood <- function(y, x, par) {
     z <- as.vector(beta %*% x)
     # The values v_i = s_u(x^i) = \sum_{j=0}^k γ_j z_i^j,
     v <- polyeval(gamma, z)
-    # The values w_i = Φ(z_i / v_i). Note that pnorm is vectorized.
-    w <- pnorm(z / v)
+    # The values w_i = Φ(z_i / v_i). Note that stats::pnorm is vectorized.
+    w <- stats::pnorm(z / v)
     # The terms of the sum in the log-likelihood function.
     u <- y*log(w) + (1-y)*log(1-w)
     u[is.nan(u)] <- -Inf
@@ -73,7 +73,7 @@ rot <- function(y, x, k) {
     beta0 <- rep(1, d)
     gamma0 <- c(1, rep(0, k))
     par0 <- c(beta0, gamma0)
-    optResult <- optim(par0, loglikelihood, y = y, x = x)
+    optResult <- stats::optim(par0, loglikelihood, y = y, x = x)
     optPars <- optResult$par
     betaR <- optPars[1:d]
     beta <- c(1, betaR)
@@ -103,9 +103,9 @@ rot <- function(y, x, k) {
     q0 <- sqrt(s0)
     q1 <- sqrt(s1)
     q2 <- sqrt(s2)
-    F0_1_3 <- -(dnorm(0) / (q0 * sigma1^3)) * dnorm(p) * (p^2 - 1)
-    F0_3_1 <- (dnorm(0) / (q0^3 * sigma1)) * dnorm(p) * (1 - q2*q0 + 2*q1^2)
-    F0_0_1 <- (1 / (2*sigma1)) * dnorm(p)
+    F0_1_3 <- -(stats::dnorm(0) / (q0 * sigma1^3)) * stats::dnorm(p) * (p^2 - 1)
+    F0_3_1 <- (stats::dnorm(0) / (q0^3 * sigma1)) * stats::dnorm(p) * (1 - q2*q0 + 2*q1^2)
+    F0_0_1 <- (1 / (2*sigma1)) * stats::dnorm(p)
     # See makeH function in confidence.R.
     makeBndElt <- function(idx1d) {
         col <- (idx1d - 1) %/% d + 1

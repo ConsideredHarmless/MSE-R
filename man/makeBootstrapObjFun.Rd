@@ -21,6 +21,10 @@ makeBootstrapObjFun(
 \item{betaEst}{The estimate of \eqn{\beta}. This should have been obtained
 by calling \code{optimizeScoreFunction} on \code{fullDataArray}.}
 
+\item{H}{The matrix \eqn{H}, as defined in Cattaneo's paper. Should have
+dimensions \eqn{d \times d}, where \eqn{d} is the number of free
+parameters.}
+
 \item{coefficient1}{The first coefficient in the extended vector of
 parameters. Should typically be \code{1} (the default) or \code{-1}.}
 

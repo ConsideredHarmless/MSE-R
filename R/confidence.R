@@ -197,11 +197,25 @@ pointIdentifiedCR <- function(
 #' @export
 plotCR <- function(estimates) {
     estimates <- estimates
-    plot(c(col(estimates)), c(estimates), type="p", col="blue", xlab="", ylab="")
+    graphics::plot(
+        c(col(estimates)), c(estimates), type="p", col="blue", xlab="", ylab="")
     graphics::abline(h=0, v=0)
 }
 
 # TODO document and refactor with pointIdentifiedCR.
+
+#' Calculate confidence region
+#'
+#' Generates a confidence region estimate using Cattaneo's bootstrap method.
+#'
+#' See:
+#' https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf
+#' https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA--Supplement.pdf
+#' https://github.com/mdcattaneo/replication-CJN_2020_ECMA
+#'
+#' @inheritParams pointIdentifiedCR
+#' @return TODO
+#'
 #' @export
 newBootstrapCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,
