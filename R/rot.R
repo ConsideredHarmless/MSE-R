@@ -20,7 +20,7 @@ polyeval <- function(p, x) {
 #   (which Cattaneo calls β_0), with its first element equal to 0, and u is a
 #   random variable with conditional distribution:
 #   u | x ~ Normal(0, s_u(x)), with
-#   s_u(x) = γ^T p(x)
+#   s_u(x) = γ^T p(x) = σ_u^2(x)
 #   p(x) is "a polynomial expansion", according to Cattaneo, but from inspecting
 #     the github code (https://github.com/mdcattaneo/replication-CJN_2020_ECMA/blob/2c1bbea2190936c0697540833b93953a012bf618/main_function_maxscore.R#L72)
 #     it seems that it is an expansion of z = x^T β, therefore
@@ -29,16 +29,16 @@ polyeval <- function(p, x) {
 #     x_1 | x_r ~ Normal(μ_1, σ_1^2)
 #   This is basically a heteroskedastic probit model, since the conditional cdf
 #   is
-#     F_{u | x}(u | x) = F_{u | x_1, x_r}(u | x_1, x_r) = Φ(u / s_u(x)),
+#     F_{u | x}(u | x) = F_{u | x_1, x_r}(u | x_1, x_r) = Φ(u / σ_u(x)),
 #   where Φ(z) is the cdf of the standard normal distribution.
 # Consider now that we have n pairs of observations (y^i, x^i). Note that in
 # our case, y^i = 1 always. Then the probability of y^i = 1 given x = x^i is
 #   π_i = P(y = 1 | x = x^i) = P(x^T β + u >= 0 | x = x^i) =
-#   F_{u | x}(x^i^T β / s_u(x^i)), because of symmetry of the normal cdf.
+#   F_{u | x}(x^i^T β) = Φ(u / σ_u(x)), because of symmetry of the normal cdf.
 # Likewise, the probability of y^i = 0 given x = x^i is
-#   1 - π_i = 1 - F_{u | x}(x^i^T β / s_u(x^i)).
+#   1 - π_i = 1 - F_{u | x}(x^i^T β).
 # The log-likelihood function can be written as
-#   L(β, γ; Y, X) = \sum_{i=1}^n ( y_i log (π_i) + (1-y_i) log(1-π_i) ).
+#   L(β, γ; Y, X) = \sum_{i=1}^n ( y_i log(π_i) + (1-y_i) log(1-π_i) ).
 # We then estimate the parameters β and γ using maximum likelihood estimation.
 #
 # Here, y is a vector of length n, x is an array of dimension (d+1, n), and par
@@ -100,6 +100,7 @@ rot <- function(y, x, k) {
     # Note that F_0^{0,1}(x_r) can be easily shown to be equal to
     #   (1/(2*σ_1)) φ((x_r^T β_r + μ_1)/σ_1),
     # where φ is the pdf of the standard normal distribution.
+    # FIXME
     q0 <- sqrt(s0)
     q1 <- sqrt(s1)
     q2 <- sqrt(s2)
