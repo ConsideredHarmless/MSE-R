@@ -221,7 +221,7 @@ newBootstrapCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
-        progressUpdate = 0, confidenceLevel = 0.95, asymptotics = "nests",
+        progressUpdate = 0, confidenceLevel = 0.95,
         eps = 1)
     if (is.null(options)) {
         options <- list()
@@ -232,21 +232,13 @@ newBootstrapCR <- function(
         }
     }
     progress  <- options$progressUpdate
-    asymp     <- options$asymptotics
 
     alpha <- 1 - confidenceLevel
     numFreeAttrs <- dim(dataArray)[1] - 1
     pointEstimate <- as.numeric(pointEstimate)
 
-    # This block sets variables that are slightly different for each of the
-    # two asymptotics. subNormalization is the standardization multiplier
-    # for the subsamples, fullNormalization is the multiplier for the
-    # construction of the final confidence interval from all of the subsamples.
-    normExponent <- switch(asymp, "nests" = 1/3, "coalitions" = 1/2)
-    subNormalization  <- ssSize^normExponent
-    fullNormalization <- length(unique(groupIDs))^normExponent
-
     scoreObjFun <- makeScoreObjFun(dataArray, objSign = 1)
+    # TODO move out this scope.
     makeH <- function(betaEst, eps) {
         f <- function(idx1d) {
             # Convert 1d index to 2d -- remember, *column-major* order.
@@ -284,7 +276,8 @@ newBootstrapCR <- function(
     print(eps)
     print(H)
 
-    # Standardized and raw subsample estimates.
+    # Raw (uncentered) and centered estimates.
+    # For the centered estimates, we subtract the point estimate.
     # Note: these arrays are transposed compared to the old function.
     # estimates[paramIdx, iterIdx] gives the estimate for the parameter with
     # index paramIdx in iteration with index iterIdx.
@@ -312,46 +305,23 @@ newBootstrapCR <- function(
         }
         return(ssEstimate)
     }
-    # TODO Perhaps we should supply both the raw and the normalized estimates.
-    ssEstimates <- sapply(1:numSubsamples, calcEstimate)
-    estimates   <- subNormalization * (ssEstimates - pointEstimate)
+    rawEstimates <- sapply(1:numSubsamples, calcEstimate)
+    estimates    <- rawEstimates - pointEstimate
 
-    # IMPORTANT: Should we use the raw or the normalized estimates to compute
-    # the confidence intervals?
-    # Fox uses the normalized estimates (see pointIdentifiedCR), but Cattaneo
-    # simply subtracts the point estimate from the raw estimates. This should
-    # be confirmed.
-
-    # For the symmetric case, we want to add and subtract the (1 - alpha')-th
-    # quantile from the point estimate. We take the Abs here for simplicity:
-    #   tn*Abs[x - y] == Abs[tn*(x - y)].
-    # For the asymmetric case we separately take the alpha/2 and 1 - alpha/2
-    # quantiles and subtract them. Keep in mind that since estimates has its
-    # mean subtracted, only in freakishly unlikely cases will these two have
-    # the same sign. This is not true for the symmetric case.
-    calcConfRegionSymm <- function(paramIdx) {
-        qSymm <- stats::quantile(
-            abs(estimates[paramIdx, ]),
-            c(1 - alpha, 1 - alpha),
+    # CARE: the resulting confidence region is CENTERED.
+    # TODO maybe add option to provide both centered and uncentered?
+    calcConfRegion <- function(paramIdx) {
+        q <- stats::quantile(
+            estimates[paramIdx, ],
+            c(alpha, 1 - alpha),
             names=FALSE, type=1)
-        qSymm <- c(-1, 1)*qSymm
-        qSymm <- rev(qSymm) / fullNormalization
-        return(pointEstimate[paramIdx] - qSymm)
+        return(q)
     }
-    calcConfRegionAsym <- function(paramIdx) {
-        qAsym <- stats::quantile(
-            (estimates[paramIdx, ]),
-            c(alpha/2, 1 - alpha/2),
-            names=FALSE, type=1)
-        qAsym <- rev(qAsym) / fullNormalization
-        return(pointEstimate[paramIdx] - qAsym)
-    }
-    crSymm <- sapply(1:numFreeAttrs, calcConfRegionSymm)
-    crAsym <- sapply(1:numFreeAttrs, calcConfRegionAsym)
+    cr <- sapply(1:numFreeAttrs, calcConfRegion)
 
     result <- list(
-        crSymm = crSymm, crAsym = crAsym,
-        estimates = t(estimates), rawEstimates = t(ssEstimates),
+        cr = cr,
+        estimates = t(estimates), rawEstimates = t(rawEstimates),
         samples = samples)
     return(result)
 }
