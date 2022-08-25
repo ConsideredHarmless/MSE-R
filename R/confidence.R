@@ -212,11 +212,10 @@ plotCR <- function(estimates) {
 #'   \eqn{\beta}, obtained from maximizing the score function corresponding to
 #'   \code{dataArray}.
 #' @param eps TODO
-#' @param method TODO (nd/plugin)
 #'
 #' @return TODO
 #' @export # FIXME
-makeH <- function(dataArray, betaEst, eps, method = NULL) {
+makeHnumder <- function(dataArray, betaEst, eps) {
     d <- dim(dataArray)[1] - 1
     scoreObjFun <- makeScoreObjFun(dataArray, objSign = 1)
     f <- function(idx1d) {
@@ -235,6 +234,30 @@ makeH <- function(dataArray, betaEst, eps, method = NULL) {
         term3 <- scoreObjFun(betaEst - rowArgTerm + colArgTerm)
         term4 <- scoreObjFun(betaEst - rowArgTerm - colArgTerm)
         element <- (-term1 + term2 + term3 - term4) / (4*epsV^2)
+    }
+    H <- matrix(sapply(1:(d*d), f), d, d)
+    return(H)
+}
+
+makeHplugin <- function(dataArray, betaEst, h) {
+    d <- dim(dataArray)[1] - 1
+    # First derivative K'(u) of the kernel function K(u), as it is defined in
+    # the Cattaneo paper. Note that, in their notation, it is not K(u) that
+    # approximates the indicator function, but its antiderivative!
+    # We have:
+    #   K_n(u) = K(u/h_n)/h_n
+    #   K_n'(u) = d/du K_n(u) = K'(u/h_n)/h_n^2
+    kernelFun1 <- function(u) { -u*stats::dnorm(u) }
+    beta <- c(1, betaEst)
+    x <- dataArray
+    z <- beta %*% x
+    f <- function(idx1d) {
+        col <- (idx1d - 1) %/% d + 1
+        row <- (idx1d - 1) %%  d + 1
+        hV <- h[row, col]
+        x_row <- as.vector(x[row + 1, ])
+        x_col <- as.vector(x[col + 1, ])
+        return(-mean(x_row*x_col*kernelFun1(z/hV)/hV^2))
     }
     H <- matrix(sapply(1:(d*d), f), d, d)
     return(H)
@@ -260,7 +283,7 @@ newBootstrapCR <- function(
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
         progressUpdate = 0, confidenceLevel = 0.95,
-        eps = 1)
+        Hest = "numder", eps = 1)
     if (is.null(options)) {
         options <- list()
     }
@@ -275,21 +298,47 @@ newBootstrapCR <- function(
     numFreeAttrs <- dim(dataArray)[1] - 1
     pointEstimate <- as.numeric(pointEstimate)
 
-    eps <- options$eps
-    if (tolower(eps) == "rot") {
-        x <- dataArray
-        n <- dim(x)[2]
-        k <- 8
-        y <- rep(1, n)
-        eps <- rot(y, x, k, pointEstimate)$bw.nd
-    }
-    # If eps is a scalar, replace it with a matrix with the same elements.
-    else if (is.atomic(eps) && length(eps) == 1) {
-        eps <- matrix(eps, numFreeAttrs, numFreeAttrs)
-    }
-    H <- makeH(dataArray, pointEstimate, eps)
-    print(eps)
-    print(H)
+    H <- switch(
+        tolower(options$Hest),
+        numder = {
+            eps <- options$eps
+            if (tolower(eps) == "rot") {
+                x <- dataArray
+                n <- dim(x)[2]
+                k <- 8
+                y <- rep(1, n)
+                eps <- rot(y, x, k, pointEstimate)$bw.nd
+            }
+            # If eps is a scalar, replace it with a matrix with the same elements.
+            else if (is.atomic(eps) && length(eps) == 1) {
+                eps <- matrix(eps, numFreeAttrs, numFreeAttrs)
+            }
+            H <- makeHnumder(dataArray, pointEstimate, eps)
+            print(eps)
+            print(H)
+            H
+        },
+        plugin = {
+            h <- options$h
+            if (tolower(h) == "rot") {
+                x <- dataArray
+                n <- dim(x)[2]
+                k <- 8
+                y <- rep(1, n)
+                h <- rot(y, x, k, pointEstimate)$bw.ker
+            }
+            # If h is a scalar, replace it with a matrix with the same elements.
+            else if (is.atomic(h) && length(h) == 1) {
+                h <- matrix(h, numFreeAttrs, numFreeAttrs)
+            }
+            # TODO add option to parametrize on kernel.
+            H <- makeHplugin(dataArray, pointEstimate, h)
+            print(h)
+            print(H)
+            H
+        },
+        stop(sprintf("method %s not implemented", options$Hest))
+    )
 
     # Raw (uncentered) and centered estimates.
     # For the centered estimates, we subtract the point estimate.

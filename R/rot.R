@@ -138,12 +138,21 @@ rot <- function(y, x, k, betaEst = NULL) {
     F0_3_1 <-  (stats::dnorm(0) / (q_0^3 * sigma1)) * stats::dnorm(p) * (1 - q_2*q_0 + 2*q_1^2)
     F0_0_1 <- (1 / (2*sigma1)) * stats::dnorm(p)
     # See makeH function in confidence.R.
+    # Note that the integral over the reals of u -> u^3*K'(u), with K(u) = φ(u),
+    # is -3. Also, the integral over the reals of u -> K'(u)^2, is 1/(4*sqrt(pi)).
     makeBndElt <- function(idx1d) {
         col <- (idx1d - 1) %/% d + 1
         row <- (idx1d - 1) %%  d + 1
         x_row <- as.vector(x[row + 1, ])
         x_col <- as.vector(x[col + 1, ])
         element <- -mean((F0_1_3 + F0_3_1/3)*(x_row*x_col)*(x_row^2 + x_col^2))
+    }
+    makeBkerElt <- function(idx1d) {
+        col <- (idx1d - 1) %/% d + 1
+        row <- (idx1d - 1) %%  d + 1
+        x_row <- as.vector(x[row + 1, ])
+        x_col <- as.vector(x[col + 1, ])
+        element <- (-3)*mean((F0_1_3 + F0_3_1/3)*(x_row*x_col))
     }
     makeVndElt <- function(idx1d) {
         col <- (idx1d - 1) %/% d + 1
@@ -153,10 +162,23 @@ rot <- function(y, x, k, betaEst = NULL) {
         f <- 2*abs(x_row) + 2*abs(x_col) - abs(x_row + x_col) - abs(x_row - x_col)
         element <- (1/8)*mean(f * F0_0_1)
     }
-    B.nd <- matrix(sapply(1:(d*d), makeBndElt), d, d)
-    V.nd <- matrix(sapply(1:(d*d), makeVndElt), d, d)
+    makeVkerElt <- function(idx1d) {
+        col <- (idx1d - 1) %/% d + 1
+        row <- (idx1d - 1) %%  d + 1
+        x_row <- as.vector(x[row + 1, ])
+        x_col <- as.vector(x[col + 1, ])
+        element <- (1/(2*sqrt(pi)))*mean(F0_0_1*x_row^2*x_col^2)
+    }
+    B.nd  <- matrix(sapply(1:(d*d), makeBndElt),  d, d)
+    B.ker <- matrix(sapply(1:(d*d), makeBkerElt), d, d)
+    V.nd  <- matrix(sapply(1:(d*d), makeVndElt),  d, d)
+    V.ker <- matrix(sapply(1:(d*d), makeVkerElt), d, d)
     print(B.nd)
     print(V.nd)
-    nd.h <- (3*V.nd/4/B.nd^2)^(1/7)*n^(-1/7)
-    return(list(bw.nd = nd.h))
+    print(B.ker)
+    print(V.ker)
+    # r_n, in the formulas (the effective sample size?) seems to equal to n^(1/3).
+    nd.h  <- (3*V.nd/4/B.nd^2)^(1/7)*n^(-1/7)
+    ker.h <- (3*V.ker/4/B.ker^2)^(1/7)*n^(-1/7)
+    return(list(bw.nd = nd.h, bw.ker = ker.h))
 }
