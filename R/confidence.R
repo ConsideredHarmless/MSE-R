@@ -279,9 +279,9 @@ newBootstrapCR <- function(
     if (tolower(eps) == "rot") {
         x <- dataArray
         n <- dim(x)[2]
-        k <- 4
+        k <- 8
         y <- rep(1, n)
-        eps <- rot(y, x, k)$bw.nd
+        eps <- rot(y, x, k, pointEstimate)$bw.nd
     }
     # If eps is a scalar, replace it with a matrix with the same elements.
     else if (is.atomic(eps) && length(eps) == 1) {

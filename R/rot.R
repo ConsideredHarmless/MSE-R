@@ -13,6 +13,27 @@ polyeval <- function(p, x) {
     return(s)
 }
 
+loglikelihoodCommon <- function(y, x, beta, gamma) {
+    # The values z_i = x^i^T β.
+    z <- as.vector(beta %*% x)
+    # The values v_i = σ_u(x^i) = (\sum_{j=0}^k γ_j z_i^j)^(1/2).
+    v <- sqrt(polyeval(gamma, z))
+    # The values w_i = Φ(z_i / v_i). Note that stats::pnorm is vectorized.
+    w <- stats::pnorm(z / v)
+    # The terms of the sum in the log-likelihood function.
+    u <- y*log(w) + (1-y)*log(1-w)
+    # The values of β and γ given can sometimes create a negative value for the
+    # variance. Since we don't want to consider such cases, we replace this
+    # value with -∞, so these parameter values are not considered during
+    # maximization.
+    # TODO Do this in a more intelligent way, which avoids warnings.
+    u[is.nan(u)] <- -Inf
+    g <- mean(u)
+    # Actually return the negative of the function value, in order to use a
+    # minimizing procedure to compute its argmax.
+    return(min(-g, 1e3))
+}
+
 # The log-likelihood function of the model.
 # Note that we define, as per Cattaneo:
 #   y = 1{x^T β + u >= 0}, where 1{.} is the indicator function/Iverson bracket,
@@ -45,46 +66,41 @@ polyeval <- function(p, x) {
 # contains both β and γ; par[1:d] correspond to the d non-unit elements of β,
 # and par[d+1:d+k+1] are the elements of γ.
 # TODO document
-loglikelihood <- function(y, x, par) {
+loglikelihoodVarBeta <- function(y, x, par) {
     d <- dim(x)[1] - 1
     n <- dim(x)[2]
     k <- length(par) - (d + 1)
     beta <- c(1, par[1:d])
     gamma <- par[(d+1):(d+k+1)]
-    # The values z_i = x^i^T β.
-    z <- as.vector(beta %*% x)
-    # The values v_i = σ_u(x^i) = (\sum_{j=0}^k γ_j z_i^j)^(1/2).
-    v <- sqrt(polyeval(gamma, z))
-    # The values w_i = Φ(z_i / v_i). Note that stats::pnorm is vectorized.
-    w <- stats::pnorm(z / v)
-    # The terms of the sum in the log-likelihood function.
-    u <- y*log(w) + (1-y)*log(1-w)
-    # The values of β and γ given can sometimes create a negative value for the
-    # variance. Since we don't want to consider such cases, we replace this
-    # value with -∞, so these parameter values are not considered during
-    # maximization.
-    # TODO Do this in a more intelligent way, which avoids warnings.
-    u[is.nan(u)] <- -Inf
-    g <- mean(u)
-    # Actually return the negative of the function value, in order to use a
-    # minimizing procedure to compute its argmax.
-    return(min(-g, 1e3))
+    return(loglikelihoodCommon(y, x, beta, gamma))
+}
+
+loglikelihoodFixedBeta <- function(y, x, betaEst, par) {
+    beta <- c(1, betaEst)
+    gamma <- par
+    return(loglikelihoodCommon(y, x, beta, gamma))
 }
 
 # TODO document
-rot <- function(y, x, k) {
+rot <- function(y, x, k, betaEst = NULL) {
     stopifnot(k >= 2)
     d <- dim(x)[1] - 1
     n <- dim(x)[2]
-    beta0 <- rep(1, d)
-    gamma0 <- c(1, rep(0, k))
-    par0 <- c(beta0, gamma0)
-    optResult <- stats::optim(par0, loglikelihood, y = y, x = x)
+    if (is.null(betaEst)) {
+        beta0 <- rep(1, d)
+        gamma0 <- c(1, rep(0, k))
+        par0 <- c(beta0, gamma0)
+        optimArgs <- list(par0, loglikelihoodVarBeta,   y = y, x = x)
+    } else {
+        gamma0 <- c(1, rep(0, k))
+        par0 <- gamma0
+        optimArgs <- list(par0, loglikelihoodFixedBeta, y = y, x = x, betaEst = betaEst)
+    }
+    optResult <- do.call(stats::optim, optimArgs)
     optPars <- optResult$par
     print(optPars)
-    betaR <- optPars[1:d]
-    beta <- c(1, betaR)
-    gamma <- optPars[(d+1):(d+k+1)]
+    betaR <- if (is.null(betaEst)) { optPars[1:d] } else { betaEst }
+    gamma <- if (is.null(betaEst)) { optPars[(d+1):(d+k+1)] } else { optPars }
     # For μ_1 and σ_1, we use the sample mean and std.
     mu1 <- mean(x[1, ])
     sigma1 <- stats::sd(x[1, ])
@@ -139,6 +155,8 @@ rot <- function(y, x, k) {
     }
     B.nd <- matrix(sapply(1:(d*d), makeBndElt), d, d)
     V.nd <- matrix(sapply(1:(d*d), makeVndElt), d, d)
+    print(B.nd)
+    print(V.nd)
     nd.h <- (3*V.nd/4/B.nd^2)^(1/7)*n^(-1/7)
     return(list(bw.nd = nd.h))
 }
