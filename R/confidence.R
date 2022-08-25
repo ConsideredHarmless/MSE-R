@@ -202,6 +202,43 @@ plotCR <- function(estimates) {
     graphics::abline(h=0, v=0)
 }
 
+#' Create estimator for H matrix
+#'
+#' Creates the estimator matrix H_n, which is used in Cattaneo's bootstrap
+#' method.
+#'
+#' @param dataArray TODO
+#' @param betaEst A vector of length \code{d}, whose value is the estimate of
+#'   \eqn{\beta}, obtained from maximizing the score function corresponding to
+#'   \code{dataArray}.
+#' @param eps TODO
+#' @param method TODO (nd/plugin)
+#'
+#' @return TODO
+makeH <- function(dataArray, betaEst, eps, method = NULL) {
+    d <- dim(dataArray)[1] - 1
+    scoreObjFun <- makeScoreObjFun(dataArray, objSign = 1)
+    f <- function(idx1d) {
+        # Convert 1d index to 2d -- remember, *column-major* order.
+        col <- (idx1d - 1) %/% d + 1
+        row <- (idx1d - 1) %%  d + 1
+        # Use formula in section 3.1 of Cattaneo et al. paper.
+        # Might not be computationally optimal.
+        epsV <- eps[row, col]
+        rowArgTerm <- rep(0, d)
+        rowArgTerm[row] <- epsV
+        colArgTerm <- rep(0, d)
+        colArgTerm[col] <- epsV
+        term1 <- scoreObjFun(betaEst + rowArgTerm + colArgTerm)
+        term2 <- scoreObjFun(betaEst + rowArgTerm - colArgTerm)
+        term3 <- scoreObjFun(betaEst - rowArgTerm + colArgTerm)
+        term4 <- scoreObjFun(betaEst - rowArgTerm - colArgTerm)
+        element <- (-term1 + term2 + term3 - term4) / (4*epsV^2)
+    }
+    H <- matrix(sapply(1:(d*d), f), d, d)
+    return(H)
+}
+
 # TODO document and refactor with pointIdentifiedCR.
 
 #' Calculate confidence region
@@ -237,29 +274,6 @@ newBootstrapCR <- function(
     numFreeAttrs <- dim(dataArray)[1] - 1
     pointEstimate <- as.numeric(pointEstimate)
 
-    scoreObjFun <- makeScoreObjFun(dataArray, objSign = 1)
-    # TODO move out this scope.
-    makeH <- function(betaEst, eps) {
-        f <- function(idx1d) {
-            # Convert 1d index to 2d -- remember, *column-major* order.
-            col <- (idx1d - 1) %/% numFreeAttrs + 1
-            row <- (idx1d - 1) %%  numFreeAttrs + 1
-            # Use formula in section 3.1 of Cattaneo et al. paper.
-            # Might not be computationally optimal.
-            epsV <- eps[row, col]
-            rowArgTerm <- rep(0, numFreeAttrs)
-            rowArgTerm[row] <- epsV
-            rowColTerm <- rep(0, numFreeAttrs)
-            rowColTerm[col] <- epsV
-            term1 <- scoreObjFun(betaEst + rowArgTerm + rowColTerm)
-            term2 <- scoreObjFun(betaEst + rowArgTerm - rowColTerm)
-            term3 <- scoreObjFun(betaEst - rowArgTerm + rowColTerm)
-            term4 <- scoreObjFun(betaEst - rowArgTerm - rowColTerm)
-            element <- (-term1 + term2 + term3 - term4) / (4*epsV^2)
-        }
-        H <- sapply(1:(numFreeAttrs*numFreeAttrs), f)
-        H <- matrix(H, numFreeAttrs, numFreeAttrs)
-    }
     eps <- options$eps
     if (tolower(eps) == "rot") {
         x <- dataArray
@@ -272,7 +286,7 @@ newBootstrapCR <- function(
     else if (is.atomic(eps) && length(eps) == 1) {
         eps <- matrix(eps, numFreeAttrs, numFreeAttrs)
     }
-    H <- makeH(pointEstimate, eps)
+    H <- makeH(dataArray, pointEstimate, eps)
     print(eps)
     print(H)
 
