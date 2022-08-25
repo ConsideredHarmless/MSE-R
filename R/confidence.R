@@ -215,6 +215,7 @@ plotCR <- function(estimates) {
 #' @param method TODO (nd/plugin)
 #'
 #' @return TODO
+#' @export # FIXME
 makeH <- function(dataArray, betaEst, eps, method = NULL) {
     d <- dim(dataArray)[1] - 1
     scoreObjFun <- makeScoreObjFun(dataArray, objSign = 1)
@@ -277,7 +278,7 @@ newBootstrapCR <- function(
     eps <- options$eps
     if (tolower(eps) == "rot") {
         x <- dataArray
-        n <- dim(x)[1]
+        n <- dim(x)[2]
         k <- 4
         y <- rep(1, n)
         eps <- rot(y, x, k)$bw.nd

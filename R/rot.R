@@ -53,21 +53,27 @@ loglikelihood <- function(y, x, par) {
     gamma <- par[(d+1):(d+k+1)]
     # The values z_i = x^i^T β.
     z <- as.vector(beta %*% x)
-    # The values v_i = s_u(x^i) = \sum_{j=0}^k γ_j z_i^j,
-    v <- polyeval(gamma, z)
+    # The values v_i = σ_u(x^i) = (\sum_{j=0}^k γ_j z_i^j)^(1/2).
+    v <- sqrt(polyeval(gamma, z))
     # The values w_i = Φ(z_i / v_i). Note that stats::pnorm is vectorized.
     w <- stats::pnorm(z / v)
     # The terms of the sum in the log-likelihood function.
     u <- y*log(w) + (1-y)*log(1-w)
+    # The values of β and γ given can sometimes create a negative value for the
+    # variance. Since we don't want to consider such cases, we replace this
+    # value with -∞, so these parameter values are not considered during
+    # maximization.
+    # TODO Do this in a more intelligent way, which avoids warnings.
     u[is.nan(u)] <- -Inf
     g <- mean(u)
     # Actually return the negative of the function value, in order to use a
-    # miniziming procedure to compute its argmax.
+    # minimizing procedure to compute its argmax.
     return(min(-g, 1e3))
 }
 
 # TODO document
 rot <- function(y, x, k) {
+    stopifnot(k >= 2)
     d <- dim(x)[1] - 1
     n <- dim(x)[2]
     beta0 <- rep(1, d)
@@ -75,37 +81,45 @@ rot <- function(y, x, k) {
     par0 <- c(beta0, gamma0)
     optResult <- stats::optim(par0, loglikelihood, y = y, x = x)
     optPars <- optResult$par
+    print(optPars)
     betaR <- optPars[1:d]
     beta <- c(1, betaR)
     gamma <- optPars[(d+1):(d+k+1)]
-    # Note that, according to our definitions,
-    #   s_u(x_1, x_r)   @ {x_1 = -x_r^T β_r} = γ_0
-    #   s'_u(x_1, x_r)  @ {x_1 = -x_r^T β_r} = γ_1
-    #   s''_u(x_1, x_r) @ {x_1 = -x_r^T β_r} = 2 γ_2
-    # where s'_u(x) = ∂/∂x_1 s_u(x), s''_u(x) = ∂^2/∂x_1^2 s_u(x).
-    s0 <- gamma[1]
-    s1 <- gamma[2]
-    s2 <- 2*gamma[3]
     # For μ_1 and σ_1, we use the sample mean and std.
     mu1 <- mean(x[1, ])
     sigma1 <- stats::sd(x[1, ])
     # The estimates.
     p <- (as.vector(betaR %*% x[2:(d+1), ]) + mu1) / sigma1
-    # Note: In the supplement, on pg. 20, Cattaneo has σ_u(x) and σ_u^3(x),
-    # where he has defined σ_u^2(x) = s_u(x). However, in his code, he uses
-    # σ_u^2(x) for σ_u(x). There seems to be an error, either in the formulas
-    # on the supplement, or in the code. I assume it is the latter, and take the
-    # square root of s0, s1, and s2. Still, I need to recheck this. Maybe q1 and
-    # q2 are incorrect.
+    # Note that, according to our definitions,
+    #   s_u(x_1, x_r)   @ {x_1 = -x_r^T β_r} = γ_0
+    #   s'_u(x_1, x_r)  @ {x_1 = -x_r^T β_r} = γ_1
+    #   s''_u(x_1, x_r) @ {x_1 = -x_r^T β_r} = 2 γ_2
+    # where s'_u(x) = ∂/∂x_1 s_u(x), s''_u(x) = ∂^2/∂x_1^2 s_u(x).
+    # However, in the supplement, on pg. 20, Cattaneo has σ_u(x) and σ_u^3(x),
+    # where he has defined σ_u^2(x) = s_u(x), while in his code he uses
+    # σ_u^2(x) for σ_u(x).
+    # After communicating with the authors, it turns out that this is indeed an
+    # inconsistency. We recover the correct values of
+    # q_j = ∂^j/∂x_1^j σ_u(x) @ {x_1 = -x_r^T β_r}, which are:
+    #   * q_0 = γ_0^(1/2)
+    #   * q_1 = 1/2 γ_0^(-1/2) γ_1
+    #   * q_2 = -1/4 γ_0^(-3/2) γ_1^2 + γ_0^(-1/2) γ_2
+    # I still haven't verified these with Mathematica, but I have triple-checked
+    # my calculations.
     # Note that F_0^{0,1}(x_r) can be easily shown to be equal to
     #   (1/(2*σ_1)) φ((x_r^T β_r + μ_1)/σ_1),
     # where φ is the pdf of the standard normal distribution.
-    # FIXME
-    q0 <- sqrt(s0)
-    q1 <- sqrt(s1)
-    q2 <- sqrt(s2)
-    F0_1_3 <- -(stats::dnorm(0) / (q0 * sigma1^3)) * stats::dnorm(p) * (p^2 - 1)
-    F0_3_1 <- (stats::dnorm(0) / (q0^3 * sigma1)) * stats::dnorm(p) * (1 - q2*q0 + 2*q1^2)
+    gamma_0 <- gamma[1]
+    gamma_1 <- gamma[2]
+    gamma_2 <- gamma[3]
+    q_0 <- gamma_0^(1/2)
+    q_1 <- (1/2)*gamma_0^(-1/2)*gamma_1
+    q_2 <- -(1/4)*gamma_0^(-3/2)*gamma_1^2 + gamma_0^(-1/2)*gamma_2
+    # q_0 <- sqrt(gamma_0)
+    # q_1 <- sqrt(gamma_1)
+    # q_2 <- sqrt(gamma_2)
+    F0_1_3 <- -(stats::dnorm(0) / (q_0 * sigma1^3)) * stats::dnorm(p) * (p^2 - 1)
+    F0_3_1 <-  (stats::dnorm(0) / (q_0^3 * sigma1)) * stats::dnorm(p) * (1 - q_2*q_0 + 2*q_1^2)
     F0_0_1 <- (1 / (2*sigma1)) * stats::dnorm(p)
     # See makeH function in confidence.R.
     makeBndElt <- function(idx1d) {
