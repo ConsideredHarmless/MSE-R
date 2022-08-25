@@ -2,7 +2,12 @@
 # Adapted from https://github.com/mdcattaneo/replication-CJN_2020_ECMA.
 # See Supplement, A.2.3.2.
 
-# TODO document
+#' Evaluate polynomial
+#'
+#' @param p TODO
+#' @param x TODO
+#' @return TODO
+#' @keywords internal
 polyeval <- function(p, x) {
     s <- 0
     y <- 1
@@ -11,27 +16,6 @@ polyeval <- function(p, x) {
         y <- y*x
     }
     return(s)
-}
-
-loglikelihoodCommon <- function(y, x, beta, gamma) {
-    # The values z_i = x^i^T β.
-    z <- as.vector(beta %*% x)
-    # The values v_i = σ_u(x^i) = (\sum_{j=0}^k γ_j z_i^j)^(1/2).
-    v <- sqrt(polyeval(gamma, z))
-    # The values w_i = Φ(z_i / v_i). Note that stats::pnorm is vectorized.
-    w <- stats::pnorm(z / v)
-    # The terms of the sum in the log-likelihood function.
-    u <- y*log(w) + (1-y)*log(1-w)
-    # The values of β and γ given can sometimes create a negative value for the
-    # variance. Since we don't want to consider such cases, we replace this
-    # value with -∞, so these parameter values are not considered during
-    # maximization.
-    # TODO Do this in a more intelligent way, which avoids warnings.
-    u[is.nan(u)] <- -Inf
-    g <- mean(u)
-    # Actually return the negative of the function value, in order to use a
-    # minimizing procedure to compute its argmax.
-    return(min(-g, 1e3))
 }
 
 # The log-likelihood function of the model.
@@ -65,7 +49,43 @@ loglikelihoodCommon <- function(y, x, beta, gamma) {
 # Here, y is a vector of length n, x is an array of dimension (d+1, n), and par
 # contains both β and γ; par[1:d] correspond to the d non-unit elements of β,
 # and par[d+1:d+k+1] are the elements of γ.
-# TODO document
+
+#' Common calculations for ROT log-likelihood
+#'
+#' @param y TODO
+#' @param x TODO
+#' @param beta TODO
+#' @param gamma TODO
+#' @return TODO
+#' @keywords internal
+loglikelihoodCommon <- function(y, x, beta, gamma) {
+    # The values z_i = x^i^T β.
+    z <- as.vector(beta %*% x)
+    # The values v_i = σ_u(x^i) = (\sum_{j=0}^k γ_j z_i^j)^(1/2).
+    v <- sqrt(polyeval(gamma, z))
+    # The values w_i = Φ(z_i / v_i). Note that stats::pnorm is vectorized.
+    w <- stats::pnorm(z / v)
+    # The terms of the sum in the log-likelihood function.
+    u <- y*log(w) + (1-y)*log(1-w)
+    # The values of β and γ given can sometimes create a negative value for the
+    # variance. Since we don't want to consider such cases, we replace this
+    # value with -∞, so these parameter values are not considered during
+    # maximization.
+    # TODO Do this in a more intelligent way, which avoids warnings.
+    u[is.nan(u)] <- -Inf
+    g <- mean(u)
+    # Actually return the negative of the function value, in order to use a
+    # minimizing procedure to compute its argmax.
+    return(min(-g, 1e3))
+}
+
+#' ROT log-likelihood with variable beta
+#'
+#' @param y TODO
+#' @param x TODO
+#' @param par TODO
+#' @return TODO
+#' @keywords internal
 loglikelihoodVarBeta <- function(y, x, par) {
     d <- dim(x)[1] - 1
     n <- dim(x)[2]
@@ -75,13 +95,28 @@ loglikelihoodVarBeta <- function(y, x, par) {
     return(loglikelihoodCommon(y, x, beta, gamma))
 }
 
+#' ROT log-likelihood with fixed beta
+#'
+#' @param y TODO
+#' @param x TODO
+#' @param par TODO
+#' @return TODO
+#' @keywords internal
 loglikelihoodFixedBeta <- function(y, x, betaEst, par) {
     beta <- c(1, betaEst)
     gamma <- par
     return(loglikelihoodCommon(y, x, beta, gamma))
 }
 
-# TODO document
+
+#' ROT calculation of bandwidth
+#'
+#' @param y TODO
+#' @param x TODO
+#' @param k TODO
+#' @param betaEst TODO
+#' @return TODO
+#' @keywords internal
 rot <- function(y, x, k, betaEst = NULL) {
     stopifnot(k >= 2)
     d <- dim(x)[1] - 1

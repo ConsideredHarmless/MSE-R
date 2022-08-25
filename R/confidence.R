@@ -205,7 +205,7 @@ plotCR <- function(estimates) {
 #' Create estimator for H matrix
 #'
 #' Creates the estimator matrix H_n, which is used in Cattaneo's bootstrap
-#' method.
+#' method. Uses the numerical derivative method.
 #'
 #' @param dataArray TODO
 #' @param betaEst A vector of length \code{d}, whose value is the estimate of
@@ -214,7 +214,7 @@ plotCR <- function(estimates) {
 #' @param eps TODO
 #'
 #' @return TODO
-#' @export # FIXME
+#' @export
 makeHnumder <- function(dataArray, betaEst, eps) {
     d <- dim(dataArray)[1] - 1
     scoreObjFun <- makeScoreObjFun(dataArray, objSign = 1)
@@ -239,6 +239,19 @@ makeHnumder <- function(dataArray, betaEst, eps) {
     return(H)
 }
 
+#' Create estimator for H matrix
+#'
+#' Creates the estimator matrix H_n, which is used in Cattaneo's bootstrap
+#' method. Uses the plug-in (kernel) method.
+#'
+#' @param dataArray TODO
+#' @param betaEst A vector of length \code{d}, whose value is the estimate of
+#'   \eqn{\beta}, obtained from maximizing the score function corresponding to
+#'   \code{dataArray}.
+#' @param h TODO
+#'
+#' @return TODO
+#' @export
 makeHplugin <- function(dataArray, betaEst, h) {
     d <- dim(dataArray)[1] - 1
     # First derivative K'(u) of the kernel function K(u), as it is defined in
