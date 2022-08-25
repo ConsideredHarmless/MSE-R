@@ -283,7 +283,7 @@ newBootstrapCR <- function(
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
         progressUpdate = 0, confidenceLevel = 0.95,
-        Hest = "numder", eps = 1)
+        Hest = "plugin", bw = 1)
     if (is.null(options)) {
         options <- list()
     }
@@ -298,47 +298,35 @@ newBootstrapCR <- function(
     numFreeAttrs <- dim(dataArray)[1] - 1
     pointEstimate <- as.numeric(pointEstimate)
 
-    H <- switch(
+    # As in the Cattaneo paper, we implement two methods for estimating the
+    # matrix H_0: one using numerical differentiation one, and one using a
+    # plug-in estimator with a kernel function. Both methods require a
+    # parameter; the numerical differentiation method calls it ε_n, and the
+    # plug-in method calls it h_n. However, since they are calculated in a
+    # similar way, we will call them both bw (for bandwidth). This can be given
+    # as a scalar value, but in the general case it can be a matrix, of same
+    # size as H. In that case, the general value of the bandwidth in formulas
+    # involving it is replaced by the corresponding entry of that matrix.
+    bwOpts <- switch(
         tolower(options$Hest),
-        numder = {
-            eps <- options$eps
-            if (tolower(eps) == "rot") {
-                x <- dataArray
-                n <- dim(x)[2]
-                k <- 8
-                y <- rep(1, n)
-                eps <- rot(y, x, k, pointEstimate)$bw.nd
-            }
-            # If eps is a scalar, replace it with a matrix with the same elements.
-            else if (is.atomic(eps) && length(eps) == 1) {
-                eps <- matrix(eps, numFreeAttrs, numFreeAttrs)
-            }
-            H <- makeHnumder(dataArray, pointEstimate, eps)
-            print(eps)
-            print(H)
-            H
-        },
-        plugin = {
-            h <- options$h
-            if (tolower(h) == "rot") {
-                x <- dataArray
-                n <- dim(x)[2]
-                k <- 8
-                y <- rep(1, n)
-                h <- rot(y, x, k, pointEstimate)$bw.ker
-            }
-            # If h is a scalar, replace it with a matrix with the same elements.
-            else if (is.atomic(h) && length(h) == 1) {
-                h <- matrix(h, numFreeAttrs, numFreeAttrs)
-            }
-            # TODO add option to parametrize on kernel.
-            H <- makeHplugin(dataArray, pointEstimate, h)
-            print(h)
-            print(H)
-            H
-        },
-        stop(sprintf("method %s not implemented", options$Hest))
-    )
+        numder = list(method = "bw.nd.summed", fn = makeHnumder),
+        plugin = list(method = "bw.ker",       fn = makeHplugin),
+        stop(sprintf("method %s not implemented", options$Hest)))
+    bw <- options$bw
+    if (tolower(bw) == "rot") {
+        x <- dataArray
+        n <- dim(x)[2]
+        k <- 8
+        y <- rep(1, n)
+        bw <- rot(y, x, k, pointEstimate)[[bwOpts$method]]
+    }
+    # If bw is a scalar, replace it with a matrix with the same elements.
+    if (is.atomic(bw) && length(bw) == 1) {
+        bw <- matrix(bw, numFreeAttrs, numFreeAttrs)
+    }
+    H <- bwOpts$fn(dataArray, pointEstimate, bw)
+    print(bw)
+    print(H)
 
     # Raw (uncentered) and centered estimates.
     # For the centered estimates, we subtract the point estimate.
