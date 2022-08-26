@@ -378,7 +378,7 @@ newBootstrapCR <- function(
     calcConfRegion <- function(paramIdx) {
         q <- stats::quantile(
             estimates[paramIdx, ],
-            c(alpha, 1 - alpha),
+            c(alpha/2, 1 - alpha/2),
             names=FALSE, type=1)
         return(q)
     }
