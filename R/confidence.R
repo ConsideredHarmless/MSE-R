@@ -338,6 +338,10 @@ newBootstrapCR <- function(
         bw <- matrix(bw, numFreeAttrs, numFreeAttrs)
     }
     H <- bwOpts$fn(dataArray, pointEstimate, bw)
+    # TODO warn user if H has many zeros, or too large entries
+    # TODO in the documentation for H, state that an entry-wise different value
+    # for ε might be appropriate in the ND case if the covariates have
+    # different scale
     print(bw)
     print(H)
 

@@ -5,7 +5,7 @@
 #' of inequalities satisfied) for a given parameter vector (\eqn{\beta}).
 #'
 #' The function created is:
-#'   \eqn{g(\beta) = \mathrm{objSign} \sum_{k=1}^{N_{\mathrm{ineqs}} (a_k \beta')}}
+#'   \eqn{g(\beta) = \frac{1}{N_{\mathrm{ineqs}} \mathrm{objSign} \sum_{k=1}^{N_{\mathrm{ineqs}} (a_k \beta')}}
 #' where
 #' \enumerate{
 #'   \item \eqn{\beta} is the vector of free parameters, of length \code{noAttr-1}.
@@ -28,7 +28,7 @@
 makeScoreObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
     scoreObjFun <- function(b) {
         u <- t(dataArray) %*% c(coefficient1, b)
-        return(objSign * sum(u >= 0))
+        return(objSign * sum(u >= 0) / dim(dataArray)[2])
     }
     return(scoreObjFun)
 }
