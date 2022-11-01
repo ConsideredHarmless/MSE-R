@@ -295,7 +295,7 @@ newBootstrapCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
-        progressUpdate = 0, confidenceLevel = 0.95,
+        progressUpdate = 0, confidenceLevel = 0.95, centered = FALSE,
         Hest = "plugin", bw = 1)
     if (is.null(options)) {
         options <- list()
@@ -377,8 +377,7 @@ newBootstrapCR <- function(
     rawEstimates <- sapply(1:numSubsamples, calcEstimate)
     estimates    <- rawEstimates - pointEstimate
 
-    # CARE: the resulting confidence region is CENTERED.
-    # TODO maybe add option to provide both centered and uncentered?
+    # The resulting confidence region is CENTERED.
     calcConfRegion <- function(paramIdx) {
         q <- stats::quantile(
             estimates[paramIdx, ],
@@ -386,7 +385,12 @@ newBootstrapCR <- function(
             names=FALSE, type=1)
         return(q)
     }
-    cr <- sapply(1:numFreeAttrs, calcConfRegion)
+    crCentered <- sapply(1:numFreeAttrs, calcConfRegion)
+    if (options$centered) {
+        cr <- crCentered
+    } else {
+        cr <- t(t(cr$cr) + pointEstimate)
+    }
 
     result <- list(
         cr = cr,
