@@ -42,7 +42,7 @@
 optimizeScoreFunction <- function(
         dataArray, bounds,
         coefficient1 = NULL, method = NULL, optimParams = NULL,
-        getIneqSat = FALSE, permuteInvariant = TRUE) {
+        getIneqSat = FALSE, permuteInvariant = TRUE, numRuns = 1) {
     if (is.null(method)) {
         method <- "DEoptim"
     }
@@ -67,7 +67,17 @@ optimizeScoreFunction <- function(
                 makeScoreObjFunArgs$coefficient1 <- coefficient1
             }
             scoreObjFun <- do.call(makeScoreObjFun, makeScoreObjFunArgs)
-            result <- maximizeDEoptim(scoreObjFun, bounds$lower, bounds$upper, optimParams)
+            # TODO check if numRuns is a positive integer.
+            bestObjVal <- -Inf
+            bestResult <- NULL
+            for (run in 1:numRuns) {
+                result <- maximizeDEoptim(
+                    scoreObjFun, bounds$lower, bounds$upper, optimParams)
+                if (result$optVal > bestObjVal) {
+                    bestResult <- result
+                    bestObjVal <- result$optVal
+                }
+            }
         },
         stop(sprintf("optimizeScoreFunction: method %s is not implemented",
                       method))

@@ -137,6 +137,11 @@ pointIdentifiedCR <- function(
     subNormalization  <- ssSize^normExponent
     fullNormalization <- length(unique(groupIDs))^normExponent
 
+    # Ignore the numRuns argument, in order not to slow down the calculations.
+    # This is not required in the newBootstrapCR, because
+    # optimizeBootstrapFunction doesn't use it.
+    optimizeScoreArgs$numRuns <- NULL
+
     # Standardized and raw subsample estimates.
     # Note: these arrays are transposed compared to the old function.
     # estimates[paramIdx, iterIdx] gives the estimate for the parameter with
@@ -389,7 +394,7 @@ newBootstrapCR <- function(
     if (options$centered) {
         cr <- crCentered
     } else {
-        cr <- t(t(cr$cr) + pointEstimate)
+        cr <- t(t(crCentered) + pointEstimate)
     }
 
     result <- list(
