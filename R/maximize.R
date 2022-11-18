@@ -46,6 +46,7 @@ optimizeScoreFunction <- function(
     if (is.null(method)) {
         method <- "DEoptim"
     }
+    stopifnot(numRuns >= 1)
     objDataArray <- dataArray
     if (permuteInvariant) {
         # TODO docs
@@ -67,17 +68,22 @@ optimizeScoreFunction <- function(
                 makeScoreObjFunArgs$coefficient1 <- coefficient1
             }
             scoreObjFun <- do.call(makeScoreObjFun, makeScoreObjFunArgs)
-            # TODO check if numRuns is a positive integer.
             bestObjVal <- -Inf
             bestResult <- NULL
-            for (run in 1:numRuns) {
-                result <- maximizeDEoptim(
+            runResults <- lapply(1:numRuns, function(runIdx) {
+                runResult <- maximizeDEoptim(
                     scoreObjFun, bounds$lower, bounds$upper, optimParams)
-                if (result$optVal > bestObjVal) {
-                    bestResult <- result
-                    bestObjVal <- result$optVal
+                if (runResult$optVal > bestObjVal) {
+                    bestResult <<- runResult
+                    bestObjVal <<- runResult$optVal
                 }
-            }
+                return(runResult)
+            })
+            bestIdxs <- lapply(
+                runResults, function(runResult) { runResult$optVal }) == bestObjVal
+            bestRuns <- runResults[bestIdxs]
+            # Arbitrarily pick the first one as representative.
+            result <- bestRuns[[1]]
         },
         stop(sprintf("optimizeScoreFunction: method %s is not implemented",
                       method))
@@ -87,11 +93,22 @@ optimizeScoreFunction <- function(
         result$optArg <- result$optArg[invPerm]
         makeScoreObjFunArgs$dataArray <- dataArray
     }
+    print(bestRuns)
     if (getIneqSat) {
         scoreObjFunVec <- do.call(makeScoreObjFunVec, makeScoreObjFunArgs)
         result$ineqSat <- objSign * scoreObjFunVec(result$optArg)
+        bestRuns <- lapply(bestRuns, function(runResult) {
+            runResult$ineqSat <- objSign * scoreObjFunVec(runResult$optArg)
+            runResult
+        })
     }
     result$optArg <- unname(result$optArg)
+    bestRuns <- lapply(bestRuns, function(runResult) {
+        runResult$optArg <- unname(runResult$optArg)
+        runResult
+    })
+    result$bestRuns <- bestRuns
+    result$numSat <- result$optVal * dim(dataArray)[2]
     return(result)
 }
 
