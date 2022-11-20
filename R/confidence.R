@@ -141,6 +141,7 @@ pointIdentifiedCR <- function(
     # This is not required in the newBootstrapCR, because
     # optimizeBootstrapFunction doesn't use it.
     optimizeScoreArgs$numRuns <- NULL
+    optimizeScoreArgs$progressUpdate <- NULL
 
     # Standardized and raw subsample estimates.
     # Note: these arrays are transposed compared to the old function.
@@ -301,7 +302,7 @@ newBootstrapCR <- function(
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
         progressUpdate = 0, confidenceLevel = 0.95, centered = FALSE,
-        Hest = "plugin", bw = 1)
+        Hest = "plugin", bw = 1, debugLogging = FALSE)
     if (is.null(options)) {
         options <- list()
     }
@@ -310,7 +311,8 @@ newBootstrapCR <- function(
             options[[name]] <- defaultOptions[[name]]
         }
     }
-    progress  <- options$progressUpdate
+    progress <- options$progressUpdate
+    debugLogging <- options$debugLogging
 
     alpha <- 1 - confidenceLevel
     numFreeAttrs <- dim(dataArray)[1] - 1
@@ -336,7 +338,7 @@ newBootstrapCR <- function(
         n <- dim(x)[2]
         k <- 8
         y <- rep(1, n)
-        bw <- rot(y, x, k, pointEstimate)[[bwOpts$method]]
+        bw <- rot(y, x, k, pointEstimate, debugLogging)[[bwOpts$method]]
     }
     # If bw is a scalar, replace it with a matrix with the same elements.
     if (is.atomic(bw) && length(bw) == 1) {
@@ -347,8 +349,12 @@ newBootstrapCR <- function(
     # TODO in the documentation for H, state that an entry-wise different value
     # for ε might be appropriate in the ND case if the covariates have
     # different scale
-    print(bw)
-    print(H)
+    if (debugLogging) {
+        print("[DEBUG] in newBootstrapCR: bw =")
+        print(bw)
+        print("[DEBUG] in newBootstrapCR: H =")
+        print(H)
+    }
 
     # Raw (uncentered) and centered estimates.
     # For the centered estimates, we subtract the point estimate.
@@ -362,7 +368,7 @@ newBootstrapCR <- function(
     samples <- array(0, dim = c(numSubsamples, max(groupIDs)))
     calcEstimate <- function(iterIdx) {
         sample <- sampleBootstrap(groupIDs, dataArray) # TODO `sample` shadows stdlib function
-        optimizeBootstrapArgs = list(
+        optimizeBootstrapArgs <- list(
             fullDataArray = dataArray, sampleDataArray = sample$ssDataArray,
             betaEst = pointEstimate, H = H,
             bounds = optimizeScoreArgs$bounds,
@@ -375,7 +381,7 @@ newBootstrapCR <- function(
         # The <<- operator is required to modify objects outside the closure.
         samples[iterIdx, ] <<- sample$selectedGroups
         if (progress > 0 && iterIdx %% progress == 0) {
-            cat(sprintf("[pointIdentifiedCR] Iterations completed: %d\n", iterIdx))
+            cat(sprintf("[newBootstrapCR] Iterations completed: %d\n", iterIdx))
         }
         return(ssEstimate)
     }
@@ -400,6 +406,6 @@ newBootstrapCR <- function(
     result <- list(
         cr = cr,
         estimates = t(estimates), rawEstimates = t(rawEstimates),
-        samples = samples)
+        samples = samples, H = H)
     return(result)
 }

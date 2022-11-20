@@ -42,7 +42,8 @@
 optimizeScoreFunction <- function(
         dataArray, bounds,
         coefficient1 = NULL, method = NULL, optimParams = NULL,
-        getIneqSat = FALSE, permuteInvariant = TRUE, numRuns = 1) {
+        getIneqSat = FALSE, permuteInvariant = TRUE, numRuns = 1,
+        progressUpdate = 0) {
     if (is.null(method)) {
         method <- "DEoptim"
     }
@@ -77,6 +78,9 @@ optimizeScoreFunction <- function(
                     bestResult <<- runResult
                     bestObjVal <<- runResult$optVal
                 }
+                if (progressUpdate > 0 && runIdx %% progressUpdate == 0) {
+                    cat(sprintf("[optimizeScoreFunction] Iterations completed: %d\n", runIdx))
+                }
                 return(runResult)
             })
             bestIdxs <- lapply(
@@ -92,8 +96,11 @@ optimizeScoreFunction <- function(
         # Return parameters with the original order.
         result$optArg <- result$optArg[invPerm]
         makeScoreObjFunArgs$dataArray <- dataArray
+        bestRuns <- lapply(bestRuns, function(runResult) {
+            runResult$optArg <- runResult$optArg[invPerm]
+            runResult
+        })
     }
-    print(bestRuns)
     if (getIneqSat) {
         scoreObjFunVec <- do.call(makeScoreObjFunVec, makeScoreObjFunArgs)
         result$ineqSat <- objSign * scoreObjFunVec(result$optArg)

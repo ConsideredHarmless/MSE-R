@@ -117,7 +117,7 @@ loglikelihoodFixedBeta <- function(y, x, betaEst, par) {
 #' @param betaEst TODO
 #' @return TODO
 #' @keywords internal
-rot <- function(y, x, k, betaEst = NULL) {
+rot <- function(y, x, k, betaEst = NULL, debugLogging = FALSE) {
     stopifnot(k >= 2)
     d <- dim(x)[1] - 1
     n <- dim(x)[2]
@@ -133,7 +133,10 @@ rot <- function(y, x, k, betaEst = NULL) {
     }
     optResult <- do.call(stats::optim, optimArgs)
     optPars <- optResult$par
-    print(optPars)
+    if (debugLogging) {
+        print("[DEBUG] in rot: optPars =")
+        print(optPars)
+    }
     betaR <- if (is.null(betaEst)) { optPars[1:d] } else { betaEst }
     gamma <- if (is.null(betaEst)) { optPars[(d+1):(d+k+1)] } else { optPars }
     # For μ_1 and σ_1, we use the sample mean and std.
@@ -190,10 +193,16 @@ rot <- function(y, x, k, betaEst = NULL) {
             V.ker[row, col] <- (1/(2*sqrt(pi)))*mean(F0_0_1*x_row^2*x_col^2)
         }
     }
-    print(B.nd)
-    print(V.nd)
-    print(B.ker)
-    print(V.ker)
+    if (debugLogging) {
+        print("[DEBUG] in rot: B.nd =")
+        print(B.nd)
+        print("[DEBUG] in rot: V.nd =")
+        print(V.nd)
+        print("[DEBUG] in rot: B.ker =")
+        print(B.ker)
+        print("[DEBUG] in rot: V.ker =")
+        print(V.ker)
+    }
     V.nd.sum <- sum(V.nd)
     B.nd.sqsum <- sum(B.nd^2)
     # r_n, in the formulas (the effective sample size?) seems to equal to n^(1/3).
