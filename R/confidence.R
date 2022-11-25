@@ -302,7 +302,9 @@ newBootstrapCR <- function(
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
         progressUpdate = 0, confidenceLevel = 0.95, centered = FALSE,
-        Hest = "plugin", bw = 1, debugLogging = FALSE)
+        Hest = "plugin", bw = 1, makePosDef = FALSE, makePosDefTol = 1e-5,
+        Hbypass = NULL,
+        debugLogging = FALSE)
     if (is.null(options)) {
         options <- list()
     }
@@ -354,6 +356,26 @@ newBootstrapCR <- function(
         print(bw)
         print("[DEBUG] in newBootstrapCR: H =")
         print(H)
+    }
+    if (options$makePosDef) {
+        eigvals <- eigen(H)$values
+        minEigval <- min(eigvals) # λ_1
+        incr <- options$makePosDefTol - minEigval # κ = ε - λ_1
+        if (minEigval <= 0) {
+            H <- H + incr * diag(dim(H)[1])
+            if (debugLogging) {
+                print("[DEBUG] in newBootstrapCR: H is not positive definite")
+                print(sprintf(
+                    "[DEBUG] in newBootstrapCR: (smallest eigenvalue is %f)", minEigval))
+                print(sprintf(
+                    "[DEBUG] in newBootstrapCR: adding %f to diagonal elements", incr))
+                print("[DEBUG] in newBootstrapCR: new H =")
+                print(H)
+            }
+        }
+    }
+    if (!is.null(options$Hbypass)) {
+        H <- options$Hbypass
     }
 
     # Raw (uncentered) and centered estimates.
