@@ -358,17 +358,30 @@ newBootstrapCR <- function(
         print(H)
     }
     if (options$makePosDef) {
-        eigvals <- eigen(H)$values
+        eigH <- eigen(H)
+        eigvals <- eigH$values
         minEigval <- min(eigvals) # λ_1
-        incr <- options$makePosDefTol - minEigval # κ = ε - λ_1
         if (minEigval <= 0) {
-            H <- H + incr * diag(dim(H)[1])
             if (debugLogging) {
                 print("[DEBUG] in newBootstrapCR: H is not positive definite")
                 print(sprintf(
                     "[DEBUG] in newBootstrapCR: (smallest eigenvalue is %f)", minEigval))
-                print(sprintf(
-                    "[DEBUG] in newBootstrapCR: adding %f to diagonal elements", incr))
+            }
+            if (options$makePosDefTol == "drop") {
+                eigvals[eigvals < 0] <- 0
+                H <- eigH$vectors %*% diag(eigvals) %*% t(eigH$vectors)
+                if (debugLogging) {
+                    print("[DEBUG] in newBootstrapCR: dropping negative eigenvalues")
+                }
+            } else {
+                incr <- options$makePosDefTol - minEigval # κ = ε - λ_1
+                H <- H + incr * diag(dim(H)[1])
+                if (debugLogging) {
+                    print(sprintf(
+                        "[DEBUG] in newBootstrapCR: adding %f to diagonal elements", incr))
+                }
+            }
+            if (debugLogging) {
                 print("[DEBUG] in newBootstrapCR: new H =")
                 print(H)
             }
