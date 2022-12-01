@@ -388,6 +388,7 @@ newBootstrapCR <- function(
     # each time, rather than ssSize groups. This might later change.
     # samples <- array(0, dim = c(numSubsamples, ssSize))
     samples <- array(0, dim = c(numSubsamples, max(groupIDs)))
+    bootstrapEvalInfos <- list()
     calcEstimate <- function(iterIdx) {
         sample <- sampleBootstrap(groupIDs, dataArray) # TODO `sample` shadows stdlib function
         optimizeBootstrapArgs <- list(
@@ -402,6 +403,7 @@ newBootstrapCR <- function(
         ssEstimate <- optResult$optArg
         # The <<- operator is required to modify objects outside the closure.
         samples[iterIdx, ] <<- sample$selectedGroups
+        bootstrapEvalInfos[[iterIdx]] <<- optResult$bootstrapEvalInfo
         if (progress > 0 && iterIdx %% progress == 0) {
             cat(sprintf("[newBootstrapCR] Iterations completed: %d\n", iterIdx))
         }
@@ -428,6 +430,6 @@ newBootstrapCR <- function(
     result <- list(
         cr = cr,
         estimates = t(estimates), rawEstimates = t(rawEstimates),
-        samples = samples, H = H)
+        samples = samples, bootstrapEvalInfos = bootstrapEvalInfos, H = H)
     return(result)
 }

@@ -160,8 +160,16 @@ optimizeBootstrapFunction <- function(
                 if (!is.null(coefficient1)) {
                     makeBootstrapObjFunArgs$coefficient1 <- coefficient1
                 }
-                scoreObjFun <- do.call(makeBootstrapObjFun, makeBootstrapObjFunArgs)
-                result <- maximizeDEoptim(scoreObjFun, bounds$lower, bounds$upper, optimParams)
+                # This function also returns some extra information relevant to
+                # the calculation of the bootstrap function, useful for
+                # experimenting.
+                bootstrapExtraFunction <- do.call(
+                    makeBootstrapExtraObjFun, makeBootstrapObjFunArgs)
+                result <- maximizeDEoptim(
+                    function(b) { bootstrapExtraFunction(b)$val },
+                    bounds$lower, bounds$upper, optimParams)
+                bootstrapEvalInfo <- bootstrapExtraFunction(result$optArg)
+                result$bootstrapEvalInfo <- bootstrapEvalInfo
             },
             stop(sprintf("optimizeBootstrapFunction: method %s is not implemented",
                          method))

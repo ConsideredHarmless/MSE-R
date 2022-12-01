@@ -103,3 +103,19 @@ makeBootstrapObjFun <- function(
         return(objSign * u)
     }
 }
+
+makeBootstrapExtraObjFun <- function(
+    fullDataArray, sampleDataArray, betaEst, H,
+    coefficient1 = 1, objSign = -1) {
+    fullScoreObjFun   <- makeScoreObjFun(fullDataArray,   coefficient1, objSign = 1)
+    sampleScoreObjFun <- makeScoreObjFun(sampleDataArray, coefficient1, objSign = 1)
+    bootstrapObjFun <- function(b) {
+        v <- b - betaEst
+        q <- 0.5 * as.numeric(t(v) %*% H %*% v)
+        s <- sampleScoreObjFun(b)
+        f <- fullScoreObjFun(b)
+        u <- s - f - q
+        terms <- list(s = s, f = f, q = q)
+        return(list(val = objSign * u, arg = b, diffArg = v, terms = terms))
+    }
+}
