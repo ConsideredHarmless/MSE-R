@@ -93,26 +93,36 @@ makeScoreObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
 #' @export
 makeBootstrapObjFun <- function(
     fullDataArray, sampleDataArray, betaEst, H,
-    coefficient1 = 1, objSign = -1) {
+    coefficient1 = 1, objSign = -1, useCorrectionFactor = TRUE) {
     fullScoreObjFun   <- makeScoreObjFun(fullDataArray,   coefficient1, objSign = 1)
     sampleScoreObjFun <- makeScoreObjFun(sampleDataArray, coefficient1, objSign = 1)
     bootstrapObjFun <- function(b) {
         v <- b - betaEst
         q <- 0.5 * as.numeric(t(v) %*% H %*% v)
-        u <- sampleScoreObjFun(b) - fullScoreObjFun(b) - q
+        correctionFactor <- if (useCorrectionFactor) {
+            dim(sampleDataArray)[2] / dim(fullDataArray)[2]
+        } else {
+            1
+        }
+        u <- correctionFactor * sampleScoreObjFun(b) - fullScoreObjFun(b) - q
         return(objSign * u)
     }
 }
 
 makeBootstrapExtraObjFun <- function(
     fullDataArray, sampleDataArray, betaEst, H,
-    coefficient1 = 1, objSign = -1) {
+    coefficient1 = 1, objSign = -1, useCorrectionFactor = TRUE) {
     fullScoreObjFun   <- makeScoreObjFun(fullDataArray,   coefficient1, objSign = 1)
     sampleScoreObjFun <- makeScoreObjFun(sampleDataArray, coefficient1, objSign = 1)
     bootstrapObjFun <- function(b) {
         v <- b - betaEst
         q <- 0.5 * as.numeric(t(v) %*% H %*% v)
-        s <- sampleScoreObjFun(b)
+        correctionFactor <- if (useCorrectionFactor) {
+            dim(sampleDataArray)[2] / dim(fullDataArray)[2]
+        } else {
+            1
+        }
+        s <- correctionFactor * sampleScoreObjFun(b)
         f <- fullScoreObjFun(b)
         u <- s - f - q
         terms <- list(s = s, f = f, q = q)

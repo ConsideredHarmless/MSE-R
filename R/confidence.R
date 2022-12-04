@@ -303,7 +303,7 @@ newBootstrapCR <- function(
     defaultOptions <- list(
         progressUpdate = 0, confidenceLevel = 0.95, centered = FALSE,
         Hest = "plugin", bw = 1, makePosDef = FALSE, makePosDefTol = 1e-5,
-        Hbypass = NULL,
+        Hbypass = NULL, useCorrectionFactor = TRUE,
         debugLogging = FALSE)
     if (is.null(options)) {
         options <- list()
@@ -410,7 +410,8 @@ newBootstrapCR <- function(
             bounds = optimizeScoreArgs$bounds,
             coefficient1 = optimizeScoreArgs$coefficient1,
             method = optimizeScoreArgs$method,
-            optimParams = optimizeScoreArgs$optimParams
+            optimParams = optimizeScoreArgs$optimParams,
+            useCorrectionFactor = options$useCorrectionFactor
         )
         optResult <- do.call(optimizeBootstrapFunction, optimizeBootstrapArgs)
         ssEstimate <- optResult$optArg

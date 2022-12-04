@@ -146,7 +146,8 @@ optimizeScoreFunction <- function(
 optimizeBootstrapFunction <- function(
         fullDataArray, sampleDataArray, betaEst, H,
         bounds,
-        coefficient1 = NULL, method = NULL, optimParams = NULL) {
+        coefficient1 = NULL, method = NULL, optimParams = NULL,
+        useCorrectionFactor = TRUE) {
     if (is.null(method)) {
         method <- "DEoptim"
     }
@@ -156,7 +157,8 @@ optimizeBootstrapFunction <- function(
                 makeBootstrapObjFunArgs = list(
                     fullDataArray = fullDataArray,
                     sampleDataArray = sampleDataArray,
-                    betaEst = betaEst, H = H, objSign = objSign)
+                    betaEst = betaEst, H = H, objSign = objSign,
+                    useCorrectionFactor = useCorrectionFactor)
                 if (!is.null(coefficient1)) {
                     makeBootstrapObjFunArgs$coefficient1 <- coefficient1
                 }
