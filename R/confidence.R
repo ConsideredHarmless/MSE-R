@@ -69,6 +69,18 @@ sampleBootstrap <- function(ssSize, groupIDs, dataArray, withReplacement) {
 
 }
 
+mergeOptions <- function(options, defaultOptions) {
+    if (is.null(options)) {
+        options <- list()
+    }
+    for (name in names(defaultOptions)) {
+        if (is.null(options[[name]])) {
+            options[[name]] <- defaultOptions[[name]]
+        }
+    }
+    return(options)
+}
+
 #' Calculate confidence region
 #'
 #' Generates a confidence region estimate using subsampling.
@@ -119,14 +131,7 @@ pointIdentifiedCR <- function(
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
         progressUpdate = 0, confidenceLevel = 0.95, asymptotics = "nests")
-    if (is.null(options)) {
-        options <- list()
-    }
-    for (name in names(defaultOptions)) {
-        if (is.null(options[[name]])) {
-            options[[name]] <- defaultOptions[[name]]
-        }
-    }
+    options <- mergeOptions(options, defaultOptions)
     progress  <- options$progressUpdate
     asymp     <- options$asymptotics
 
@@ -392,14 +397,7 @@ newBootstrapCR <- function(
         Hest = "plugin", bw = 1, makePosDef = FALSE, makePosDefTol = 1e-5,
         Hbypass = NULL, useCorrectionFactor = TRUE,
         debugLogging = FALSE)
-    if (is.null(options)) {
-        options <- list()
-    }
-    for (name in names(defaultOptions)) {
-        if (is.null(options[[name]])) {
-            options[[name]] <- defaultOptions[[name]]
-        }
-    }
+    options <- mergeOptions(options, defaultOptions)
     progress <- options$progressUpdate
     debugLogging <- options$debugLogging
 
