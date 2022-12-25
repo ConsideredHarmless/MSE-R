@@ -14,54 +14,59 @@ makeGroupIDs <- function(ineqmembers) {
     return(unlist(lapply(mIdxs, f)))
 }
 
-# generateRandomSubsample(ssSize, groupIDs, dataArray) generates a subsample
-# of a given size from a data array.
-# ssSize is an integer denoting the number of markets in the subsample.
-# For groupIDs, see the function makeGroupIDs.
-# For the structure dataArray, see the function CdataArray.
-# Returns an array with the same structure as dataArray, containing only the
-# columns corresponding to inequalities in the (randomly) selected markets.
-
 #' Randomly subsample data array
 #'
 #' Generates a reduced data array, with columns corresponding to a randomly
 #' selected subset of the original markets.
 #'
-#' @param ssSize The size of the market subset. Must not be greater than the
-#'   number of markets.
+#' @param ssSize The size of the desired market subset. Must not be greater than
+#'   the original number of markets. Set to \code{NULL} to sample as many
+#'   markets as there are in the original set; this is how this function is
+#'   supposed to be used in the cube-root method.
 #' @param groupIDs The output of \code{makeGroupIDs}.
-#' @param dataArray The output of \code{CdataArray}.
+#' @param dataArray The output of \code{CdataArray}. Set to \code{NULL} to
+#'   generate only the \code{$selectedGroups} and \code{$indices} elements of
+#'   the result.
+#' @param withReplacement A boolean indicating whether to sample with
+#'   replacement, as in the cube-root method, or without, as in the
+#'   point-identified method.
 #'
 #' @return A list with members:
 #' \tabular{ll}{
 #'   \code{$ssDataArray} \tab An array with the columns of \code{dataArray}
 #'     belonging to the selected subset of markets. \cr
-#'   \code{$selectedGroups} \tab A vector of length \code{ssSize}, containing
-#'     the indices of the chosen markets.
+#'   \code{$marketIdxs} \tab A vector of length \code{ssSize}, containing the
+#'     indices of the selected markets. \cr
+#'   \code{$ineqIdxs} \tab A vector of length equal to the number of columns of
+#'     the element \code{$ssDataArray}, containing the indices of the selected
+#'     inequalities. It has the property that, if \code{r} is the return value
+#'     of this function, then \code{dataArray[, r$ineqIdxs]} is equal to
+#'     \code{r$ssDataArray}.
 #' }
 #'
 #' @keywords internal
-generateRandomSubsample <- function(ssSize, groupIDs, dataArray) {
-    uniqueGroups <- unique(groupIDs)
-    selectedGroups <- sort(sample(uniqueGroups, ssSize))
-    # Get the indices of the dataArray columns that correspond to the selected
-    # groups.
-    qualifiedIndices <- which(groupIDs %in% selectedGroups)
-    ssDataArray <- dataArray[, qualifiedIndices]
-    return(list(ssDataArray = ssDataArray, selectedGroups = selectedGroups))
-}
+sampleBootstrap <- function(ssSize, groupIDs, dataArray, withReplacement) {
+    allMarketIdxs <- unique(groupIDs)
+    numMarkets <- max(allMarketIdxs)
+    if (is.null(ssSize)) {
+        ssSize <- numMarkets
+    }
+    stopifnot(ssSize >= 1 && ssSize <= numMarkets)
+    if (!withReplacement && ssSize == numMarkets) {
+        warning("sampleBootstrap: sampling full number of markets without replacement")
+    }
+    selectedMarketIdxs <- sample(
+        allMarketIdxs, size = ssSize, replace = withReplacement)
+    # Generate the inequality index vectors corresponding to each selected
+    # market, and concatenate them.
+    selectedIneqIdxs <- do.call("c", lapply(selectedMarketIdxs, function(mIdx) {
+        return(which(groupIDs == mIdx)) }))
+    ssDataArray <- if (is.null(dataArray)) { NULL } else { dataArray[, selectedIneqIdxs] }
+    return(list(
+        ssDataArray = ssDataArray,
+        marketIdxs = selectedMarketIdxs,
+        ineqIdxs = selectedIneqIdxs))
 
-# TODO document and refactor with generateRandomSubsample.
-sampleBootstrap <- function(groupIDs, dataArray) {
-    uniqueGroups <- unique(groupIDs)
-    selectedGroups <- sample(uniqueGroups, replace = TRUE)
-    numIneqs <- dim(dataArray)[2]
-    f <- function(g) { return((1:numIneqs)[groupIDs == g]) }
-    indices <- do.call("c", lapply(selectedGroups, f))
-    ssDataArray <- dataArray[, indices]
-    return(list(ssDataArray = ssDataArray,
-                selectedGroups = selectedGroups,
-                indices = indices))
 }
 
 #' Calculate confidence region
@@ -149,12 +154,13 @@ pointIdentifiedCR <- function(
     # index paramIdx in iteration with index iterIdx.
     samples <- array(0, dim = c(numSubsamples, ssSize))
     calcEstimate <- function(iterIdx) {
-        sample <- generateRandomSubsample(ssSize, groupIDs, dataArray)
-        optimizeScoreArgs$dataArray <- sample$ssDataArray
+        bootstrapSample <- sampleBootstrap(
+            ssSize, groupIDs, dataArray, withReplacement = FALSE)
+        optimizeScoreArgs$dataArray <- bootstrapSample$ssDataArray
         optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
         ssEstimate <- optResult$optArg
         # The <<- operator is required to modify objects outside the closure.
-        samples[iterIdx, ] <<- sample$selectedGroups
+        samples[iterIdx, ] <<- bootstrapSample$marketIdxs
         if (progress > 0 && iterIdx %% progress == 0) {
             cat(sprintf("[pointIdentifiedCR] Iterations completed: %d\n", iterIdx))
         }
@@ -403,9 +409,11 @@ newBootstrapCR <- function(
     samples <- array(0, dim = c(numSubsamples, max(groupIDs)))
     bootstrapEvalInfos <- list()
     calcEstimate <- function(iterIdx) {
-        sample <- sampleBootstrap(groupIDs, dataArray) # TODO `sample` shadows stdlib function
+        bootstrapSample <- sampleBootstrap(
+            ssSize = NULL, groupIDs, dataArray, withReplacement = TRUE)
         optimizeBootstrapArgs <- list(
-            fullDataArray = dataArray, sampleDataArray = sample$ssDataArray,
+            fullDataArray = dataArray,
+            sampleDataArray = bootstrapSample$ssDataArray,
             betaEst = pointEstimate, H = H,
             bounds = optimizeScoreArgs$bounds,
             coefficient1 = optimizeScoreArgs$coefficient1,
@@ -416,7 +424,7 @@ newBootstrapCR <- function(
         optResult <- do.call(optimizeBootstrapFunction, optimizeBootstrapArgs)
         ssEstimate <- optResult$optArg
         # The <<- operator is required to modify objects outside the closure.
-        samples[iterIdx, ] <<- sample$selectedGroups
+        samples[iterIdx, ] <<- bootstrapSample$marketIdxs
         bootstrapEvalInfos[[iterIdx]] <<- optResult$bootstrapEvalInfo
         if (progress > 0 && iterIdx %% progress == 0) {
             cat(sprintf("[newBootstrapCR] Iterations completed: %d\n", iterIdx))
