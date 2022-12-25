@@ -288,6 +288,87 @@ makeHplugin <- function(dataArray, betaEst, h) {
     return(H)
 }
 
+# Handles correct bandwidth set-up, ROT calculation, conversion to PSD, ...
+makeHmatrix <- function(dataArray, pointEstimate, options) {
+    # As in the Cattaneo paper, we implement two methods for estimating the
+    # matrix H_0: one using numerical differentiation one, and one using a
+    # plug-in estimator with a kernel function. Both methods require a
+    # parameter; the numerical differentiation method calls it ε_n, and the
+    # plug-in method calls it h_n. However, since they are calculated in a
+    # similar way, we will call them both bw (for bandwidth). This can be given
+    # as a scalar value, but in the general case it can be a matrix, of same
+    # size as H. In that case, the general value of the bandwidth in formulas
+    # involving it is replaced by the corresponding entry of that matrix.
+    if (!is.null(options$Hbypass)) {
+        H <- options$Hbypass
+        if (options$debugLogging) {
+            print("[DEBUG] in makeHmatrix: bypassing calculation of H, using provided matrix")
+        }
+        return(H)
+    }
+    bwOpts <- switch(
+        tolower(options$Hest),
+        numder = list(method = "bw.nd.summed", fn = makeHnumder),
+        plugin = list(method = "bw.ker",       fn = makeHplugin),
+        stop(sprintf("method %s not implemented", options$Hest)))
+    bw <- options$bw
+    if (tolower(bw) == "rot") {
+        x <- dataArray
+        n <- dim(x)[2]
+        k <- 8
+        y <- rep(1, n)
+        bw <- rot(y, x, k, pointEstimate, options$debugLogging)[[bwOpts$method]]
+    }
+    # If bw is a scalar, replace it with a matrix with the same elements.
+    if (is.atomic(bw) && length(bw) == 1) {
+        numFreeAttrs <- dim(dataArray)[1] - 1
+        bw <- matrix(bw, numFreeAttrs, numFreeAttrs)
+    }
+    H <- bwOpts$fn(dataArray, pointEstimate, bw)
+    # TODO warn user if H has many zeros, or too large entries
+    # TODO in the documentation for H, state that an entry-wise different value
+    # for ε might be appropriate in the ND case if the covariates have
+    # different scale
+    # TODO newBootstrapCR -> makeHmatrix
+    if (options$debugLogging) {
+        print("[DEBUG] in newBootstrapCR: bw =")
+        print(bw)
+        print("[DEBUG] in newBootstrapCR: H =")
+        print(H)
+    }
+    if (options$makePosDef) {
+        eigH <- eigen(H)
+        eigvals <- eigH$values
+        minEigval <- min(eigvals) # λ_1
+        if (minEigval <= 0) {
+            if (options$debugLogging) {
+                print("[DEBUG] in newBootstrapCR: H is not positive definite")
+                print(sprintf(
+                    "[DEBUG] in newBootstrapCR: (smallest eigenvalue is %f)", minEigval))
+            }
+            if (options$makePosDefTol == "drop") {
+                eigvals[eigvals < 0] <- 0
+                H <- eigH$vectors %*% diag(eigvals) %*% t(eigH$vectors)
+                if (debugLogging) {
+                    print("[DEBUG] in newBootstrapCR: dropping negative eigenvalues")
+                }
+            } else {
+                incr <- options$makePosDefTol - minEigval # κ = ε - λ_1
+                H <- H + incr * diag(dim(H)[1])
+                if (options$debugLogging) {
+                    print(sprintf(
+                        "[DEBUG] in newBootstrapCR: adding %f to diagonal elements", incr))
+                }
+            }
+            if (options$debugLogging) {
+                print("[DEBUG] in newBootstrapCR: new H =")
+                print(H)
+            }
+        }
+    }
+    return(H)
+}
+
 # TODO document and refactor with pointIdentifiedCR.
 
 #' Calculate confidence region
@@ -326,76 +407,7 @@ newBootstrapCR <- function(
     numFreeAttrs <- dim(dataArray)[1] - 1
     pointEstimate <- as.numeric(pointEstimate)
 
-    # As in the Cattaneo paper, we implement two methods for estimating the
-    # matrix H_0: one using numerical differentiation one, and one using a
-    # plug-in estimator with a kernel function. Both methods require a
-    # parameter; the numerical differentiation method calls it ε_n, and the
-    # plug-in method calls it h_n. However, since they are calculated in a
-    # similar way, we will call them both bw (for bandwidth). This can be given
-    # as a scalar value, but in the general case it can be a matrix, of same
-    # size as H. In that case, the general value of the bandwidth in formulas
-    # involving it is replaced by the corresponding entry of that matrix.
-    bwOpts <- switch(
-        tolower(options$Hest),
-        numder = list(method = "bw.nd.summed", fn = makeHnumder),
-        plugin = list(method = "bw.ker",       fn = makeHplugin),
-        stop(sprintf("method %s not implemented", options$Hest)))
-    bw <- options$bw
-    if (tolower(bw) == "rot") {
-        x <- dataArray
-        n <- dim(x)[2]
-        k <- 8
-        y <- rep(1, n)
-        bw <- rot(y, x, k, pointEstimate, debugLogging)[[bwOpts$method]]
-    }
-    # If bw is a scalar, replace it with a matrix with the same elements.
-    if (is.atomic(bw) && length(bw) == 1) {
-        bw <- matrix(bw, numFreeAttrs, numFreeAttrs)
-    }
-    H <- bwOpts$fn(dataArray, pointEstimate, bw)
-    # TODO warn user if H has many zeros, or too large entries
-    # TODO in the documentation for H, state that an entry-wise different value
-    # for ε might be appropriate in the ND case if the covariates have
-    # different scale
-    if (debugLogging) {
-        print("[DEBUG] in newBootstrapCR: bw =")
-        print(bw)
-        print("[DEBUG] in newBootstrapCR: H =")
-        print(H)
-    }
-    if (options$makePosDef) {
-        eigH <- eigen(H)
-        eigvals <- eigH$values
-        minEigval <- min(eigvals) # λ_1
-        if (minEigval <= 0) {
-            if (debugLogging) {
-                print("[DEBUG] in newBootstrapCR: H is not positive definite")
-                print(sprintf(
-                    "[DEBUG] in newBootstrapCR: (smallest eigenvalue is %f)", minEigval))
-            }
-            if (options$makePosDefTol == "drop") {
-                eigvals[eigvals < 0] <- 0
-                H <- eigH$vectors %*% diag(eigvals) %*% t(eigH$vectors)
-                if (debugLogging) {
-                    print("[DEBUG] in newBootstrapCR: dropping negative eigenvalues")
-                }
-            } else {
-                incr <- options$makePosDefTol - minEigval # κ = ε - λ_1
-                H <- H + incr * diag(dim(H)[1])
-                if (debugLogging) {
-                    print(sprintf(
-                        "[DEBUG] in newBootstrapCR: adding %f to diagonal elements", incr))
-                }
-            }
-            if (debugLogging) {
-                print("[DEBUG] in newBootstrapCR: new H =")
-                print(H)
-            }
-        }
-    }
-    if (!is.null(options$Hbypass)) {
-        H <- options$Hbypass
-    }
+    H <- makeHmatrix(dataArray, pointEstimate, options)
 
     # Raw (uncentered) and centered estimates.
     # For the centered estimates, we subtract the point estimate.
