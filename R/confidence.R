@@ -130,7 +130,7 @@ pointIdentifiedCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
-        progressUpdate = 0, confidenceLevel = 0.95, asymptotics = "nests")
+        progressUpdate = 0, asymptotics = "nests")
     options <- mergeOptions(options, defaultOptions)
     progress  <- options$progressUpdate
     asymp     <- options$asymptotics
@@ -393,7 +393,7 @@ newBootstrapCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
-        progressUpdate = 0, confidenceLevel = 0.95, centered = FALSE,
+        progressUpdate = 0, centered = FALSE,
         Hest = "plugin", bw = 1, makePosDef = FALSE, makePosDefTol = 1e-5,
         Hbypass = NULL, useCorrectionFactor = TRUE,
         debugLogging = FALSE)
