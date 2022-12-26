@@ -10,8 +10,8 @@ makeHmatrix(dataArray, pointEstimate, options)
 \arguments{
 \item{dataArray}{The output of \code{dataArray}.}
 
-\item{pointEstimate}{The optimal parameters, as calculated by
-\code{optimizeScoreFunction}.}
+\item{pointEstimate}{The vector \mjseqn{\hat{\beta}} of the optimal
+parameters, as calculated by \code{optimizeScoreFunction}.}
 
 \item{options}{See options \code{Hest}, \code{bw}, \code{makePosDef}, \code{makePosDefTol},
 \code{Hbypass}, and \code{debugLogging} from \code{\link{newBootstrapCR}}.}
@@ -35,13 +35,16 @@ Two methods for estimating the matrix \mjseqn{H_0} are implemented. The first
 uses numerical differentiation, as shown in section 3.1., and the other
 creates a "plug-in" estimator for this specific model, as in section 4.1..
 
+The choice of method is controlled by the option \code{Hest}.
+\subsection{Plug-in kernel}{
+
 Note that the plug-in estimator method requires a kernel function with
 specific properties, as shown in the paper and its supplement. The only
 kernel currently available is the function \mjseqn{K(u) = \phi(u)}, i.e. the
 pdf of the standard normal distribution, with first derivative
 \mjseqn{\dot{K}(u) = -u\phi(u)}.
+}
 
-The choice of method is controlled by the option \code{Hest}.
 }
 
 \subsection{Step/bandwidth}{

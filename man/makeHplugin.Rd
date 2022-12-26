@@ -2,24 +2,34 @@
 % Please edit documentation in R/confidence.R
 \name{makeHplugin}
 \alias{makeHplugin}
-\title{Create estimator for H matrix}
+\title{\loadmathjax}
 \usage{
 makeHplugin(dataArray, betaEst, h)
 }
 \arguments{
-\item{dataArray}{TODO}
+\item{dataArray}{The output of \code{dataArray}.}
 
-\item{betaEst}{A vector of length \code{d}, whose value is the estimate of
-\eqn{\beta}, obtained from maximizing the score function corresponding to
-\code{dataArray}.}
+\item{betaEst}{The vector \mjseqn{\hat{\beta}}, of length \mjseqn{d}, whose
+value is the estimate of \mjseqn{\beta}, obtained from maximizing the
+score function corresponding to \code{dataArray}.}
 
-\item{h}{TODO}
+\item{h}{The bandwidth matrix
+\mjseqn{h_{n,kl}}, of size \mjseqn{d \times d}.}
 }
 \value{
-TODO
+The matrix \mjseqn{H}.
 }
 \description{
-Creates the estimator matrix H_n, which is used in Cattaneo's bootstrap
-method. Uses the plug-in (kernel) method.
+Creates the estimator matrix \mjseqn{\tilde{H}_n} using the plug-in (kernel)
+method.
 }
-\keyword{internal}
+\details{
+\subsection{Plug-in kernel}{
+
+Note that the plug-in estimator method requires a kernel function with
+specific properties, as shown in the paper and its supplement. The only
+kernel currently available is the function \mjseqn{K(u) = \phi(u)}, i.e. the
+pdf of the standard normal distribution, with first derivative
+\mjseqn{\dot{K}(u) = -u\phi(u)}.
+}
+}

@@ -20,8 +20,8 @@ newBootstrapCR(
 
 \item{groupIDs}{The output of \code{makeGroupIDs}.}
 
-\item{pointEstimate}{The optimal parameters, as calculated by
-\code{optimizeScoreFunction}.}
+\item{pointEstimate}{The vector \mjseqn{\hat{\beta}} of the optimal
+parameters, as calculated by \code{optimizeScoreFunction}.}
 
 \item{ssSize}{Currently ignored. In \code{pointIdentifiedCR}, this is the number
 of markets in each sample, but in the cube-root method, this number is

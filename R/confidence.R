@@ -69,13 +69,19 @@ sampleBootstrap <- function(ssSize, groupIDs, dataArray, withReplacement) {
 
 }
 
-#' TODO
+#' Merge passed options with default options
 #'
-#' @param options TODO
-#' @param defaultOptions TODO
+#' Merges the passed options list with the default options list by adding to
+#' the former any name-value pairs which only occur in the latter. In case of
+#' name conflicts, the former pair is kept.
 #'
-#' @return TODO
+#' @param options A list of name-value pairs.
+#' @param defaultOptions A list of name-value pairs.
+#'
+#' @return A list of name-value pairs obtained by adding to `options` any pairs
+#'   only occuring in `defaultOptions`.
 #' @keywords internal
+#' @examples mergeOptions(list(x = 1, y = 2), list(y = 3, z = 4))
 mergeOptions <- function(options, defaultOptions) {
     if (is.null(options)) {
         options <- list()
@@ -88,6 +94,7 @@ mergeOptions <- function(options, defaultOptions) {
     return(options)
 }
 
+#' \loadmathjax
 #' Calculate confidence region
 #'
 #' Generates a confidence region estimate using subsampling.
@@ -108,8 +115,8 @@ mergeOptions <- function(options, defaultOptions) {
 #'
 #' @param dataArray The output of \code{dataArray}.
 #' @param groupIDs The output of \code{makeGroupIDs}.
-#' @param pointEstimate The optimal parameters, as calculated by
-#'   \code{optimizeScoreFunction}.
+#' @param pointEstimate The vector \mjseqn{\hat{\beta}} of the optimal
+#'   parameters, as calculated by \code{optimizeScoreFunction}.
 #' @param ssSize The size of the market subset used in subsampling. Must not be
 #'   greater than the number of markets.
 #' @param numSubsamples The number of subsamples.
@@ -231,18 +238,20 @@ plotCR <- function(estimates) {
     graphics::abline(h=0, v=0)
 }
 
+#' \loadmathjax
 #' Create estimator for H matrix
 #'
-#' Creates the estimator matrix H_n, which is used in Cattaneo's bootstrap
-#' method. Uses the numerical derivative method.
+#' Creates the estimator matrix \mjseqn{\tilde{H}_n} using the numerical
+#' derivative method.
 #'
-#' @param dataArray TODO
-#' @param betaEst A vector of length \code{d}, whose value is the estimate of
-#'   \eqn{\beta}, obtained from maximizing the score function corresponding to
-#'   \code{dataArray}.
-#' @param eps TODO
+#' @param dataArray The output of \code{dataArray}.
+#' @param betaEst The vector \mjseqn{\hat{\beta}}, of length \mjseqn{d}, whose
+#'   value is the estimate of \mjseqn{\beta}, obtained from maximizing the
+#'   score function corresponding to `dataArray`.
+#' @param eps The numerical derivative step size matrix
+#'   \mjseqn{\epsilon_{n,kl}}, of size \mjseqn{d \times d}.
 #'
-#' @return TODO
+#' @return The matrix \mjseqn{H}.
 #' @keywords internal
 makeHnumder <- function(dataArray, betaEst, eps) {
     d <- dim(dataArray)[1] - 1
@@ -268,27 +277,37 @@ makeHnumder <- function(dataArray, betaEst, eps) {
     return(H)
 }
 
-#' Create estimator for H matrix
+#' \loadmathjax
+#' @inherit makeHnumder
 #'
-#' Creates the estimator matrix H_n, which is used in Cattaneo's bootstrap
-#' method. Uses the plug-in (kernel) method.
+#' @description
+#' Creates the estimator matrix \mjseqn{\tilde{H}_n} using the plug-in (kernel)
+#' method.
 #'
-#' @param dataArray TODO
-#' @param betaEst A vector of length \code{d}, whose value is the estimate of
-#'   \eqn{\beta}, obtained from maximizing the score function corresponding to
-#'   \code{dataArray}.
-#' @param h TODO
+#' @details
+#' ## Plug-in kernel
+#' Note that the plug-in estimator method requires a kernel function with
+#' specific properties, as shown in the paper and its supplement. The only
+#' kernel currently available is the function \mjseqn{K(u) = \phi(u)}, i.e. the
+#' pdf of the standard normal distribution, with first derivative
+#' \mjseqn{\dot{K}(u) = -u\phi(u)}.
 #'
-#' @return TODO
-#' @keywords internal
+#' @param h The bandwidth matrix
+#'   \mjseqn{h_{n,kl}}, of size \mjseqn{d \times d}.
 makeHplugin <- function(dataArray, betaEst, h) {
     d <- dim(dataArray)[1] - 1
     # First derivative K'(u) of the kernel function K(u), as it is defined in
-    # the Cattaneo paper. Note that, in their notation, it is not K(u) that
-    # approximates the indicator function, but its antiderivative!
+    # the Cattaneo et al. (2020) paper. Note that, in their notation, it is not
+    # K(u) that approximates the indicator function, but its antiderivative!
     # We have:
     #   K_n(u) = K(u/h_n)/h_n
     #   K_n'(u) = d/du K_n(u) = K'(u/h_n)/h_n^2
+    # NOTE: If additional (or even user-supplied) kernel functions are later
+    # used, there are two important points:
+    # * The function K'(u) must satisfy certain conditions (see Condition K in
+    #   the supplement).
+    # * Certain constants in the rot function, resulting from integrals
+    #   involving K'(u), will have to be recalculated.
     kernelFun1 <- function(u) { -u*stats::dnorm(u) }
     beta <- c(1, betaEst)
     x <- dataArray
@@ -322,13 +341,14 @@ makeHplugin <- function(dataArray, betaEst, h) {
 #' uses numerical differentiation, as shown in section 3.1., and the other
 #' creates a "plug-in" estimator for this specific model, as in section 4.1..
 #'
+#' The choice of method is controlled by the option `Hest`.
+#'
+#' ### Plug-in kernel
 #' Note that the plug-in estimator method requires a kernel function with
 #' specific properties, as shown in the paper and its supplement. The only
 #' kernel currently available is the function \mjseqn{K(u) = \phi(u)}, i.e. the
 #' pdf of the standard normal distribution, with first derivative
 #' \mjseqn{\dot{K}(u) = -u\phi(u)}.
-#'
-#' The choice of method is controlled by the option `Hest`.
 #'
 #' ## Step/bandwidth
 #' Both methods require a matrix of parameters: for the numerical derivative
