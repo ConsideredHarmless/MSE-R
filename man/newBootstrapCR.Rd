@@ -23,8 +23,9 @@ newBootstrapCR(
 \item{pointEstimate}{The optimal parameters, as calculated by
 \code{optimizeScoreFunction}.}
 
-\item{ssSize}{The size of the market subset used in subsampling. Must not be
-greater than the number of markets.}
+\item{ssSize}{Currently ignored. In \code{pointIdentifiedCR}, this is the number
+of markets in each sample, but in the cube-root method, this number is
+always equal to the number of markets in the full data array.}
 
 \item{numSubsamples}{The number of subsamples.}
 
@@ -37,21 +38,142 @@ be present, except \code{dataArray}.}
 
 \item{options}{A list of options:
 \tabular{ll}{
-\code{progressUpdate}  \tab How often to print progress. Defaults to
+\code{progressUpdate} \tab How often to print progress. Defaults to
 \code{0} (never). \cr
-\code{asymptotics}     \tab Type of asymptotics to use. Supported values
-are "nests" (default) or "coalitions".
+\code{centered} \tab A boolean selecting whether the confidence regions, i.e.
+the element \verb{$cr} in the result, are centered (meaning that, for each
+attribute index \mjseqn{k}, the value \mjseqn{\hat{\beta}_k} is
+subtracted from the result, where \mjseqn{\hat{\beta}} is the point
+estimate). Note that the estimate array, i.e. the element \verb{$estimates}
+in the result, are always \emph{centered}, and the element \verb{$rawEstimates}
+has estimates which are always \emph{uncentered}. Defaults to \code{FALSE}. \cr
+\code{Hest} \tab Which method to use for estimating the matrix \mjseqn{H_0}.
+Choices are \code{"numder"} and \code{"plugin"}, which use the numerical
+derivative method and the plug-in method described in the paper,
+respectively. Note that for the plug-in method, the only kernel
+currently available is the function \mjseqn{K(u) = \phi(u)}, i.e. the
+pdf of the standard normal distribution. Defaults to \code{"plugin"}. \cr
+\code{bw} \tab This value is required for the calculation of \mjseqn{H}. For
+the numerical derivative method, this corresponds to the step
+\mjseqn{\epsilon_{n,kl}}, and for the plug-in method, this corresponds
+to the bandwidth \mjseqn{h_{n,kl}}. In both cases, this value is
+supposed to be a matrix of size \mjseqn{d \times d}, where \mjseqn{d}
+is the number of free attributes, but if given as a scalar, it is
+automatically converted to a matrix of the appropriate size with
+constant elements.
+Alternatively, the user can set this to \code{"rot"}, in which case the
+step or bandwidth is calculated using the Rule-Of-Thumb (ROT) method.
+For more information, the user can consult the paper by Cattaneo et al.
+(2020), linked in this document page, and its supplement.
+Defaults to \code{1}. \cr
+\code{makePosDef} \tab A boolean selecting whether to correct the calculated
+\mjseqn{H} matrix if it is not positive semidefinite. Two approaches
+are implemented. In the first, a constant value \mjseqn{\kappa} is
+added to each diagonal element of \mjseqn{H}. This value is defined
+as \mjseqn{\epsilon_{\mathrm{tol}} - \lambda_d}, where
+\mjseqn{\lambda_d \leq 0} is the smallest eigenvalue of \mjseqn{H}, and
+\mjseqn{\epsilon_{\mathrm{tol}}} is a non-negative tolerance. In the
+second, all negative eigenvalues of \mjseqn{H} are replaced with
+\mjseqn{0}. See also the option \code{makePosDefTol}. Defaults to \code{FALSE}.
+\cr
+\code{makePosDefTol} \tab This value controls how the positive semidefinite
+correction of \mjseqn{H} is done (see also the option \code{makePosDef}). It
+can be a non-negative scalar, denoting the tolerance
+\mjseqn{\epsilon_{\mathrm{tol}}}, if the first approach is desired, or
+the value \code{"drop"}, if the second approach is desired.
+Ignored if the option \code{makePosDef} is \code{FALSE}. Defaults to \code{1e-5} (TODO drop). \cr
+\code{Hbypass} \tab If provided, skips the entire calculation of \mjseqn{H}
+and uses this value instead. Defaults to \code{NULL}. \cr
+\code{useCorrectionFactor} \tab A boolean selecting whether to use the ratio
+described in the \emph{Details} section as the correction factor
+(if \code{TRUE}), or revert to the older behavior, where that factor was
+equal to \code{1} (if \code{FALSE}). Defaults to \code{TRUE}. \cr
+\code{debugLogging} \tab Whether this function and others called from it
+should print information for debugging purposes. Defaults to \code{FALSE}.
 }}
 }
 \value{
-TODO
+A list with members:
+\tabular{ll}{
+\verb{$cr} \tab The confidence regions of each parameter, as an array of
+dimension \verb{(2, numFreeAttrs)}, where \code{numFreeAttrs} is the
+total number of attributes minus 1. \cr
+\verb{$estimates} \tab The estimates for each parameter, as an array of
+dimension \verb{(numSubsamples, numFreeAttrs)}. \cr
+\verb{$rawEstimates} \tab TODO \cr
+\verb{$samples} \tab The market subsets chosen at each iteration, as an
+array of dimension \verb{(numSubsamples, ssSize)}, containing their
+respective indices. Note that here, \code{ssSize} denotes the total
+number of markets. \cr
+\verb{$bootstrapEvalInfos} \tab TODO \cr
+\verb{$H} \tab The matrix \mjseqn{H} used.
+}
 }
 \description{
-Generates a confidence region estimate using Cattaneo's bootstrap method.
+Generates a confidence region estimate using a bootstrap method with
+cube-root asymptotics.
 }
 \details{
-See:
-https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf
-https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA--Supplement.pdf
-https://github.com/mdcattaneo/replication-CJN_2020_ECMA
+The method used is the \strong{cube-root} one. For the point-identfied method,
+see the function \code{\link{pointIdentifiedCR}}, which has the same signature.
+
+The estimates are calculated by sampling, with replacement, a number of
+markets equal to their total number, creating its associated data array, and
+maximizing a function related to the difference of their scores, augmented
+by a quadratic term.
+
+\loadmathjax
+
+In particular, let \mjseqn{S(\beta; X)} be the score function corresponding
+to the data array \mjseqn{X} (see also \code{\link{makeScoreObjFun}}),
+\mjseqn{\hat{\beta}} be the point estimate previously calculated, and
+\mjseqn{H} (short for \mjseqn{\tilde{H}_n}) be the matrix which estimates
+\mjseqn{H_0}. After sampling the full data array \mjseqn{X_{\mathrm{full}}},
+we create the sample data array \mjseqn{X_{\mathrm{sample}}}. Define now the
+quadratic term
+\mjsdeqn{
+  q(\beta; \hat{\beta}, H) =
+  \frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})}
+Then the function maximized at each bootstrap step is
+\mjsdeqn{
+  B(\beta; \hat{\beta}, H, X_{\mathrm{full}}, X_{\mathrm{sample}}) =
+  c S(\beta; X_{\mathrm{sample}}) - S(\beta; X_{\mathrm{full}}) - q(\beta; \hat{\beta}, H)}
+Note that, as defined, the score function is normalized on the number of
+inequalities of the data array, and therefore takes values in the interval
+\mjseqn{[0, 1]}.
+
+For the calculation of the matrix \mjseqn{H}, see the function
+\code{\link{makeHmatrix}}.
+
+The \emph{correction factor} \mjseqn{c} has a value which, by default, is equal to
+the ratio of the number of inequalities in the sample data array to the
+number of inequalities in the full data array. See also the option
+\code{useCorrectionFactor} in the \code{options} list.
+
+As in \code{pointIdentifiedCR}, a list of arguments related to optimizing
+the above function is required. The optimization is performed by the
+function \code{optimizeBootstrapFunction}, which is similar to
+\code{optimizeScoreFunction.} The argument \code{optimizeScoreArgs}
+should be a list with the following elements:
+\itemize{
+\item \code{bounds}
+\item \code{coefficient1}
+\item \code{method}
+\item \code{optimParams}
+}
+The list of arguments to \code{optimizeBootstrapFunction} is then internally
+constructed using the above data.
+}
+\references{
+This method is adapted from the paper: \cr
+M. D. Cattaneo, M. Jansson, and K. Nagasawa,
+“Bootstrap-Based Inference for Cube Root Asymptotics”,
+\emph{Econometrica}, vol. 88, no. 5, pp. 2203–2219, September 2020. \cr
+Links to the
+\href{https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf}{paper},
+its \href{https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA--Supplement.pdf}{supplement},
+and an \href{https://github.com/mdcattaneo/replication-CJN_2020_ECMA}{implementation} are provided.
+}
+\seealso{
+\code{\link[=pointIdentifiedCR]{pointIdentifiedCR()}} for the point-identified method.
 }

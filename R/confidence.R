@@ -69,6 +69,13 @@ sampleBootstrap <- function(ssSize, groupIDs, dataArray, withReplacement) {
 
 }
 
+#' TODO
+#'
+#' @param options TODO
+#' @param defaultOptions TODO
+#'
+#' @return TODO
+#' @keywords internal
 mergeOptions <- function(options, defaultOptions) {
     if (is.null(options)) {
         options <- list()
@@ -84,6 +91,11 @@ mergeOptions <- function(options, defaultOptions) {
 #' Calculate confidence region
 #'
 #' Generates a confidence region estimate using subsampling.
+#'
+#' The method used is the **point-identified** one. For the cube-root method,
+#' see the function \code{\link{newBootstrapCR}}, which has the same signature.
+#'
+#' @seealso [newBootstrapCR()] for the cube-root method.
 #'
 #' The estimates are calculated by running the score optimization procedure for
 #' many different randomly selected subsets of markets.
@@ -231,7 +243,7 @@ plotCR <- function(estimates) {
 #' @param eps TODO
 #'
 #' @return TODO
-#' @export
+#' @keywords internal
 makeHnumder <- function(dataArray, betaEst, eps) {
     d <- dim(dataArray)[1] - 1
     scoreObjFun <- makeScoreObjFun(dataArray, objSign = 1)
@@ -268,7 +280,7 @@ makeHnumder <- function(dataArray, betaEst, eps) {
 #' @param h TODO
 #'
 #' @return TODO
-#' @export
+#' @keywords internal
 makeHplugin <- function(dataArray, betaEst, h) {
     d <- dim(dataArray)[1] - 1
     # First derivative K'(u) of the kernel function K(u), as it is defined in
@@ -293,17 +305,88 @@ makeHplugin <- function(dataArray, betaEst, h) {
     return(H)
 }
 
-# Handles correct bandwidth set-up, ROT calculation, conversion to PSD, ...
+#' \loadmathjax
+#' Create estimator for H matrix
+#'
+#' Creates the estimator matrix \mjseqn{\tilde{H}_n} (\mjseqn{H} for short),
+#' used in \code{\link{newBootstrapCR}}. Handles choice of method, correct
+#' set-up of step/bandwidth, its calculation using ROT if required, and
+#' conversion to positive semidefinite.
+#'
+#' The construction of \mjseqn{H} is based on the paper by Cattaneo et al.
+#' (2020), linked in the document page of the \code{\link{newBootstrapCR}}
+#' function.
+#'
+#' ## Choice of method
+#' Two methods for estimating the matrix \mjseqn{H_0} are implemented. The first
+#' uses numerical differentiation, as shown in section 3.1., and the other
+#' creates a "plug-in" estimator for this specific model, as in section 4.1..
+#'
+#' Note that the plug-in estimator method requires a kernel function with
+#' specific properties, as shown in the paper and its supplement. The only
+#' kernel currently available is the function \mjseqn{K(u) = \phi(u)}, i.e. the
+#' pdf of the standard normal distribution, with first derivative
+#' \mjseqn{\dot{K}(u) = -u\phi(u)}.
+#'
+#' The choice of method is controlled by the option `Hest`.
+#'
+#' ## Step/bandwidth
+#' Both methods require a matrix of parameters: for the numerical derivative
+#' method, this is the step \mjseqn{\epsilon_{n,kl}}, and for the plug-in
+#' method, this is the bandwidth \mjseqn{h_{n,kl}}. In both cases, this value
+#' has to be a matrix of size equal to the size of \mjseqn{H}, i.e.
+#' \mjseqn{d \times d}, where \mjseqn{d} is the number of free attributes.
+#'
+#' The user can also pass a scalar value for this parameter, in which case it
+#' is automatically converted to a matrix of the appropriate size with
+#' constant elements. However, if the covariates have different scale, then a
+#' matrix with different entry-wise values would be more appropriate.
+#'
+#' The parameter scalar or matrix can be passed using the option `bw`.
+#'
+#' ### Rule-Of-Thumb
+#' It is usually the case that the user does not have the correct values of the
+#' step or bandwidth parameters. In this case, they can be automatically
+#' calculated using a method called *Rule-Of-Thumb* (ROT). See the linked
+#' paper and its supplement, as well the function \code{\link{rot}} for more
+#' details. To select this option, the user can set the option `bw` to `"rot"`.
+#'
+#' ## Conversion to positive semidefinite
+#' Although the matrix \mjseqn{H_0} is positive semidefinite, this is not
+#' necessarily the case for its estimate \mjseqn{H}. Since this matrix is used
+#' in a quadratic form in the bootstrap optimization procedure, it can be
+#' useful to replace the matrix calculated with an approximation which
+#' satisfies this requirement.
+#'
+#' Consider a non-positive-semidefinite matrix \mjseqn{H}, and let
+#' \mjseqn{\lambda_1 \geq \lambda_2 \geq \dots \geq \lambda_d} be its
+#' eigenvalues in descending order. We provide two approaches:
+#' \enumerate{
+#'   \item In the first approach, a constant
+#'     \mjseqn{\kappa = \epsilon_{\mathrm{tol}} - \lambda_d} is added to all
+#'     diagonal elements of \mjseqn{H}, where \mjseqn{\lambda_d < 0} is the
+#'     smallest eigenvalue of \mjseqn{H}, and \mjseqn{\epsilon_{\mathrm{tol}}}
+#'     is a non-negative tolerance.
+#'   \item In the second approach, all negative eigenvalues of \mjseqn{H} are
+#'     replaced with \mjseqn{0}.
+#' }
+#'
+#' Note that both \mjseqn{H_0} and \mjseqn{H} are always symmetric by
+#' construction.
+#'
+#' The options `makePosDef` and `makePosDefTol` control this feature.
+#'
+#' ## Bypassing the calculations
+#' The user can also skip the entire calculation of \mjseqn{H} and pass their
+#' own value instead, using the option `Hbypass`.
+#'
+#' @inheritParams newBootstrapCR
+#' @param options See options `Hest`, `bw`, `makePosDef`, `makePosDefTol`,
+#'   `Hbypass`, and `debugLogging` from \code{\link{newBootstrapCR}}.
+#'
+#' @return The matrix \mjseqn{H}.
+#' @keywords internal
 makeHmatrix <- function(dataArray, pointEstimate, options) {
-    # As in the Cattaneo paper, we implement two methods for estimating the
-    # matrix H_0: one using numerical differentiation one, and one using a
-    # plug-in estimator with a kernel function. Both methods require a
-    # parameter; the numerical differentiation method calls it ε_n, and the
-    # plug-in method calls it h_n. However, since they are calculated in a
-    # similar way, we will call them both bw (for bandwidth). This can be given
-    # as a scalar value, but in the general case it can be a matrix, of same
-    # size as H. In that case, the general value of the bandwidth in formulas
-    # involving it is replaced by the corresponding entry of that matrix.
     if (!is.null(options$Hbypass)) {
         H <- options$Hbypass
         if (options$debugLogging) {
@@ -331,42 +414,38 @@ makeHmatrix <- function(dataArray, pointEstimate, options) {
     }
     H <- bwOpts$fn(dataArray, pointEstimate, bw)
     # TODO warn user if H has many zeros, or too large entries
-    # TODO in the documentation for H, state that an entry-wise different value
-    # for ε might be appropriate in the ND case if the covariates have
-    # different scale
-    # TODO newBootstrapCR -> makeHmatrix
     if (options$debugLogging) {
-        print("[DEBUG] in newBootstrapCR: bw =")
+        print("[DEBUG] in makeHmatrix: bw =")
         print(bw)
-        print("[DEBUG] in newBootstrapCR: H =")
+        print("[DEBUG] in makeHmatrix: H =")
         print(H)
     }
     if (options$makePosDef) {
         eigH <- eigen(H)
         eigvals <- eigH$values
-        minEigval <- min(eigvals) # λ_1
-        if (minEigval <= 0) {
+        minEigval <- min(eigvals) # λ_d
+        if (minEigval <= 0) { # TODO <= 0 or < 0?
             if (options$debugLogging) {
-                print("[DEBUG] in newBootstrapCR: H is not positive definite")
+                print("[DEBUG] in makeHmatrix: H is not positive definite")
                 print(sprintf(
-                    "[DEBUG] in newBootstrapCR: (smallest eigenvalue is %f)", minEigval))
+                    "[DEBUG] in makeHmatrix: (smallest eigenvalue is %f)", minEigval))
             }
             if (options$makePosDefTol == "drop") {
                 eigvals[eigvals < 0] <- 0
                 H <- eigH$vectors %*% diag(eigvals) %*% t(eigH$vectors)
                 if (debugLogging) {
-                    print("[DEBUG] in newBootstrapCR: dropping negative eigenvalues")
+                    print("[DEBUG] in makeHmatrix: dropping negative eigenvalues")
                 }
             } else {
-                incr <- options$makePosDefTol - minEigval # κ = ε - λ_1
+                incr <- options$makePosDefTol - minEigval # κ = ε - λ_d
                 H <- H + incr * diag(dim(H)[1])
                 if (options$debugLogging) {
                     print(sprintf(
-                        "[DEBUG] in newBootstrapCR: adding %f to diagonal elements", incr))
+                        "[DEBUG] in makeHmatrix: adding %f to diagonal elements", incr))
                 }
             }
             if (options$debugLogging) {
-                print("[DEBUG] in newBootstrapCR: new H =")
+                print("[DEBUG] in makeHmatrix: new H =")
                 print(H)
             }
         }
@@ -374,20 +453,148 @@ makeHmatrix <- function(dataArray, pointEstimate, options) {
     return(H)
 }
 
-# TODO document and refactor with pointIdentifiedCR.
-
+# TODO rename to cubeRootBootstrapCR, but keep old name as alias
 #' Calculate confidence region
 #'
-#' Generates a confidence region estimate using Cattaneo's bootstrap method.
+#' Generates a confidence region estimate using a bootstrap method with
+#' cube-root asymptotics.
 #'
-#' See:
-#' https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf
-#' https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA--Supplement.pdf
-#' https://github.com/mdcattaneo/replication-CJN_2020_ECMA
+#' The method used is the **cube-root** one. For the point-identfied method,
+#' see the function \code{\link{pointIdentifiedCR}}, which has the same signature.
+#'
+#' The estimates are calculated by sampling, with replacement, a number of
+#' markets equal to their total number, creating its associated data array, and
+#' maximizing a function related to the difference of their scores, augmented
+#' by a quadratic term.
+#'
+#' \loadmathjax
+#'
+#' In particular, let \mjseqn{S(\beta; X)} be the score function corresponding
+#' to the data array \mjseqn{X} (see also \code{\link{makeScoreObjFun}}),
+#' \mjseqn{\hat{\beta}} be the point estimate previously calculated, and
+#' \mjseqn{H} (short for \mjseqn{\tilde{H}_n}) be the matrix which estimates
+#' \mjseqn{H_0}. After sampling the full data array \mjseqn{X_{\mathrm{full}}},
+#' we create the sample data array \mjseqn{X_{\mathrm{sample}}}. Define now the
+#' quadratic term
+#' \mjsdeqn{
+#'   q(\beta; \hat{\beta}, H) =
+#'   \frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})}
+#' Then the function maximized at each bootstrap step is
+#' \mjsdeqn{
+#'   B(\beta; \hat{\beta}, H, X_{\mathrm{full}}, X_{\mathrm{sample}}) =
+#'   c S(\beta; X_{\mathrm{sample}}) - S(\beta; X_{\mathrm{full}}) - q(\beta; \hat{\beta}, H)}
+#' Note that, as defined, the score function is normalized on the number of
+#' inequalities of the data array, and therefore takes values in the interval
+#' \mjseqn{[0, 1]}.
+#'
+#' For the calculation of the matrix \mjseqn{H}, see the function
+#' \code{\link{makeHmatrix}}.
+#'
+#' The *correction factor* \mjseqn{c} has a value which, by default, is equal to
+#' the ratio of the number of inequalities in the sample data array to the
+#' number of inequalities in the full data array. See also the option
+#' `useCorrectionFactor` in the `options` list.
+#'
+#' As in `pointIdentifiedCR`, a list of arguments related to optimizing
+#' the above function is required. The optimization is performed by the
+#' function `optimizeBootstrapFunction`, which is similar to
+#' `optimizeScoreFunction.` The argument `optimizeScoreArgs`
+#' should be a list with the following elements:
+#' \itemize{
+#'   \item `bounds`
+#'   \item `coefficient1`
+#'   \item `method`
+#'   \item `optimParams`
+#' }
+#' The list of arguments to \code{optimizeBootstrapFunction} is then internally
+#' constructed using the above data.
+#'
+#' @seealso [pointIdentifiedCR()] for the point-identified method.
+#'
+#' @references
+#' This method is adapted from the paper: \cr
+#' M. D. Cattaneo, M. Jansson, and K. Nagasawa,
+#'   “Bootstrap-Based Inference for Cube Root Asymptotics”,
+#'   *Econometrica*, vol. 88, no. 5, pp. 2203–2219, September 2020. \cr
+#' Links to the
+#'   [paper](https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf),
+#'   its [supplement](https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA--Supplement.pdf),
+#'   and an [implementation](https://github.com/mdcattaneo/replication-CJN_2020_ECMA) are provided.
 #'
 #' @inheritParams pointIdentifiedCR
-#' @return TODO
-#'
+#' @param ssSize Currently ignored. In `pointIdentifiedCR`, this is the number
+#'   of markets in each sample, but in the cube-root method, this number is
+#'   always equal to the number of markets in the full data array.
+#' @param options A list of options:
+#'   \tabular{ll}{
+#'     `progressUpdate` \tab How often to print progress. Defaults to
+#'       `0` (never). \cr
+#'     `centered` \tab A boolean selecting whether the confidence regions, i.e.
+#'       the element `$cr` in the result, are centered (meaning that, for each
+#'       attribute index \mjseqn{k}, the value \mjseqn{\hat{\beta}_k} is
+#'       subtracted from the result, where \mjseqn{\hat{\beta}} is the point
+#'       estimate). Note that the estimate array, i.e. the element `$estimates`
+#'       in the result, are always *centered*, and the element `$rawEstimates`
+#'       has estimates which are always *uncentered*. Defaults to `FALSE`. \cr
+#'     `Hest` \tab Which method to use for estimating the matrix \mjseqn{H_0}.
+#'       Choices are `"numder"` and `"plugin"`, which use the numerical
+#'       derivative method and the plug-in method described in the paper,
+#'       respectively. Note that for the plug-in method, the only kernel
+#'       currently available is the function \mjseqn{K(u) = \phi(u)}, i.e. the
+#'       pdf of the standard normal distribution. Defaults to `"plugin"`. \cr
+#'     `bw` \tab This value is required for the calculation of \mjseqn{H}. For
+#'       the numerical derivative method, this corresponds to the step
+#'       \mjseqn{\epsilon_{n,kl}}, and for the plug-in method, this corresponds
+#'       to the bandwidth \mjseqn{h_{n,kl}}. In both cases, this value is
+#'       supposed to be a matrix of size \mjseqn{d \times d}, where \mjseqn{d}
+#'       is the number of free attributes, but if given as a scalar, it is
+#'       automatically converted to a matrix of the appropriate size with
+#'       constant elements.
+#'       Alternatively, the user can set this to `"rot"`, in which case the
+#'       step or bandwidth is calculated using the Rule-Of-Thumb (ROT) method.
+#'       For more information, the user can consult the paper by Cattaneo et al.
+#'       (2020), linked in this document page, and its supplement.
+#'       Defaults to `1`. \cr
+#'     `makePosDef` \tab A boolean selecting whether to correct the calculated
+#'       \mjseqn{H} matrix if it is not positive semidefinite. Two approaches
+#'       are implemented. In the first, a constant value \mjseqn{\kappa} is
+#'       added to each diagonal element of \mjseqn{H}. This value is defined
+#'       as \mjseqn{\epsilon_{\mathrm{tol}} - \lambda_d}, where
+#'       \mjseqn{\lambda_d \leq 0} is the smallest eigenvalue of \mjseqn{H}, and
+#'       \mjseqn{\epsilon_{\mathrm{tol}}} is a non-negative tolerance. In the
+#'       second, all negative eigenvalues of \mjseqn{H} are replaced with
+#'       \mjseqn{0}. See also the option `makePosDefTol`. Defaults to `FALSE`.
+#'       \cr
+#'     `makePosDefTol` \tab This value controls how the positive semidefinite
+#'       correction of \mjseqn{H} is done (see also the option `makePosDef`). It
+#'       can be a non-negative scalar, denoting the tolerance
+#'       \mjseqn{\epsilon_{\mathrm{tol}}}, if the first approach is desired, or
+#'       the value `"drop"`, if the second approach is desired.
+#'       Ignored if the option `makePosDef` is `FALSE`. Defaults to `1e-5` (TODO drop). \cr
+#'     `Hbypass` \tab If provided, skips the entire calculation of \mjseqn{H}
+#'       and uses this value instead. Defaults to `NULL`. \cr
+#'     `useCorrectionFactor` \tab A boolean selecting whether to use the ratio
+#'       described in the *Details* section as the correction factor
+#'       (if `TRUE`), or revert to the older behavior, where that factor was
+#'       equal to `1` (if `FALSE`). Defaults to `TRUE`. \cr
+#'     `debugLogging` \tab Whether this function and others called from it
+#'       should print information for debugging purposes. Defaults to `FALSE`.
+#'   }
+#' @return A list with members:
+#' \tabular{ll}{
+#'   `$cr` \tab The confidence regions of each parameter, as an array of
+#'     dimension `(2, numFreeAttrs)`, where `numFreeAttrs` is the
+#'     total number of attributes minus 1. \cr
+#'   `$estimates` \tab The estimates for each parameter, as an array of
+#'     dimension `(numSubsamples, numFreeAttrs)`. \cr
+#'   `$rawEstimates` \tab TODO \cr
+#'   `$samples` \tab The market subsets chosen at each iteration, as an
+#'     array of dimension `(numSubsamples, ssSize)`, containing their
+#'     respective indices. Note that here, `ssSize` denotes the total
+#'     number of markets. \cr
+#'   `$bootstrapEvalInfos` \tab TODO \cr
+#'   `$H` \tab The matrix \mjseqn{H} used.
+#' }
 #' @export
 newBootstrapCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,

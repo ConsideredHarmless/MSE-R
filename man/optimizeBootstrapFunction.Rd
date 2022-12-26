@@ -12,7 +12,8 @@ optimizeBootstrapFunction(
   bounds,
   coefficient1 = NULL,
   method = NULL,
-  optimParams = NULL
+  optimParams = NULL,
+  useCorrectionFactor = TRUE
 )
 }
 \arguments{

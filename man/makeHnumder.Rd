@@ -22,3 +22,4 @@ TODO
 Creates the estimator matrix H_n, which is used in Cattaneo's bootstrap
 method. Uses the numerical derivative method.
 }
+\keyword{internal}

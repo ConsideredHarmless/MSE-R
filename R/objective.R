@@ -2,27 +2,33 @@
 #'
 #' Creates a score function from the given data array, in a form suitable for
 #' passing to an optimization routine. This function computes the score (number
-#' of inequalities satisfied) for a given parameter vector (\eqn{\beta}).
+#' of inequalities satisfied, normalized on their total number) for a given
+#' parameter vector (\eqn{\beta}).
+#'
+#' \loadmathjax
 #'
 #' The function created is:
-#'   \eqn{g(\beta) = \frac{1}{N_{\mathrm{ineqs}} \mathrm{objSign} \sum_{k=1}^{N_{\mathrm{ineqs}} (a_k \beta')}}
+#'   \mjsdeqn{g(\beta) = s \frac{1}{n} \sum_{k=1}^{n} a_k^T \tilde{\beta}}
 #' where
 #' \enumerate{
-#'   \item \eqn{\beta} is the vector of free parameters, of length \code{noAttr-1}.
-#'   \item \eqn{\beta' = (\mathrm{coefficient1}\, \beta)} is the extended
-#'     vector of parameters.
-#'   \item \eqn{a_k} is the \eqn{k}-th column of \code{dataArray}.
+#'   \item \mjseqn{c_1} is TODO.
+#'   \item \mjseqn{s} is TODO.
+#'   \item \mjseqn{n} is TODO.
+#'   \item \mjseqn{\beta} is the vector of free parameters, of length `noAttr-1`.
+#'   \item \mjseqn{\tilde{\beta} = (c_1, \beta)} is the extended vector of
+#'     parameters.
+#'   \item \mjseqn{a_k} is the \mjseqn{k}-th column of `dataArray`.
 #' }
 #'
-#' @param dataArray See the result of the function \code{CdataArray}.
+#' @param dataArray See the result of the function `CdataArray`.
 #' @param coefficient1 The first coefficient in the extended vector of
-#'   parameters. Should typically be \code{1} (the default) or \code{-1}.
-#' @param objSign Use \code{-1} (the default) when passing the result to an
+#'   parameters. Should typically be `1` (the default) or `-1`.
+#' @param objSign Use `-1` (the default) when passing the result to an
 #'   optimization routine that can only minimize, such as
-#'   \code{DEoptim::DEoptim}. Otherwise, use \code{1}.
+#'   `DEoptim::DEoptim`. Otherwise, use `1`.
 #'
-#' @return A function taking a vector of length \code{noAttr-1} (the parameters)
-#'   and returning an integer (the score).
+#' @return A function taking a vector of length `noAttr-1` (the parameters)
+#'   and returning an scalar (the score).
 #'
 #' @export
 makeScoreObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
@@ -33,6 +39,7 @@ makeScoreObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
     return(scoreObjFun)
 }
 
+# FIXME the docs
 #' Create vector-valued score function
 #'
 #' Creates a vector-valued score function from the given data array. The purpose
@@ -52,6 +59,8 @@ makeScoreObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
     }
     return(scoreObjFunVec)
 }
+
+# FIXME the docs
 #' Create objective function used in Cattaneo's bootstrap
 #'
 #' Creates an objective function from the given data, in a form suitable for
@@ -68,7 +77,7 @@ makeScoreObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
 #'   \item \eqn{q_{H,\hat{\beta}}(\beta)} be the quadratic form:
 #'     \eqn{\frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})}
 #' }
-#' The function created is:
+#' The function created is: # FIXME
 #'   \eqn{B(\beta) = \mathrm{objSign} (
 #'     g_{X_\mathrm{sample}}(\beta) -
 #'     g_{X_\mathrm{full}}(\beta) -

@@ -11,7 +11,9 @@ optimizeScoreFunction(
   method = NULL,
   optimParams = NULL,
   getIneqSat = FALSE,
-  permuteInvariant = TRUE
+  permuteInvariant = TRUE,
+  numRuns = 1,
+  progressUpdate = 0
 )
 }
 \arguments{

@@ -4,7 +4,7 @@
 \alias{rot}
 \title{ROT calculation of bandwidth}
 \usage{
-rot(y, x, k, betaEst = NULL)
+rot(y, x, k, betaEst = NULL, debugLogging = FALSE)
 }
 \arguments{
 \item{y}{TODO}

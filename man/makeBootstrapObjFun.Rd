@@ -10,7 +10,8 @@ makeBootstrapObjFun(
   betaEst,
   H,
   coefficient1 = 1,
-  objSign = -1
+  objSign = -1,
+  useCorrectionFactor = TRUE
 )
 }
 \arguments{
@@ -52,7 +53,7 @@ maximizing \eqn{g_{X}}.
 \item \eqn{q_{H,\hat{\beta}}(\beta)} be the quadratic form:
 \eqn{\frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})}
 }
-The function created is:
+The function created is: # FIXME
 \eqn{B(\beta) = \mathrm{objSign} (
     g_{X_\mathrm{sample}}(\beta) -
     g_{X_\mathrm{full}}(\beta) -
