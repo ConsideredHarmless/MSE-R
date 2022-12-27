@@ -37,18 +37,23 @@ loglikelihoodCommon <- function(y, x, extBeta, gamma) {
     # The values z_i = {x^i}^T β.
     z <- as.vector(extBeta %*% x)
     # The values v_i = σ_u(x^i) = (\sum_{j=0}^k γ_j z_i^j)^(1/2).
-    v <- sqrt(polyeval(gamma, z))
+    u <- polyeval(gamma, z)
+    # The values of β and γ given can sometimes create a negative value for the
+    # variance. Since we don't want to consider such cases, we just return
+    # a large number, since we use a minimizing procedure to simulate
+    # maximization.
+    if (any(u < 0)) {
+        return(1e3)
+    }
+    v <- sqrt(u)
     # The values w_i = Φ(z_i / v_i). Note that stats::pnorm is vectorized.
+    # NOTE: Here w can equal 0 or 1. This will generate infinities in the log
+    # function, which will in turn generate NaNs when multiplied by 0.
     w <- stats::pnorm(z / v)
     # The terms of the sum in the log-likelihood function.
-    u <- y*log(w) + (1-y)*log(1-w)
-    # The values of β and γ given can sometimes create a negative value for the
-    # variance. Since we don't want to consider such cases, we replace this
-    # value with -∞, so these parameter values are not considered during
-    # maximization.
-    # TODO Do this in a more intelligent way, which avoids warnings.
-    u[is.nan(u)] <- -Inf
-    g <- mean(u)
+    s <- y*log(w) + (1-y)*log(1-w)
+    s[is.nan(s)] <- -Inf
+    g <- mean(s)
     # Actually return the negative of the function value, in order to use a
     # minimizing procedure to compute its argmax.
     return(min(-g, 1e3))
