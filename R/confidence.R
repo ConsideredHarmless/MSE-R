@@ -453,7 +453,7 @@ makeHmatrix <- function(dataArray, pointEstimate, options) {
             if (options$makePosDefTol == "drop") {
                 eigvals[eigvals < 0] <- 0
                 H <- eigH$vectors %*% diag(eigvals) %*% t(eigH$vectors)
-                if (debugLogging) {
+                if (options$debugLogging) {
                     print("[DEBUG] in makeHmatrix: dropping negative eigenvalues")
                 }
             } else {
