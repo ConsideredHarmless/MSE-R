@@ -7,7 +7,7 @@
 maximizeDEoptim(objective, lower, upper, control = list())
 }
 \arguments{
-\item{objective}{The objective function, produced by \code{makeObjFun}.}
+\item{objective}{The objective function, produced by \code{makeScoreObjFun}.}
 
 \item{lower, upper}{The lower and upper bounds in the box constraints.}
 

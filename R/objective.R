@@ -5,7 +5,7 @@
 #' of inequalities satisfied) for a given parameter vector (\eqn{\beta}).
 #'
 #' The function created is:
-#'   \eqn{g(\beta) = \mathrm{objSign} \sum_{k=1}^{N_{\mathrm{ineqs}} (a_k \beta')}}
+#'   \eqn{g(\beta) = \frac{1}{N_{\mathrm{ineqs}} \mathrm{objSign} \sum_{k=1}^{N_{\mathrm{ineqs}} (a_k \beta')}}
 #' where
 #' \enumerate{
 #'   \item \eqn{\beta} is the vector of free parameters, of length \code{noAttr-1}.
@@ -25,12 +25,12 @@
 #'   and returning an integer (the score).
 #'
 #' @export
-makeObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
-    objFun <- function(b) {
+makeScoreObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
+    scoreObjFun <- function(b) {
         u <- t(dataArray) %*% c(coefficient1, b)
-        return(objSign * sum(u >= 0))
+        return(objSign * sum(u >= 0) / dim(dataArray)[2])
     }
-    return(objFun)
+    return(scoreObjFun)
 }
 
 #' Create vector-valued score function
@@ -39,16 +39,93 @@ makeObjFun <- function(dataArray, coefficient1 = 1, objSign = -1) {
 #' of this function is not to be passed to an optimization routine, but to track
 #' which inequalities were satisfied.
 #'
-#' @inheritParams makeObjFun
+#' @inheritParams makeScoreObjFun
 #'
 #' @return A function taking a vector of length \code{noAttr-1} (the parameters)
 #'   and returning a vector of integers (the scores for each market).
 #'
 #' @export
-makeObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
-    objFunVec <- function(b) {
+makeScoreObjFunVec <- function(dataArray, coefficient1 = 1, objSign = -1) {
+    scoreObjFunVec <- function(b) {
         u <- t(dataArray) %*% c(coefficient1, b)
         return(objSign * as.vector(u >= 0))
     }
-    return(objFunVec)
+    return(scoreObjFunVec)
+}
+#' Create objective function used in Cattaneo's bootstrap
+#'
+#' Creates an objective function from the given data, in a form suitable for
+#' passing to an optimization routine. This function is used internally in the
+#' implementation of Cattaneo's bootstrap method.
+#'
+#' Let:
+#' \enumerate{
+#'   \item \eqn{g_{X}(\beta)} be the score function defined the by data array
+#'     \eqn{X} (see \code{makeScoreObjFun}).
+#'   \item \eqn{\hat{\beta}} be the estimate of \eqn{\beta}, obtained by
+#'     maximizing \eqn{g_{X}}.
+#'   \item \eqn{H} be the H-matrix defined in Cattaneo's paper.
+#'   \item \eqn{q_{H,\hat{\beta}}(\beta)} be the quadratic form:
+#'     \eqn{\frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})}
+#' }
+#' The function created is:
+#'   \eqn{B(\beta) = \mathrm{objSign} (
+#'     g_{X_\mathrm{sample}}(\beta) -
+#'     g_{X_\mathrm{full}}(\beta) -
+#'     q_{H,\hat{\beta}}(\beta)
+#'   )}.
+#'
+#' See \code{makeScoreObjFun} for the definition of \eqn{\beta} and
+#' \eqn{\mathrm{objSign}}.
+#'
+#' @param fullDataArray The full data array.
+#' @param sampleDataArray The sample data array.
+#' @param betaEst The estimate of \eqn{\beta}. This should have been obtained
+#'   by calling \code{optimizeScoreFunction} on \code{fullDataArray}.
+#' @param H The matrix \eqn{H}, as defined in Cattaneo's paper. Should have
+#'   dimensions \eqn{d \times d}, where \eqn{d} is the number of free
+#'   parameters.
+#' @inheritParams makeScoreObjFun
+#'
+#' @return A function taking a vector of length \code{noAttr-1} (the parameters)
+#'   and returning a real number.
+#'
+#' @export
+makeBootstrapObjFun <- function(
+    fullDataArray, sampleDataArray, betaEst, H,
+    coefficient1 = 1, objSign = -1, useCorrectionFactor = TRUE) {
+    fullScoreObjFun   <- makeScoreObjFun(fullDataArray,   coefficient1, objSign = 1)
+    sampleScoreObjFun <- makeScoreObjFun(sampleDataArray, coefficient1, objSign = 1)
+    bootstrapObjFun <- function(b) {
+        v <- b - betaEst
+        q <- 0.5 * as.numeric(t(v) %*% H %*% v)
+        correctionFactor <- if (useCorrectionFactor) {
+            dim(sampleDataArray)[2] / dim(fullDataArray)[2]
+        } else {
+            1
+        }
+        u <- correctionFactor * sampleScoreObjFun(b) - fullScoreObjFun(b) - q
+        return(objSign * u)
+    }
+}
+
+makeBootstrapExtraObjFun <- function(
+    fullDataArray, sampleDataArray, betaEst, H,
+    coefficient1 = 1, objSign = -1, useCorrectionFactor = TRUE) {
+    fullScoreObjFun   <- makeScoreObjFun(fullDataArray,   coefficient1, objSign = 1)
+    sampleScoreObjFun <- makeScoreObjFun(sampleDataArray, coefficient1, objSign = 1)
+    bootstrapObjFun <- function(b) {
+        v <- b - betaEst
+        q <- 0.5 * as.numeric(t(v) %*% H %*% v)
+        correctionFactor <- if (useCorrectionFactor) {
+            dim(sampleDataArray)[2] / dim(fullDataArray)[2]
+        } else {
+            1
+        }
+        s <- correctionFactor * sampleScoreObjFun(b)
+        f <- fullScoreObjFun(b)
+        u <- s - f - q
+        terms <- list(s = s, f = f, q = q)
+        return(list(val = objSign * u, arg = b, diffArg = v, terms = terms))
+    }
 }
