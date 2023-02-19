@@ -20,6 +20,6 @@ Evaluate the given polynomial at the given point. The function is vectorized
 on its second argument.
 }
 \examples{
-polyeval(c(1, -1, 2, -3), 0.5)
+\donttest{polyeval(c(1, -1, 2, -3), 0.5)}
 }
 \keyword{internal}

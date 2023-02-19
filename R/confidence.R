@@ -81,7 +81,7 @@ sampleBootstrap <- function(ssSize, groupIDs, dataArray, withReplacement) {
 #' @return A list of name-value pairs obtained by adding to `options` any pairs
 #'   only occuring in `defaultOptions`.
 #' @keywords internal
-#' @examples mergeOptions(list(x = 1, y = 2), list(y = 3, z = 4))
+#' @examples \donttest{mergeOptions(list(x = 1, y = 2), list(y = 3, z = 4))}
 mergeOptions <- function(options, defaultOptions) {
     if (is.null(options)) {
         options <- list()
@@ -278,6 +278,7 @@ makeHnumder <- function(dataArray, betaEst, eps) {
 }
 
 #' \loadmathjax
+#' Create estimator for H matrix
 #' @inherit makeHnumder
 #'
 #' @description

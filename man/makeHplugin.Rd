@@ -2,7 +2,8 @@
 % Please edit documentation in R/confidence.R
 \name{makeHplugin}
 \alias{makeHplugin}
-\title{\loadmathjax}
+\title{\loadmathjax
+Create estimator for H matrix}
 \usage{
 makeHplugin(dataArray, betaEst, h)
 }

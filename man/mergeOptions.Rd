@@ -21,6 +21,6 @@ the former any name-value pairs which only occur in the latter. In case of
 name conflicts, the former pair is kept.
 }
 \examples{
-mergeOptions(list(x = 1, y = 2), list(y = 3, z = 4))
+\donttest{mergeOptions(list(x = 1, y = 2), list(y = 3, z = 4))}
 }
 \keyword{internal}

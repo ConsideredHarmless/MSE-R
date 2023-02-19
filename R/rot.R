@@ -12,7 +12,7 @@
 #' @param x The point at which the polynomial is evaluated.
 #' @return The value of the polynomial
 #' @keywords internal
-#' @examples polyeval(c(1, -1, 2, -3), 0.5)
+#' @examples \donttest{polyeval(c(1, -1, 2, -3), 0.5)}
 polyeval <- function(p, x) {
     s <- 0
     y <- 1
