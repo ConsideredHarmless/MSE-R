@@ -21,7 +21,7 @@ the number of free attributes, and also the length of the vector
 \item{par}{The vector of parameters \mjseqn{\gamma}.}
 }
 \value{
-TODO
+The optimal parameters.
 }
 \description{
 \loadmathjax

@@ -23,7 +23,7 @@ the number of free attributes, and also the length of the vector
 \mjseqn{k + 1}.}
 }
 \value{
-TODO
+The optimal parameters.
 }
 \description{
 \loadmathjax

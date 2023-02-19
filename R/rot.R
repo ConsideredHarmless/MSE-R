@@ -89,10 +89,6 @@ loglikelihoodFixedBeta <- function(y, x, betaEst, par) {
     return(loglikelihoodCommon(y, x, extBeta, gamma))
 }
 
-# TODO _1 -> _f
-# TODO note the discrepancy in the F0_3_1 calculations!
-# maybe write up the partial derivative analysis in a separate pdf
-
 #' \loadmathjax
 #' ROT calculation of bandwidth
 #'
@@ -181,7 +177,7 @@ loglikelihoodFixedBeta <- function(y, x, betaEst, par) {
 #' Note that, for the estimation of \mjseqn{\mu_1} and \mjseqn{\sigma_1}, we
 #' use the sample mean and standard deviation.
 #'
-#' ## TODO subsection name 1
+#' ## Values of \mjseqn{F_0}
 #' The next step is to calculate certain values of the family of functions
 #' \mjseqn{F_0^{i,j}(x_r)}, defined on pg. 15 of the supplement. Specifically:
 #' \mjsdeqn{
@@ -192,17 +188,66 @@ loglikelihoodFixedBeta <- function(y, x, betaEst, par) {
 #' , where \mjseqn{F_{u|x_f,x_r}} and \mjseqn{F_{x_f|x_r}} are the
 #' corresponding conditional cdfs.
 #'
-#' Evaluating the partial derivatives for \mjseqn{(i,j) = (0,1), (1,3), (3,1)},
-#' we can prove that:
-#' \mjsdeqn{F_0^{0,1}(x_r) = .}
-#' \mjsdeqn{F_0^{1,3}(x_r) = .}
-#' \mjsdeqn{F_0^{3,1}(x_r) = .}
+#' Cattaneo et al. provide the following formulas for the partial derivatives
+#' for \mjseqn{(i,j) = (0,1), (1,3), (3,1)}:
+#' \mjsdeqn{F_0^{0,1}(x_r) = \frac{1}{2} \sigma_f^{-1} \phi(w)}
+#' \mjsdeqn{F_0^{1,3}(x_r) = \phi(0) \phi(w) (1 - w^2) \sigma_f^{-3} \tau^{-1}}
+#' \mjsdeqn{F_0^{3,1}(x_r) = \phi(0) \phi(w) \sigma_f^{-1} \tau^{-3}
+#'     (1 - \tau \ddot\tau + 2 {\dot\tau}^2)}
+#' where
+#' \mjsdeqn{w = \frac{\beta^T x_r + \mu_f}{\sigma_f}}
+#' \mjsdeqn{\tau = \sigma_u(x_f, x_r) \biggr\rvert_{x_f=-\beta^T x_r} }
+#' \mjsdeqn{\dot\tau = \frac{\partial}{\partial x_f} \sigma_u(x_f, x_r) \biggr\rvert_{x_f=-\beta^T x_r} }
+#' \mjsdeqn{\ddot\tau = \frac{\partial^2}{\partial x_f^2} \sigma_u(x_f, x_r) \biggr\rvert_{x_f=-\beta^T x_r} }
+#'
+#' If using a polynomial expansion for \mjseqn{s_u}, then the values for
+#' \mjseqn{\tau, \dot\tau, \ddot\tau} are
+#' \mjseqn{\gamma_0^{\frac{1}{2}}, \frac{1}{2}\gamma_0^{-\frac{1}{2}}\gamma_1,
+#'     -\frac{1}{4}\gamma_0^{-\frac{3}{2}}\gamma_1^2 + \gamma_0^{-\frac{1}{2}}\gamma_2},
+#' respectively. Alternatively, if the polynomial expansion is for
+#' \mjseqn{\sigma_u} instead, they are \mjseqn{\gamma_0, \gamma_1, 2\gamma_2}
+#' instead.
+#'
+#' Note that, when using the sample mean and standard deviation of \mjseqn{x_f}
+#' for \mjseqn{\mu_f} and \mjseqn{\sigma_f} respectively, and the optimal
+#' parameters for \mjseqn{\gamma} estimated by MLE, we are actually calculating
+#' the estimates \mjseqn{\hat{F}_0}.
 #'
 #' # Bias and variance constants
-#' TODO
+#'
+#' The bias and variance constants \mjseqn{B_{kl}} and \mjseqn{V_{kl}} are
+#' matrices of size \mjseqn{d \times d}. We will calculate their estimates.
+#'
+#' ## Plug-in estimator
+#'
+#' Let \mjseqn{K} be the kernel function used (see pg. 15 of the supplement for
+#' relevant conditions). Define the following definite integrals over the reals:
+#' \mjsdeqn{I_B = \int_{\mathbb{R}} u^3 \dot K(u) du}
+#' \mjsdeqn{I_V = \int_{\mathbb{R}} \dot K(u)^2 du}
+#' Then the estimators are:
+#' \mjsdeqn{\hat{B}_{kl} = I_B \frac{1}{n} \sum_{i=1}^n x_{r,k}^i x_{r,l}^i \left( \hat{F}^{1,3}(x_r^i) + \frac{1}{3} \hat{F}^{3,1}(x_r^i) \right)}
+#' \mjsdeqn{\hat{V}_{kl} = 2 I_V \frac{1}{n} \sum_{i=1}^n \hat{F}^{0,1}(x_r^i) (x_{r,k}^i)^2 (x_{r,l}^i)^2}
+#' where \mjseqn{x_{r,k}^i} is the \mjseqn{k}-th component of the \mjseqn{i}-th
+#' observation of the vector \mjseqn{x_r}.
+#'
+#' Note that we currently support the kernel function \mjseqn{K(u) = \phi(u)},
+#' whose integrals are \mjseqn{I_B = -3} and \mjseqn{I_V = \frac{1}{4\sqrt{\pi}}}.
+#'
+#' ## Numerical differentiation estimator
+#'
+#' The estimates are:
+#' \mjsdeqn{\hat{B}_{kl} = - \frac{1}{n} \sum_{i=1}^n \left( (x_{r,k}^i)^3 x_{r,l}^i + x_{r,k}^i (x_{r,l}^i)^3 \right) \left( \hat{F}^{1,3}(x_r^i) + \frac{1}{3} \hat{F}^{3,1}(x_r^i) \right)}
+#' \mjsdeqn{\hat{V}_{kl} = \frac{1}{8n} \sum_{i=1}^n \hat{F}^{0,1}(x_r^i) \left( 2|x_{r,k}^i| + 2|x_{r,l}^i| - |x_{r,k}^i + x_{r,l}^i| - |x_{r,k}^i - x_{r,l}^i|\right)}
 #'
 #' # Step/bandwidth parameters
-#' TODO
+#'
+#' Let
+#' \mjsdeqn{h_{kl} = \left( \frac{3}{4} \frac{\hat{V}_{kl}}{(\hat{B}_{kl})^2} \right)^{\frac{1}{7}} n^{-\frac{1}{7}}}
+#' be the (matrix-valued) bandwidth of the plug-in method. The value of
+#' \mjseqn{\epsilon_{kl}}, i.e. the step of the numerical differentiation method,
+#' can be defined identically, but we also provide a scalar value, replacing
+#' \mjseqn{\hat{V}_{kl}} and \mjseqn{\hat{B}_{kl}} with their sum over all
+#' \mjseqn{k,l}.
 #'
 #' @param y The vector of observations, of length \mjseqn{n}. This should
 #'   always be equal to all ones.
@@ -217,7 +262,12 @@ loglikelihoodFixedBeta <- function(y, x, betaEst, par) {
 #'   estimated.
 #' @param debugLogging Whether this function should print information for
 #'   debugging purposes.
-#' @return TODO
+#' @return A list with members:
+#' \tabular{ll}{
+#'   \code{$nd} \tab The matrix-valued step parameter. \cr
+#'   \code{$nd.summer} \tab The scalar-valued step parameter. \cr
+#'   \code{$ker} \tab The matrix-valued bandwidth.
+#' }
 #' @keywords internal
 rot <- function(y, x, k, betaEst = NULL, debugLogging = FALSE) {
     stopifnot(k >= 2)
@@ -241,56 +291,19 @@ rot <- function(y, x, k, betaEst = NULL, debugLogging = FALSE) {
     }
     betaR <- if (is.null(betaEst)) { optPars[1:d] } else { betaEst }
     gamma <- if (is.null(betaEst)) { optPars[(d+1):(d+k+1)] } else { optPars }
-    # For μ_1 and σ_1, we use the sample mean and std.
-    mu1 <- mean(x[1, ])
-    sigma1 <- stats::sd(x[1, ])
-    # The vector of values (β_r^T (x_r^i)^T + μ_1)/σ_1, for i = 1,...,n, i.e.
-    # the argument of φ(.) in the formulas at the top of pg. 20 of the
-    # supplement.
-    p <- (as.vector(betaR %*% x[2:(d+1), ]) + mu1) / sigma1
-    # Note that, according to our definitions,
-    #   s_u(x_1, x_r)   @ {x_1 = -x_r^T β_r} = γ_0
-    #   s'_u(x_1, x_r)  @ {x_1 = -x_r^T β_r} = γ_1
-    #   s''_u(x_1, x_r) @ {x_1 = -x_r^T β_r} = 2 γ_2
-    # where s'_u(x) = ∂/∂x_1 s_u(x), s''_u(x) = ∂^2/∂x_1^2 s_u(x).
-    # However, in the supplement, on pg. 20, Cattaneo et al. have σ_u(x) and
-    # σ_u^3(x), where they have defined σ_u^2(x) = s_u(x), while in their
-    # github code they use σ_u^2(x) for σ_u(x).
-    # After communicating with the authors, it turns out that this is indeed an
-    # inconsistency. We recover the correct values of
-    # q_j = ∂^j/∂x_1^j σ_u(x) @ {x_1 = -x_r^T β_r}, which are:
-    #   * q_0 = γ_0^(1/2)
-    #   * q_1 = 1/2 γ_0^(-1/2) γ_1
-    #   * q_2 = -1/4 γ_0^(-3/2) γ_1^2 + γ_0^(-1/2) γ_2
-    # I still haven't verified these with Mathematica, but I have triple-checked
-    # my calculations.
-    # Note that F_0^{0,1}(x_r) can be easily shown to be equal to
-    #   (1/(2*σ_1)) φ((x_r^T β_r + μ_1)/σ_1),
-    # where φ is the pdf of the standard normal distribution.
+    # For μ_f and σ_f, we use the sample mean and std.
+    mu_f <- mean(x[1, ])
+    sigma_f <- stats::sd(x[1, ])
+    w <- (as.vector(betaR %*% x[2:(d+1), ]) + mu_f) / sigma_f
     gamma_0 <- gamma[1]
     gamma_1 <- gamma[2]
     gamma_2 <- gamma[3]
     q_0 <- gamma_0^(1/2)
     q_1 <- (1/2)*gamma_0^(-1/2)*gamma_1
     q_2 <- -(1/4)*gamma_0^(-3/2)*gamma_1^2 + gamma_0^(-1/2)*gamma_2
-    # q_0 <- sqrt(gamma_0)
-    # q_1 <- sqrt(gamma_1)
-    # q_2 <- sqrt(gamma_2)
-    F0_1_3 <- -(stats::dnorm(0) / (q_0 * sigma1^3)) * stats::dnorm(p) * (p^2 - 1)
-    F0_3_1 <-  (stats::dnorm(0) / (q_0^3 * sigma1)) * stats::dnorm(p) * (1 - q_2*q_0 + 2*q_1^2)
-    F0_0_1 <- (1 / (2*sigma1)) * stats::dnorm(p)
-    # See the makeHmatrix function in confidence.R.
-    # NOTE:
-    # The calculations for B.ker and V.ker rely on the values of two definite
-    # integrals involving the first derivative of the kernel function.
-    # The only kernel function currently available is K(u) = φ(u) (the pdf of
-    # the standard normal distribution), whose first derivative is
-    # K'(u) = -u*φ(u). The definite integrals we need are:
-    # * the integral over the reals of u -> u^3*K'(u), and
-    # * the integral over the reals of u -> K'(u)^2.
-    # In our case, these can be proven to be equal to -3 and 1/(4√π)
-    # respectively. These values will have to be changed if other kernels are
-    # used.
+    F0_1_3 <- -(stats::dnorm(0) / (q_0 * sigma_f^3)) * stats::dnorm(w) * (w^2 - 1)
+    F0_3_1 <-  (stats::dnorm(0) / (q_0^3 * sigma_f)) * stats::dnorm(w) * (1 - q_2*q_0 + 2*q_1^2)
+    F0_0_1 <- (1 / (2*sigma_f)) * stats::dnorm(w)
     integral1 <- -3
     integral2 <- 1/(4*sqrt(pi))
     B.nd  <- matrix(0, d, d)

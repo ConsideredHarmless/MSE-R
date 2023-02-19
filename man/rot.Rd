@@ -27,7 +27,12 @@ estimated.}
 debugging purposes.}
 }
 \value{
-TODO
+A list with members:
+\tabular{ll}{
+\code{$nd} \tab The matrix-valued step parameter. \cr
+\code{$nd.summer} \tab The scalar-valued step parameter. \cr
+\code{$ker} \tab The matrix-valued bandwidth.
+}
 }
 \description{
 Rule-Of-Thumb (ROT) calculation of step/bandwidth parameters, used in the
@@ -115,7 +120,7 @@ used) is the ones-vector, and for \mjseqn{\gamma} is the vector
 
 Note that, for the estimation of \mjseqn{\mu_1} and \mjseqn{\sigma_1}, we
 use the sample mean and standard deviation.
-\subsection{TODO subsection name 1}{
+\subsection{Values of \mjseqn{F_0}}{
 
 The next step is to calculate certain values of the family of functions
 \mjseqn{F_0^{i,j}(x_r)}, defined on pg. 15 of the supplement. Specifically:
@@ -127,20 +132,68 @@ The next step is to calculate certain values of the family of functions
 , where \mjseqn{F_{u|x_f,x_r}} and \mjseqn{F_{x_f|x_r}} are the
 corresponding conditional cdfs.
 
-Evaluating the partial derivatives for \mjseqn{(i,j) = (0,1), (1,3), (3,1)},
-we can prove that:
-\mjsdeqn{F_0^{0,1}(x_r) = .}
-\mjsdeqn{F_0^{1,3}(x_r) = .}
-\mjsdeqn{F_0^{3,1}(x_r) = .}
+Cattaneo et al. provide the following formulas for the partial derivatives
+for \mjseqn{(i,j) = (0,1), (1,3), (3,1)}:
+\mjsdeqn{F_0^{0,1}(x_r) = \frac{1}{2} \sigma_f^{-1} \phi(w)}
+\mjsdeqn{F_0^{1,3}(x_r) = \phi(0) \phi(w) (1 - w^2) \sigma_f^{-3} \tau^{-1}}
+\mjsdeqn{F_0^{3,1}(x_r) = \phi(0) \phi(w) \sigma_f^{-1} \tau^{-3}
+    (1 - \tau \ddot\tau + 2 {\dot\tau}^2)}
+where
+\mjsdeqn{w = \frac{\beta^T x_r + \mu_f}{\sigma_f}}
+\mjsdeqn{\tau = \sigma_u(x_f, x_r) \biggr\rvert_{x_f=-\beta^T x_r} }
+\mjsdeqn{\dot\tau = \frac{\partial}{\partial x_f} \sigma_u(x_f, x_r) \biggr\rvert_{x_f=-\beta^T x_r} }
+\mjsdeqn{\ddot\tau = \frac{\partial^2}{\partial x_f^2} \sigma_u(x_f, x_r) \biggr\rvert_{x_f=-\beta^T x_r} }
+
+If using a polynomial expansion for \mjseqn{s_u}, then the values for
+\mjseqn{\tau, \dot\tau, \ddot\tau} are
+\mjseqn{\gamma_0^{\frac{1}{2}}, \frac{1}{2}\gamma_0^{-\frac{1}{2}}\gamma_1,
+    -\frac{1}{4}\gamma_0^{-\frac{3}{2}}\gamma_1^2 + \gamma_0^{-\frac{1}{2}}\gamma_2},
+respectively. Alternatively, if the polynomial expansion is for
+\mjseqn{\sigma_u} instead, they are \mjseqn{\gamma_0, \gamma_1, 2\gamma_2}
+instead.
+
+Note that, when using the sample mean and standard deviation of \mjseqn{x_f}
+for \mjseqn{\mu_f} and \mjseqn{\sigma_f} respectively, and the optimal
+parameters for \mjseqn{\gamma} estimated by MLE, we are actually calculating
+the estimates \mjseqn{\hat{F}_0}.
 }
 }
 
 \section{Bias and variance constants}{
-TODO
+The bias and variance constants \mjseqn{B_{kl}} and \mjseqn{V_{kl}} are
+matrices of size \mjseqn{d \times d}. We will calculate their estimates.
+\subsection{Plug-in estimator}{
+
+Let \mjseqn{K} be the kernel function used (see pg. 15 of the supplement for
+relevant conditions). Define the following definite integrals over the reals:
+\mjsdeqn{I_B = \int_{\mathbb{R}} u^3 \dot K(u) du}
+\mjsdeqn{I_V = \int_{\mathbb{R}} \dot K(u)^2 du}
+Then the estimators are:
+\mjsdeqn{\hat{B}_{kl} = I_B \frac{1}{n} \sum_{i=1}^n x_{r,k}^i x_{r,l}^i \left( \hat{F}^{1,3}(x_r^i) + \frac{1}{3} \hat{F}^{3,1}(x_r^i) \right)}
+\mjsdeqn{\hat{V}_{kl} = 2 I_V \frac{1}{n} \sum_{i=1}^n \hat{F}^{0,1}(x_r^i) (x_{r,k}^i)^2 (x_{r,l}^i)^2}
+where \mjseqn{x_{r,k}^i} is the \mjseqn{k}-th component of the \mjseqn{i}-th
+observation of the vector \mjseqn{x_r}.
+
+Note that we currently support the kernel function \mjseqn{K(u) = \phi(u)},
+whose integrals are \mjseqn{I_B = -3} and \mjseqn{I_V = \frac{1}{4\sqrt{\pi}}}.
+}
+
+\subsection{Numerical differentiation estimator}{
+
+The estimates are:
+\mjsdeqn{\hat{B}_{kl} = - \frac{1}{n} \sum_{i=1}^n \left( (x_{r,k}^i)^3 x_{r,l}^i + x_{r,k}^i (x_{r,l}^i)^3 \right) \left( \hat{F}^{1,3}(x_r^i) + \frac{1}{3} \hat{F}^{3,1}(x_r^i) \right)}
+\mjsdeqn{\hat{V}_{kl} = \frac{1}{8n} \sum_{i=1}^n \hat{F}^{0,1}(x_r^i) \left( 2|x_{r,k}^i| + 2|x_{r,l}^i| - |x_{r,k}^i + x_{r,l}^i| - |x_{r,k}^i - x_{r,l}^i|\right)}
+}
 }
 
 \section{Step/bandwidth parameters}{
-TODO
+Let
+\mjsdeqn{h_{kl} = \left( \frac{3}{4} \frac{\hat{V}_{kl}}{(\hat{B}_{kl})^2} \right)^{\frac{1}{7}} n^{-\frac{1}{7}}}
+be the (matrix-valued) bandwidth of the plug-in method. The value of
+\mjseqn{\epsilon_{kl}}, i.e. the step of the numerical differentiation method,
+can be defined identically, but we also provide a scalar value, replacing
+\mjseqn{\hat{V}_{kl}} and \mjseqn{\hat{B}_{kl}} with their sum over all
+\mjseqn{k,l}.
 }
 
 \keyword{internal}

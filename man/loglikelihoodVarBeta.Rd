@@ -19,7 +19,7 @@ the number of free attributes, and also the length of the vector
 \item{par}{The concatenated vector of parameters.}
 }
 \value{
-TODO
+The optimal parameters.
 }
 \description{
 \loadmathjax
