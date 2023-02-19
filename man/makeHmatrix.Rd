@@ -14,20 +14,20 @@ makeHmatrix(dataArray, pointEstimate, options)
 parameters, as calculated by \code{optimizeScoreFunction}.}
 
 \item{options}{See options \code{Hest}, \code{bw}, \code{makePosDef}, \code{makePosDefTol},
-\code{Hbypass}, and \code{debugLogging} from \code{\link{newBootstrapCR}}.}
+\code{Hbypass}, and \code{debugLogging} from \code{\link{cubeRootBootstrapCR}}.}
 }
 \value{
 The matrix \mjseqn{H}.
 }
 \description{
 Creates the estimator matrix \mjseqn{\tilde{H}_n} (\mjseqn{H} for short),
-used in \code{\link{newBootstrapCR}}. Handles choice of method, correct
+used in \code{\link{cubeRootBootstrapCR}}. Handles choice of method, correct
 set-up of step/bandwidth, its calculation using ROT if required, and
 conversion to positive semidefinite.
 }
 \details{
 The construction of \mjseqn{H} is based on the paper by Cattaneo et al.
-(2020), linked in the document page of the \code{\link{newBootstrapCR}}
+(2020), linked in the document page of the \code{\link{cubeRootBootstrapCR}}
 function.
 \subsection{Choice of method}{
 

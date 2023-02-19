@@ -38,7 +38,7 @@ A list with members:
 Rule-Of-Thumb (ROT) calculation of step/bandwidth parameters, used in the
 calculation of the estimate \mjseqn{\tilde{H}_n}. For more details, see the
 paper by Cattaneo et al. (2020), linked in the documentation of
-\code{\link{newBootstrapCR}}, and its supplement, specifically section
+\code{\link{cubeRootBootstrapCR}}, and its supplement, specifically section
 A.2.3.\cr
 Adapted from the \href{https://github.com/mdcattaneo/replication-CJN_2020_ECMA}{authors' implementation}.
 }

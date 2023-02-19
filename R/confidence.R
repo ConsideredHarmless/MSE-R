@@ -100,9 +100,9 @@ mergeOptions <- function(options, defaultOptions) {
 #' Generates a confidence region estimate using subsampling.
 #'
 #' The method used is the **point-identified** one. For the cube-root method,
-#' see the function \code{\link{newBootstrapCR}}, which has the same signature.
+#' see the function \code{\link{cubeRootBootstrapCR}}, which has the same signature.
 #'
-#' @seealso [newBootstrapCR()] for the cube-root method.
+#' @seealso [cubeRootBootstrapCR()] for the cube-root method.
 #'
 #' The estimates are calculated by running the score optimization procedure for
 #' many different randomly selected subsets of markets.
@@ -167,7 +167,7 @@ pointIdentifiedCR <- function(
     fullNormalization <- length(unique(groupIDs))^normExponent
 
     # Ignore the numRuns argument, in order not to slow down the calculations.
-    # This is not required in the newBootstrapCR, because
+    # This is not required in the cubeRootBootstrapCR, because
     # optimizeBootstrapFunction doesn't use it.
     optimizeScoreArgs$numRuns <- NULL
     optimizeScoreArgs$progressUpdate <- NULL
@@ -328,12 +328,12 @@ makeHplugin <- function(dataArray, betaEst, h) {
 #' Create estimator for H matrix
 #'
 #' Creates the estimator matrix \mjseqn{\tilde{H}_n} (\mjseqn{H} for short),
-#' used in \code{\link{newBootstrapCR}}. Handles choice of method, correct
+#' used in \code{\link{cubeRootBootstrapCR}}. Handles choice of method, correct
 #' set-up of step/bandwidth, its calculation using ROT if required, and
 #' conversion to positive semidefinite.
 #'
 #' The construction of \mjseqn{H} is based on the paper by Cattaneo et al.
-#' (2020), linked in the document page of the \code{\link{newBootstrapCR}}
+#' (2020), linked in the document page of the \code{\link{cubeRootBootstrapCR}}
 #' function.
 #'
 #' ## Choice of method
@@ -400,9 +400,9 @@ makeHplugin <- function(dataArray, betaEst, h) {
 #' The user can also skip the entire calculation of \mjseqn{H} and pass their
 #' own value instead, using the option `Hbypass`.
 #'
-#' @inheritParams newBootstrapCR
+#' @inheritParams cubeRootBootstrapCR
 #' @param options See options `Hest`, `bw`, `makePosDef`, `makePosDefTol`,
-#'   `Hbypass`, and `debugLogging` from \code{\link{newBootstrapCR}}.
+#'   `Hbypass`, and `debugLogging` from \code{\link{cubeRootBootstrapCR}}.
 #'
 #' @return The matrix \mjseqn{H}.
 #' @keywords internal
@@ -473,7 +473,6 @@ makeHmatrix <- function(dataArray, pointEstimate, options) {
     return(H)
 }
 
-# TODO rename to cubeRootBootstrapCR, but keep old name as alias
 #' Calculate confidence region
 #'
 #' Generates a confidence region estimate using a bootstrap method with
@@ -616,7 +615,7 @@ makeHmatrix <- function(dataArray, pointEstimate, options) {
 #'   `$H` \tab The matrix \mjseqn{H} used.
 #' }
 #' @export
-newBootstrapCR <- function(
+cubeRootBootstrapCR <- function(
         dataArray, groupIDs, pointEstimate, ssSize, numSubsamples,
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
@@ -664,7 +663,7 @@ newBootstrapCR <- function(
         samples[iterIdx, ] <<- bootstrapSample$marketIdxs
         bootstrapEvalInfos[[iterIdx]] <<- optResult$bootstrapEvalInfo
         if (progress > 0 && iterIdx %% progress == 0) {
-            cat(sprintf("[newBootstrapCR] Iterations completed: %d\n", iterIdx))
+            cat(sprintf("[cubeRootBootstrapCR] Iterations completed: %d\n", iterIdx))
         }
         return(ssEstimate)
     }
@@ -692,3 +691,6 @@ newBootstrapCR <- function(
         samples = samples, bootstrapEvalInfos = bootstrapEvalInfos, H = H)
     return(result)
 }
+
+# Alias for old name of function
+newBootstrapCR <- cubeRootBootstrapCR

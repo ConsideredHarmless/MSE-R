@@ -63,10 +63,10 @@ Generates a confidence region estimate using subsampling.
 }
 \details{
 The method used is the \strong{point-identified} one. For the cube-root method,
-see the function \code{\link{newBootstrapCR}}, which has the same signature.
+see the function \code{\link{cubeRootBootstrapCR}}, which has the same signature.
 }
 \seealso{
-\code{\link[=newBootstrapCR]{newBootstrapCR()}} for the cube-root method.
+\code{\link{cubeRootBootstrapCR}} for the cube-root method.
 
 The estimates are calculated by running the score optimization procedure for
 many different randomly selected subsets of markets.
