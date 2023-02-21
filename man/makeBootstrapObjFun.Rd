@@ -2,7 +2,7 @@
 % Please edit documentation in R/objective.R
 \name{makeBootstrapObjFun}
 \alias{makeBootstrapObjFun}
-\title{Create objective function used in Cattaneo's bootstrap}
+\title{Create objective function used in \code{\link{cubeRootBootstrapCR}}}
 \usage{
 makeBootstrapObjFun(
   fullDataArray,
@@ -22,8 +22,9 @@ makeBootstrapObjFun(
 \item{betaEst}{The estimate of \eqn{\beta}. This should have been obtained
 by calling \code{optimizeScoreFunction} on \code{fullDataArray}.}
 
-\item{H}{The matrix \eqn{H}, as defined in Cattaneo's paper. Should have
-dimensions \eqn{d \times d}, where \eqn{d} is the number of free
+\item{H}{The matrix \eqn{H}, as defined in the paper by Cattaneo et al..
+Should have
+dimensions \mjseqn{d \times d}, where \eqn{d} is the number of free
 parameters.}
 
 \item{coefficient1}{The first coefficient in the extended vector of
@@ -32,6 +33,10 @@ parameters. Should typically be \code{1} (the default) or \code{-1}.}
 \item{objSign}{Use \code{-1} (the default) when passing the result to an
 optimization routine that can only minimize, such as
 \code{DEoptim::DEoptim}. Otherwise, use \code{1}.}
+
+\item{useCorrectionFactor}{A boolean selecting whether to apply the
+correction factor. If \code{TRUE} (the default value), then
+\mjseqn{c = \frac{m}{n}}, otherwise it is \mjseqn{1}.}
 }
 \value{
 A function taking a vector of length \code{noAttr-1} (the parameters)
@@ -39,27 +44,29 @@ and returning a real number.
 }
 \description{
 Creates an objective function from the given data, in a form suitable for
-passing to an optimization routine. This function is used internally in the
-implementation of Cattaneo's bootstrap method.
+passing to an optimization routine. This function is used internally in
+\code{\link{cubeRootBootstrapCR}}.
 }
 \details{
-Let:
-\enumerate{
-\item \eqn{g_{X}(\beta)} be the score function defined the by data array
-\eqn{X} (see \code{makeScoreObjFun}).
-\item \eqn{\hat{\beta}} be the estimate of \eqn{\beta}, obtained by
-maximizing \eqn{g_{X}}.
-\item \eqn{H} be the H-matrix defined in Cattaneo's paper.
-\item \eqn{q_{H,\hat{\beta}}(\beta)} be the quadratic form:
-\eqn{\frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})}
-}
-The function created is: # FIXME
-\eqn{B(\beta) = \mathrm{objSign} (
-    g_{X_\mathrm{sample}}(\beta) -
-    g_{X_\mathrm{full}}(\beta) -
-    q_{H,\hat{\beta}}(\beta)
-  )}.
+\loadmathjax
 
-See \code{makeScoreObjFun} for the definition of \eqn{\beta} and
-\eqn{\mathrm{objSign}}.
+Let:
+\itemize{
+\item \mjseqn{S(\beta; X)} be the score function defined the by data array
+\mjseqn{X} (see \code{\link{makeScoreObjFun}}).
+\item \mjseqn{\hat{\beta}} be the estimate of \mjseqn{\beta}, obtained by
+maximizing \mjseqn{S(\beta; X)}.
+\item \eqn{H} be the \mjseqn{H}-matrix defined in the paper mentioned in
+\code{\link{cubeRootBootstrapCR}}.
+\item \mjseqn{q(\beta; \hat{\beta}, H)} be the quadratic form
+\mjseqn{\frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})}
+}
+The function created is:
+\mjsdeqn{
+  B(\beta; \hat{\beta}, H, X_{\mathrm{full}}, X_{\mathrm{sample}}) =
+  c S(\beta; X_{\mathrm{sample}}) - S(\beta; X_{\mathrm{full}}) - q(\beta; \hat{\beta}, H)}
+
+See \code{\link{makeScoreObjFun}} for the definition of \mjseqn{\beta} and
+\code{objSign}, and \code{\link{cubeRootBootstrapCR}} for the definition of the
+correction factor \mjseqn{c}.
 }

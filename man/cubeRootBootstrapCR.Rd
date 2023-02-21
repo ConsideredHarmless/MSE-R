@@ -98,14 +98,20 @@ A list with members:
 \verb{$cr} \tab The confidence regions of each parameter, as an array of
 dimension \verb{(2, numFreeAttrs)}, where \code{numFreeAttrs} is the
 total number of attributes minus 1. \cr
-\verb{$estimates} \tab The estimates for each parameter, as an array of
-dimension \verb{(numSubsamples, numFreeAttrs)}. \cr
-\verb{$rawEstimates} \tab TODO \cr
+\verb{$estimates} \tab The \emph{centered} estimates for each parameter, as an array of
+dimension \verb{(numSubsamples, numFreeAttrs)}. \emph{Centered} means that, for
+the \mjseqn{k}-th parameter, the value \mjseqn{\hat{\beta}_k} has been
+subtracted from each estimate's \mjseqn{k}-th component;
+\mjseqn{\hat{\beta}} corresponds to \code{pointEstimate}. \cr
+\verb{$rawEstimates} \tab The \emph{uncentered} estimates for each paremeter. \cr
 \verb{$samples} \tab The market subsets chosen at each iteration, as an
 array of dimension \verb{(numSubsamples, ssSize)}, containing their
 respective indices. Note that here, \code{ssSize} denotes the total
 number of markets. \cr
-\verb{$bootstrapEvalInfos} \tab TODO \cr
+\verb{$bootstrapEvalInfos} \tab Internal information about the values of the
+bootstrap score function. See \code{\link{makeBootstrapExtraObjFun}}.
+This is subject to change
+and should not be regarded as part of the function's interface. \cr
 \verb{$H} \tab The matrix \mjseqn{H} used.
 }
 }
@@ -170,8 +176,8 @@ M. D. Cattaneo, M. Jansson, and K. Nagasawa,
 “Bootstrap-Based Inference for Cube Root Asymptotics”,
 \emph{Econometrica}, vol. 88, no. 5, pp. 2203–2219, September 2020. \cr
 Links to the
-\href{https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf}{paper},
-its \href{https://cattaneo.princeton.edu/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA--Supplement.pdf}{supplement},
+\href{https://mdcattaneo.github.io/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf}{paper},
+its \href{https://mdcattaneo.github.io/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA--Supplement.pdf}{supplement},
 and an \href{https://github.com/mdcattaneo/replication-CJN_2020_ECMA}{implementation} are provided.
 }
 \seealso{

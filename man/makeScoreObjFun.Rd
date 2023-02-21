@@ -30,15 +30,19 @@ parameter vector (\eqn{\beta}).
 \loadmathjax
 
 The function created is:
-\mjsdeqn{g(\beta) = s \frac{1}{n} \sum_{k=1}^{n} a_k^T \tilde{\beta}}
+\mjsdeqn{g(\beta) = s \frac{1}{n} \sum_{k=1}^{n} \mathbb{1} \left( a_k^T \tilde{\beta} \right)}
 where
-\enumerate{
-\item \mjseqn{c_1} is TODO.
-\item \mjseqn{s} is TODO.
-\item \mjseqn{n} is TODO.
+\itemize{
+\item \mjseqn{c_1} is the first coefficient of the extended vector of
+parameters.
+\item \mjseqn{s} is \mjseqn{-1} if the function has to be passed to a
+minimization method, \mjseqn{1} otherwise.
+\item \mjseqn{n} is the number of inequalities/\code{dataArray} rows..
 \item \mjseqn{\beta} is the vector of free parameters, of length \code{noAttr-1}.
 \item \mjseqn{\tilde{\beta} = (c_1, \beta)} is the extended vector of
 parameters.
 \item \mjseqn{a_k} is the \mjseqn{k}-th column of \code{dataArray}.
+\item \mjseqn{\mathbb{1}(u)} is \mjseqn{1} if \mjseqn{u \geq 0}, \mjseqn{0}
+otherwise.
 }
 }

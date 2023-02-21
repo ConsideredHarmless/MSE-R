@@ -28,6 +28,10 @@
 #' @param permuteInvariant (optional) Whether to reorder the parameters before
 #'   and after the optimization, such that the parameter with the smallest
 #'   standard deviation comes first. Defaults to \code{TRUE}.
+#' @param numRuns (optional) How many times to restart the optimization method. Useful with
+#'   methods such as *Differential Evolution*, when restarting the method when the
+#'   random seed has changed might yield a different result. Defaults to `1`.
+#' @param progressUpdate (optional) How often to print progress. Defaults to `0` (never).
 #'
 #' @return A list with members:
 #' \tabular{ll}{
@@ -36,7 +40,12 @@
 #'   \code{$ineqSat} \tab A vector of \code{0}s and \code{1}s. Each element
 #'     corresponds to a single inequality, and is \code{1} if that inequality is
 #'     satisfied for the optimal parameters, and \code{0} otherwise. Only
-#'     present if \code{getIneqSat} is \code{TRUE}.
+#'     present if \code{getIneqSat} is \code{TRUE}. \cr
+#'   \code{$numSat} \tab The total number of satisfied inequalities. \cr
+#'   \code{$bestRuns} \tab A list containing the results of optimization method
+#'     that have yielded the best overall value. Each element is a list with
+#'     members \code{$optVal}, \code{$optArg}, and \code{$ineqSat}. The first
+#'     element of this list is returned as the default solution.
 #' }
 #' @export
 optimizeScoreFunction <- function(

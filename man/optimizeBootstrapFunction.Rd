@@ -24,8 +24,9 @@ optimizeBootstrapFunction(
 \item{betaEst}{The estimate of \eqn{\beta}. This should have been obtained
 by calling \code{optimizeScoreFunction} on \code{fullDataArray}.}
 
-\item{H}{The matrix \eqn{H}, as defined in Cattaneo's paper. Should have
-dimensions \eqn{d \times d}, where \eqn{d} is the number of free
+\item{H}{The matrix \eqn{H}, as defined in the paper by Cattaneo et al..
+Should have
+dimensions \mjseqn{d \times d}, where \eqn{d} is the number of free
 parameters.}
 
 \item{bounds}{A list with elements \code{$lower}, \code{$upper} which are
@@ -41,6 +42,10 @@ Currently, only \code{"DEoptim"} (the default value) is supported.}
 \item{optimParams}{(optional) A list of parameters to be passed to the
 optimization routine. Defaults to the empty list.
 See the section "Optimization methods" for more information.}
+
+\item{useCorrectionFactor}{A boolean selecting whether to apply the
+correction factor. If \code{TRUE} (the default value), then
+\mjseqn{c = \frac{m}{n}}, otherwise it is \mjseqn{1}.}
 }
 \value{
 A list with members:
