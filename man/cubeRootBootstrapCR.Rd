@@ -71,7 +71,7 @@ Defaults to \code{1}. \cr
 are implemented. In the first, a constant value \mjseqn{\kappa} is
 added to each diagonal element of \mjseqn{H}. This value is defined
 as \mjseqn{\epsilon_{\mathrm{tol}} - \lambda_d}, where
-\mjseqn{\lambda_d \leq 0} is the smallest eigenvalue of \mjseqn{H}, and
+\mjseqn{\lambda_d < 0} is the smallest eigenvalue of \mjseqn{H}, and
 \mjseqn{\epsilon_{\mathrm{tol}}} is a non-negative tolerance. In the
 second, all negative eigenvalues of \mjseqn{H} are replaced with
 \mjseqn{0}. See also the option \code{makePosDefTol}. Defaults to \code{FALSE}.
@@ -81,7 +81,7 @@ correction of \mjseqn{H} is done (see also the option \code{makePosDef}). It
 can be a non-negative scalar, denoting the tolerance
 \mjseqn{\epsilon_{\mathrm{tol}}}, if the first approach is desired, or
 the value \code{"drop"}, if the second approach is desired.
-Ignored if the option \code{makePosDef} is \code{FALSE}. Defaults to \code{1e-5} (TODO drop). \cr
+Ignored if the option \code{makePosDef} is \code{FALSE}. Defaults to \code{drop}. \cr
 \code{Hbypass} \tab If provided, skips the entire calculation of \mjseqn{H}
 and uses this value instead. Defaults to \code{NULL}. \cr
 \code{useCorrectionFactor} \tab A boolean selecting whether to use the ratio
@@ -89,7 +89,9 @@ described in the \emph{Details} section as the correction factor
 (if \code{TRUE}), or revert to the older behavior, where that factor was
 equal to \code{1} (if \code{FALSE}). Defaults to \code{TRUE}. \cr
 \code{debugLogging} \tab Whether this function and others called from it
-should print information for debugging purposes. Defaults to \code{FALSE}.
+should print information for debugging purposes. Defaults to \code{FALSE}. \cr
+\code{returnBootstrapEvalInfos} \tab Whether to add the \verb{$bootstrapEvalInfos}
+member to the result. Defaults to \code{FALSE}.
 }}
 }
 \value{

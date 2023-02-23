@@ -445,9 +445,9 @@ makeHmatrix <- function(dataArray, pointEstimate, options) {
         eigH <- eigen(H)
         eigvals <- eigH$values
         minEigval <- min(eigvals) # λ_d
-        if (minEigval <= 0) { # TODO <= 0 or < 0?
+        if (minEigval < 0) {
             if (options$debugLogging) {
-                print("[DEBUG] in makeHmatrix: H is not positive definite")
+                print("[DEBUG] in makeHmatrix: H is not positive semidefinite")
                 print(sprintf(
                     "[DEBUG] in makeHmatrix: (smallest eigenvalue is %f)", minEigval))
             }
@@ -580,7 +580,7 @@ makeHmatrix <- function(dataArray, pointEstimate, options) {
 #'       are implemented. In the first, a constant value \mjseqn{\kappa} is
 #'       added to each diagonal element of \mjseqn{H}. This value is defined
 #'       as \mjseqn{\epsilon_{\mathrm{tol}} - \lambda_d}, where
-#'       \mjseqn{\lambda_d \leq 0} is the smallest eigenvalue of \mjseqn{H}, and
+#'       \mjseqn{\lambda_d < 0} is the smallest eigenvalue of \mjseqn{H}, and
 #'       \mjseqn{\epsilon_{\mathrm{tol}}} is a non-negative tolerance. In the
 #'       second, all negative eigenvalues of \mjseqn{H} are replaced with
 #'       \mjseqn{0}. See also the option `makePosDefTol`. Defaults to `FALSE`.
@@ -590,7 +590,7 @@ makeHmatrix <- function(dataArray, pointEstimate, options) {
 #'       can be a non-negative scalar, denoting the tolerance
 #'       \mjseqn{\epsilon_{\mathrm{tol}}}, if the first approach is desired, or
 #'       the value `"drop"`, if the second approach is desired.
-#'       Ignored if the option `makePosDef` is `FALSE`. Defaults to `1e-5` (TODO drop). \cr
+#'       Ignored if the option `makePosDef` is `FALSE`. Defaults to `drop`. \cr
 #'     `Hbypass` \tab If provided, skips the entire calculation of \mjseqn{H}
 #'       and uses this value instead. Defaults to `NULL`. \cr
 #'     `useCorrectionFactor` \tab A boolean selecting whether to use the ratio
@@ -598,7 +598,9 @@ makeHmatrix <- function(dataArray, pointEstimate, options) {
 #'       (if `TRUE`), or revert to the older behavior, where that factor was
 #'       equal to `1` (if `FALSE`). Defaults to `TRUE`. \cr
 #'     `debugLogging` \tab Whether this function and others called from it
-#'       should print information for debugging purposes. Defaults to `FALSE`.
+#'       should print information for debugging purposes. Defaults to `FALSE`. \cr
+#'     `returnBootstrapEvalInfos` \tab Whether to add the `$bootstrapEvalInfos`
+#'       member to the result. Defaults to `FALSE`.
 #'   }
 #' @return A list with members:
 #' \tabular{ll}{
@@ -627,9 +629,9 @@ cubeRootBootstrapCR <- function(
         confidenceLevel, optimizeScoreArgs, options = NULL) {
     defaultOptions <- list(
         progressUpdate = 0, centered = FALSE,
-        Hest = "plugin", bw = 1, makePosDef = FALSE, makePosDefTol = 1e-5,
+        Hest = "plugin", bw = 1, makePosDef = FALSE, makePosDefTol = "drop",
         Hbypass = NULL, useCorrectionFactor = TRUE,
-        debugLogging = FALSE)
+        debugLogging = FALSE, returnBootstrapEvalInfos = FALSE)
     options <- mergeOptions(options, defaultOptions)
     progress <- options$progressUpdate
     debugLogging <- options$debugLogging
@@ -695,7 +697,10 @@ cubeRootBootstrapCR <- function(
     result <- list(
         cr = cr,
         estimates = t(estimates), rawEstimates = t(rawEstimates),
-        samples = samples, bootstrapEvalInfos = bootstrapEvalInfos, H = H)
+        samples = samples, H = H)
+    if (options$returnBootstrapEvalInfos) {
+        result$bootstrapEvalInfos <- bootstrapEvalInfos
+    }
     return(result)
 }
 
