@@ -4,8 +4,4 @@
 ^\.github$
 ^doc$
 ^Meta$
-^old-doc$
-^old-src$
-^old-testing$
-^old-examples$
 ^maxscoreest.*pdf$

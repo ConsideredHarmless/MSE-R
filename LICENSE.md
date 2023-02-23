@@ -1,7 +1,6 @@
 # MIT License
 
-Copyright (c) 2017 Denisa Mindruta, Theodore N. Chronis, Christina L. Tatli,
-and Panaghis Mavrokefalos
+Copyright (c) 2023 Denisa Mindruta, Theodore N. Chronis, Christina L. Tatli, and Panaghis Mavrokefalos
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

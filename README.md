@@ -68,6 +68,7 @@ or, using the RStudio browser,
 ```r
 vignette("matched", package = "maxscoreest")
 vignette("unmatched", package = "maxscoreest")
+vignette("cubeRootBootstrapCR", package = "maxscoreest")
 ```
 ## References
 
@@ -79,3 +80,4 @@ accessed from
 from <http://fox.web.rice.edu/working-papers/fox-matching-maximum-score.pdf>
 - Fox J. 2010. Identification in matching games. Quantitative Economics 1:
 203–254
+- M. D. Cattaneo, M. Jansson, and K. Nagasawa, “Bootstrap-Based Inference for Cube Root Asymptotics”, *Econometrica*, vol. 88, no. 5, pp. 2203–2219, September 2020.

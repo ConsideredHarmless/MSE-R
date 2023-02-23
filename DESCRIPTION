@@ -1,6 +1,6 @@
 Package: maxscoreest
 Title: Maximum Score Estimator
-Version: 2.0.0.9002
+Version: 2.1.0
 Authors@R: c(
     person("Theodore", "Chronis", email = "t.n.chronis@gmail.com",
         role = c("aut", "cre")),
