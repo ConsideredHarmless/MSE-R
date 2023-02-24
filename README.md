@@ -68,7 +68,7 @@ or, using the RStudio browser,
 ```r
 vignette("matched", package = "maxscoreest")
 vignette("unmatched", package = "maxscoreest")
-vignette("cubeRootBootstrapCR", package = "maxscoreest")
+vignette("cubeRootBootstrap", package = "maxscoreest")
 ```
 ## References
 
