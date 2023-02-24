@@ -7,14 +7,19 @@
 polyeval(p, x)
 }
 \arguments{
-\item{p}{TODO}
+\item{p}{The (ordered) coefficients of the polynomial, given as a vector
+whose first element is the constant term.}
 
-\item{x}{TODO}
+\item{x}{The point at which the polynomial is evaluated.}
 }
 \value{
-TODO
+The value of the polynomial
 }
 \description{
-Evaluate polynomial
+Evaluate the given polynomial at the given point. The function is vectorized
+on its second argument.
+}
+\examples{
+\donttest{polyeval(c(1, -1, 2, -3), 0.5)}
 }
 \keyword{internal}

@@ -2,23 +2,26 @@
 % Please edit documentation in R/confidence.R
 \name{makeHnumder}
 \alias{makeHnumder}
-\title{Create estimator for H matrix}
+\title{\loadmathjax
+Create estimator for H matrix}
 \usage{
 makeHnumder(dataArray, betaEst, eps)
 }
 \arguments{
-\item{dataArray}{TODO}
+\item{dataArray}{The output of \code{dataArray}.}
 
-\item{betaEst}{A vector of length \code{d}, whose value is the estimate of
-\eqn{\beta}, obtained from maximizing the score function corresponding to
-\code{dataArray}.}
+\item{betaEst}{The vector \mjseqn{\hat{\beta}}, of length \mjseqn{d}, whose
+value is the estimate of \mjseqn{\beta}, obtained from maximizing the
+score function corresponding to \code{dataArray}.}
 
-\item{eps}{TODO}
+\item{eps}{The numerical derivative step size matrix
+\mjseqn{\epsilon_{n,kl}}, of size \mjseqn{d \times d}.}
 }
 \value{
-TODO
+The matrix \mjseqn{H}.
 }
 \description{
-Creates the estimator matrix H_n, which is used in Cattaneo's bootstrap
-method. Uses the numerical derivative method.
+Creates the estimator matrix \mjseqn{\tilde{H}_n} using the numerical
+derivative method.
 }
+\keyword{internal}

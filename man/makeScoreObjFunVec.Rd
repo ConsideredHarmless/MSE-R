@@ -23,5 +23,6 @@ and returning a vector of integers (the scores for each market).
 \description{
 Creates a vector-valued score function from the given data array. The purpose
 of this function is not to be passed to an optimization routine, but to track
-which inequalities were satisfied.
+which inequalities were satisfied. The objective function is similar to
+\code{\link{makeScoreObjFun}}, except that the sum is not divided by \eqn{n}.
 }

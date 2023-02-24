@@ -2,21 +2,29 @@
 % Please edit documentation in R/rot.R
 \name{loglikelihoodFixedBeta}
 \alias{loglikelihoodFixedBeta}
-\title{ROT log-likelihood with fixed beta}
+\title{\loadmathjax
+ROT log-likelihood with fixed beta}
 \usage{
 loglikelihoodFixedBeta(y, x, betaEst, par)
 }
 \arguments{
-\item{y}{TODO}
+\item{y}{The vector of observations, of length \mjseqn{n}. This should
+always be equal to all ones.}
 
-\item{x}{TODO}
+\item{x}{The array of regressors, also called the \emph{data array} in other
+functions. An array of size \mjseqn{(d+1) \times n}, where \mjseqn{d} is
+the number of free attributes, and also the length of the vector
+\mjseqn{\beta}.}
 
-\item{par}{TODO}
+\item{betaEst}{The vector of (free) parameters \mjseqn{\beta}.}
+
+\item{par}{The vector of parameters \mjseqn{\gamma}.}
 }
 \value{
-TODO
+The optimal parameters.
 }
 \description{
+\loadmathjax
 ROT log-likelihood with fixed beta
 }
 \keyword{internal}

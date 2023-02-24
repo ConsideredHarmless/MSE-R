@@ -18,21 +18,31 @@ optimization routine that can only minimize, such as
 }
 \value{
 A function taking a vector of length \code{noAttr-1} (the parameters)
-and returning an integer (the score).
+and returning an scalar (the score).
 }
 \description{
 Creates a score function from the given data array, in a form suitable for
 passing to an optimization routine. This function computes the score (number
-of inequalities satisfied) for a given parameter vector (\eqn{\beta}).
+of inequalities satisfied, normalized on their total number) for a given
+parameter vector (\eqn{\beta}).
 }
 \details{
+\loadmathjax
+
 The function created is:
-\eqn{g(\beta) = \mathrm{objSign} \sum_{k=1}^{N_{\mathrm{ineqs}} (a_k \beta')}}
+\mjsdeqn{g(\beta) = s \frac{1}{n} \sum_{k=1}^{n} \mathbb{1} \left( a_k^T \tilde{\beta} \right)}
 where
-\enumerate{
-\item \eqn{\beta} is the vector of free parameters, of length \code{noAttr-1}.
-\item \eqn{\beta' = (\mathrm{coefficient1}\, \beta)} is the extended
-vector of parameters.
-\item \eqn{a_k} is the \eqn{k}-th column of \code{dataArray}.
+\itemize{
+\item \mjseqn{c_1} is the first coefficient of the extended vector of
+parameters.
+\item \mjseqn{s} is \mjseqn{-1} if the function has to be passed to a
+minimization method, \mjseqn{1} otherwise.
+\item \mjseqn{n} is the number of inequalities/\code{dataArray} rows..
+\item \mjseqn{\beta} is the vector of free parameters, of length \code{noAttr-1}.
+\item \mjseqn{\tilde{\beta} = (c_1, \beta)} is the extended vector of
+parameters.
+\item \mjseqn{a_k} is the \mjseqn{k}-th column of \code{dataArray}.
+\item \mjseqn{\mathbb{1}(u)} is \mjseqn{1} if \mjseqn{u \geq 0}, \mjseqn{0}
+otherwise.
 }
 }

@@ -2,23 +2,31 @@
 % Please edit documentation in R/rot.R
 \name{loglikelihoodCommon}
 \alias{loglikelihoodCommon}
-\title{Common calculations for ROT log-likelihood}
+\title{\loadmathjax
+Common calculations for ROT log-likelihood}
 \usage{
-loglikelihoodCommon(y, x, beta, gamma)
+loglikelihoodCommon(y, x, extBeta, gamma)
 }
 \arguments{
-\item{y}{TODO}
+\item{y}{The vector of observations, of length \mjseqn{n}. This should
+always be equal to all ones.}
 
-\item{x}{TODO}
+\item{x}{The array of regressors, also called the \emph{data array} in other
+functions. An array of size \mjseqn{(d+1) \times n}, where \mjseqn{d} is
+the number of free attributes, and also the length of the vector
+\mjseqn{\beta}.}
 
-\item{beta}{TODO}
+\item{extBeta}{The extended vector of parameters \mjseqn{\tilde{\beta} =
+(1, \beta)}, of length \mjseqn{d + 1}.}
 
-\item{gamma}{TODO}
+\item{gamma}{The vector of variance parameters \mjseqn{\gamma}, of length
+\mjseqn{k + 1}.}
 }
 \value{
-TODO
+The optimal parameters.
 }
 \description{
+\loadmathjax
 Common calculations for ROT log-likelihood
 }
 \keyword{internal}

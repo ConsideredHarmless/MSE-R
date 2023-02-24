@@ -4,10 +4,15 @@
 
 #' Evaluate polynomial
 #'
-#' @param p TODO
-#' @param x TODO
-#' @return TODO
+#' Evaluate the given polynomial at the given point. The function is vectorized
+#' on its second argument.
+#'
+#' @param p The (ordered) coefficients of the polynomial, given as a vector
+#'   whose first element is the constant term.
+#' @param x The point at which the polynomial is evaluated.
+#' @return The value of the polynomial
 #' @keywords internal
+#' @examples \donttest{polyeval(c(1, -1, 2, -3), 0.5)}
 polyeval <- function(p, x) {
     s <- 0
     y <- 1
@@ -18,104 +23,251 @@ polyeval <- function(p, x) {
     return(s)
 }
 
-# The log-likelihood function of the model.
-# Note that we define, as per Cattaneo:
-#   y = 1{x^T β + u >= 0}, where 1{.} is the indicator function/Iverson bracket,
-#   x is a (d+1)-D vector of regressors, β is a (d+1)-D vector of parameters
-#   (which Cattaneo calls β_0), with its first element equal to 0, and u is a
-#   random variable with conditional distribution:
-#   u | x ~ Normal(0, s_u(x)), with
-#   s_u(x) = γ^T p(x) = σ_u^2(x)
-#   p(x) is "a polynomial expansion", according to Cattaneo, but from inspecting
-#     the github code (https://github.com/mdcattaneo/replication-CJN_2020_ECMA/blob/2c1bbea2190936c0697540833b93953a012bf618/main_function_maxscore.R#L72)
-#     it seems that it is an expansion of z = x^T β, therefore
-#     p(x) = (z^0, z^1, ..., z^k)
-#   We also assume that, writing x = (x_1, x_r), with x_r a d-D vector:
-#     x_1 | x_r ~ Normal(μ_1, σ_1^2)
-#   This is basically a heteroskedastic probit model, since the conditional cdf
-#   is
-#     F_{u | x}(u | x) = F_{u | x_1, x_r}(u | x_1, x_r) = Φ(u / σ_u(x)),
-#   where Φ(z) is the cdf of the standard normal distribution.
-# Consider now that we have n pairs of observations (y^i, x^i). Note that in
-# our case, y^i = 1 always. Then the probability of y^i = 1 given x = x^i is
-#   π_i = P(y = 1 | x = x^i) = P(x^T β + u >= 0 | x = x^i) =
-#   F_{u | x}(x^i^T β) = Φ(u / σ_u(x)), because of symmetry of the normal cdf.
-# Likewise, the probability of y^i = 0 given x = x^i is
-#   1 - π_i = 1 - F_{u | x}(x^i^T β).
-# The log-likelihood function can be written as
-#   L(β, γ; Y, X) = \sum_{i=1}^n ( y_i log(π_i) + (1-y_i) log(1-π_i) ).
-# We then estimate the parameters β and γ using maximum likelihood estimation.
-#
-# Here, y is a vector of length n, x is an array of dimension (d+1, n), and par
-# contains both β and γ; par[1:d] correspond to the d non-unit elements of β,
-# and par[d+1:d+k+1] are the elements of γ.
-
+#' \loadmathjax
 #' Common calculations for ROT log-likelihood
 #'
-#' @param y TODO
-#' @param x TODO
-#' @param beta TODO
-#' @param gamma TODO
-#' @return TODO
+#' @inheritParams rot
+#' @param extBeta The extended vector of parameters \mjseqn{\tilde{\beta} =
+#'   (1, \beta)}, of length \mjseqn{d + 1}.
+#' @param gamma The vector of variance parameters \mjseqn{\gamma}, of length
+#'   \mjseqn{k + 1}.
+#' @return The optimal parameters.
 #' @keywords internal
-loglikelihoodCommon <- function(y, x, beta, gamma) {
-    # The values z_i = x^i^T β.
-    z <- as.vector(beta %*% x)
+loglikelihoodCommon <- function(y, x, extBeta, gamma) {
+    # The values z_i = {x^i}^T β.
+    z <- as.vector(extBeta %*% x)
     # The values v_i = σ_u(x^i) = (\sum_{j=0}^k γ_j z_i^j)^(1/2).
-    v <- sqrt(polyeval(gamma, z))
+    u <- polyeval(gamma, z)
+    # The values of β and γ given can sometimes create a negative value for the
+    # variance. Since we don't want to consider such cases, we just return
+    # a large number, since we use a minimizing procedure to simulate
+    # maximization.
+    if (any(u < 0)) {
+        return(1e3)
+    }
+    v <- sqrt(u)
     # The values w_i = Φ(z_i / v_i). Note that stats::pnorm is vectorized.
+    # NOTE: Here w can equal 0 or 1. This will generate infinities in the log
+    # function, which will in turn generate NaNs when multiplied by 0.
     w <- stats::pnorm(z / v)
     # The terms of the sum in the log-likelihood function.
-    u <- y*log(w) + (1-y)*log(1-w)
-    # The values of β and γ given can sometimes create a negative value for the
-    # variance. Since we don't want to consider such cases, we replace this
-    # value with -∞, so these parameter values are not considered during
-    # maximization.
-    # TODO Do this in a more intelligent way, which avoids warnings.
-    u[is.nan(u)] <- -Inf
-    g <- mean(u)
+    s <- y*log(w) + (1-y)*log(1-w)
+    s[is.nan(s)] <- -Inf
+    g <- mean(s)
     # Actually return the negative of the function value, in order to use a
     # minimizing procedure to compute its argmax.
     return(min(-g, 1e3))
 }
 
+#' \loadmathjax
 #' ROT log-likelihood with variable beta
 #'
-#' @param y TODO
-#' @param x TODO
-#' @param par TODO
-#' @return TODO
+#' @inheritParams rot
+#' @param par The concatenated vector of parameters.
+#' @return The optimal parameters.
 #' @keywords internal
 loglikelihoodVarBeta <- function(y, x, par) {
     d <- dim(x)[1] - 1
     n <- dim(x)[2]
     k <- length(par) - (d + 1)
-    beta <- c(1, par[1:d])
+    extBeta <- c(1, par[1:d])
     gamma <- par[(d+1):(d+k+1)]
-    return(loglikelihoodCommon(y, x, beta, gamma))
+    return(loglikelihoodCommon(y, x, extBeta, gamma))
 }
 
+#' \loadmathjax
 #' ROT log-likelihood with fixed beta
 #'
-#' @param y TODO
-#' @param x TODO
-#' @param par TODO
-#' @return TODO
+#' @inheritParams rot
+#' @param betaEst The vector of (free) parameters \mjseqn{\beta}.
+#' @param par The vector of parameters \mjseqn{\gamma}.
+#' @return The optimal parameters.
 #' @keywords internal
 loglikelihoodFixedBeta <- function(y, x, betaEst, par) {
-    beta <- c(1, betaEst)
+    extBeta <- c(1, betaEst)
     gamma <- par
-    return(loglikelihoodCommon(y, x, beta, gamma))
+    return(loglikelihoodCommon(y, x, extBeta, gamma))
 }
 
-
+#' \loadmathjax
 #' ROT calculation of bandwidth
 #'
-#' @param y TODO
-#' @param x TODO
-#' @param k TODO
-#' @param betaEst TODO
-#' @return TODO
+#' Rule-Of-Thumb (ROT) calculation of step/bandwidth parameters, used in the
+#' calculation of the estimate \mjseqn{\tilde{H}_n}. For more details, see the
+#' paper by Cattaneo et al. (2020), linked in the documentation of
+#' \code{\link{cubeRootBootstrapCR}}, and its supplement, specifically section
+#' A.2.3.\cr
+#' Adapted from the [authors' implementation](https://github.com/mdcattaneo/replication-CJN_2020_ECMA).
+#'
+#' This procedure has three steps. In the first, we assume that the data are
+#' generated by a (finitely) parametrized model, and we estimate these
+#' parameters using maximum likelihood estimation. We then use these parameters
+#' to calculate estimates for certain bias and variance constants. Finally,
+#' these constants are used in the calculation of the step or bandwidth
+#' parameters.
+#'
+#' # Model
+#' We assume, as per the paper, that the data are generated by the model
+#' \mjsdeqn{
+#'      y = \mathbb{1}\left\lbrace \tilde{\beta}^T x + u \geq 0 \right\rbrace},
+#' where \mjseqn{\mathbb{1}\left\lbrace\cdot\right\rbrace} is the indicator
+#' function/Iverson bracket,
+#' \mjseqn{x} is a vector of regressors of length \mjseqn{d+1},
+#' \mjseqn{\tilde{\beta} = (1, \beta)} is the extended vector of (true)
+#' parameters (which, in the paper, is called \mjseqn{\beta_0}),
+#' \mjseqn{y} is the observed variable, which in our case is always equal to
+#' \mjseqn{1}, and \mjseqn{u} is a random variable whose distribution,
+#' conditioned on \mjseqn{x}, is normal with mean \mjseqn{0} and variance
+#' \mjseqn{s_u(x) = \sigma_u^2(x) = \gamma^T p(x)}.
+#'
+#' According to the supplement, \mjseqn{p(x)} is "a polynomial expansion", but
+#' from inspecting the
+#' [github code](https://github.com/mdcattaneo/replication-CJN_2020_ECMA/blob/2c1bbea2190936c0697540833b93953a012bf618/main_function_maxscore.R#L72),
+#' it seems that it actually is an expansion of the scalar
+#' \mjseqn{z = \tilde{\beta}^T x}, i.e. \mjseqn{p(x) = (z^0, z^1, \dots, z^k)}.
+#'
+#' Let us partition \mjseqn{x = (x_f, x_r)}, where the two parts have length
+#' \mjseqn{1} (a scalar) and \mjseqn{d} respectively. The authors further
+#' assume that the distibution of \mjseqn{x_f} conditional to \mjseqn{x_r} is
+#' normal with mean \mjseqn{\mu_1} and variance \mjseqn{\sigma_1^2}.
+#'
+#' The model is now parametrized by \mjseqn{\beta} and
+#' \mjseqn{\gamma = (\gamma_0, \gamma_1, \dots, \gamma_k)}.
+#' This is basically a heteroskedastic probit model, since the conditional cdf
+#' is
+#' \mjsdeqn{
+#'      F_{u | x}(u | x) = F_{u | x_f, x_r}(u | x_f, x_r) =
+#'      \Phi(\frac{u}{\sigma_u(x)})},
+#' where \mjseqn{\Phi(z)} is the cdf of the standard normal distribution.
+#'
+#' Consider now that we have \mjseqn{n} pairs of observations \mjseqn{(y^i,
+#' x^i)}. Again, note that in our case, \mjseqn{y^i = 1} always. Then the
+#' probability of \mjseqn{y^i = 1} given \mjseqn{x = x^i} is
+#' \mjsdeqn{
+#'      \pi_i =
+#'      \mathbb{P}(y = 1 | x = x^i) =
+#'      \mathbb{P}(\tilde{\beta}^T x + u \geq 0 | x = x^i) =
+#'      F_{u | x}(\tilde{\beta}^T x^i) =
+#'      \Phi(\frac{u}{\sigma_u(x)})},
+#' because of the symmetry of the normal cdf.
+#' Likewise, the probability of \mjseqn{y^i = 0} given \mjseqn{x = x^i} is
+#' \mjsdeqn{1 - \pi_i = 1 - F_{u | x}(\tilde{\beta}^T x^i)}.
+#'
+#' The log-likelihood function can be written as
+#' \mjsdeqn{
+#'      L(\beta, \gamma; Y, X) =
+#'      \sum_{i=1}^n ( y_i \log(\pi_i) + (1-y_i) \log(1-\pi_i) )}.
+#' We can then estimate the parameters \mjseqn{\beta} and \mjseqn{\gamma} using
+#' maximum likelihood estimation. However, in the usual case, we have already
+#' calculated an estimate \mjseqn{\hat{\beta}} using the score optimization
+#' procedure. We can therefore define a related log-likelihood function:
+#' \mjsdeqn{\tilde{L}(\gamma; Y, X) = L(\hat{\beta}, \gamma; Y, X)}
+#' and estimate only \mjseqn{\gamma}. These two functions are called
+#' \code{\link{loglikelihoodVarBeta}} and \code{\link{loglikelihoodFixedBeta}}
+#' respectively.
+#'
+#' Note that in the first case, the vector `par` of parameters, used in the
+#' optimization procedure for MLE, has length \mjseqn{d+k+1}: its first
+#' \mjseqn{d} elements correspond to the elements of \mjseqn{\beta}, and the
+#' rest to the elements of \mjseqn{\gamma}. If estimating only \mjseqn{\gamma},
+#' then `par` has length \mjseqn{k+1}. Initial values for \mjseqn{\beta} (if
+#' used) is the ones-vector, and for \mjseqn{\gamma} is the vector
+#' \mjseqn{(1, 0, \dots, 0)}.
+#'
+#' Note that, for the estimation of \mjseqn{\mu_1} and \mjseqn{\sigma_1}, we
+#' use the sample mean and standard deviation.
+#'
+#' ## Values of \mjseqn{F_0}
+#' The next step is to calculate certain values of the family of functions
+#' \mjseqn{F_0^{i,j}(x_r)}, defined on pg. 15 of the supplement. Specifically:
+#' \mjsdeqn{
+#'      F_0^{i,j}(x_r) =
+#'      \frac{\partial^i}{\partial u^i} F_{u|x_f,x_r}(-u|x_f+u,x_r)
+#'      \frac{\partial^j}{\partial x_f^j} F_{x_f|x_r}(x_f|x_r)
+#'      \Biggr\rvert_{u=0,x_f=-\beta^T x_r}}
+#' , where \mjseqn{F_{u|x_f,x_r}} and \mjseqn{F_{x_f|x_r}} are the
+#' corresponding conditional cdfs.
+#'
+#' Cattaneo et al. provide the following formulas for the partial derivatives
+#' for \mjseqn{(i,j) = (0,1), (1,3), (3,1)}:
+#' \mjsdeqn{F_0^{0,1}(x_r) = \frac{1}{2} \sigma_f^{-1} \phi(w)}
+#' \mjsdeqn{F_0^{1,3}(x_r) = \phi(0) \phi(w) (1 - w^2) \sigma_f^{-3} \tau^{-1}}
+#' \mjsdeqn{F_0^{3,1}(x_r) = \phi(0) \phi(w) \sigma_f^{-1} \tau^{-3}
+#'     (1 - \tau \ddot\tau + 2 {\dot\tau}^2)}
+#' where
+#' \mjsdeqn{w = \frac{\beta^T x_r + \mu_f}{\sigma_f}}
+#' \mjsdeqn{\tau = \sigma_u(x_f, x_r) \biggr\rvert_{x_f=-\beta^T x_r} }
+#' \mjsdeqn{\dot\tau = \frac{\partial}{\partial x_f} \sigma_u(x_f, x_r) \biggr\rvert_{x_f=-\beta^T x_r} }
+#' \mjsdeqn{\ddot\tau = \frac{\partial^2}{\partial x_f^2} \sigma_u(x_f, x_r) \biggr\rvert_{x_f=-\beta^T x_r} }
+#'
+#' If using a polynomial expansion for \mjseqn{s_u}, then the values for
+#' \mjseqn{\tau, \dot\tau, \ddot\tau} are
+#' \mjseqn{\gamma_0^{\frac{1}{2}}, \frac{1}{2}\gamma_0^{-\frac{1}{2}}\gamma_1,
+#'     -\frac{1}{4}\gamma_0^{-\frac{3}{2}}\gamma_1^2 + \gamma_0^{-\frac{1}{2}}\gamma_2},
+#' respectively. Alternatively, if the polynomial expansion is for
+#' \mjseqn{\sigma_u} instead, they are \mjseqn{\gamma_0, \gamma_1, 2\gamma_2}
+#' instead.
+#'
+#' Note that, when using the sample mean and standard deviation of \mjseqn{x_f}
+#' for \mjseqn{\mu_f} and \mjseqn{\sigma_f} respectively, and the optimal
+#' parameters for \mjseqn{\gamma} estimated by MLE, we are actually calculating
+#' the estimates \mjseqn{\hat{F}_0}.
+#'
+#' # Bias and variance constants
+#'
+#' The bias and variance constants \mjseqn{B_{kl}} and \mjseqn{V_{kl}} are
+#' matrices of size \mjseqn{d \times d}. We will calculate their estimates.
+#'
+#' ## Plug-in estimator
+#'
+#' Let \mjseqn{K} be the kernel function used (see pg. 15 of the supplement for
+#' relevant conditions). Define the following definite integrals over the reals:
+#' \mjsdeqn{I_B = \int_{\mathbb{R}} u^3 \dot K(u) du}
+#' \mjsdeqn{I_V = \int_{\mathbb{R}} \dot K(u)^2 du}
+#' Then the estimators are:
+#' \mjsdeqn{\hat{B}_{kl} = I_B \frac{1}{n} \sum_{i=1}^n x_{r,k}^i x_{r,l}^i \left( \hat{F}^{1,3}(x_r^i) + \frac{1}{3} \hat{F}^{3,1}(x_r^i) \right)}
+#' \mjsdeqn{\hat{V}_{kl} = 2 I_V \frac{1}{n} \sum_{i=1}^n \hat{F}^{0,1}(x_r^i) (x_{r,k}^i)^2 (x_{r,l}^i)^2}
+#' where \mjseqn{x_{r,k}^i} is the \mjseqn{k}-th component of the \mjseqn{i}-th
+#' observation of the vector \mjseqn{x_r}.
+#'
+#' Note that we currently support the kernel function \mjseqn{K(u) = \phi(u)},
+#' whose integrals are \mjseqn{I_B = -3} and \mjseqn{I_V = \frac{1}{4\sqrt{\pi}}}.
+#'
+#' ## Numerical differentiation estimator
+#'
+#' The estimates are:
+#' \mjsdeqn{\hat{B}_{kl} = - \frac{1}{n} \sum_{i=1}^n \left( (x_{r,k}^i)^3 x_{r,l}^i + x_{r,k}^i (x_{r,l}^i)^3 \right) \left( \hat{F}^{1,3}(x_r^i) + \frac{1}{3} \hat{F}^{3,1}(x_r^i) \right)}
+#' \mjsdeqn{\hat{V}_{kl} = \frac{1}{8n} \sum_{i=1}^n \hat{F}^{0,1}(x_r^i) \left( 2|x_{r,k}^i| + 2|x_{r,l}^i| - |x_{r,k}^i + x_{r,l}^i| - |x_{r,k}^i - x_{r,l}^i|\right)}
+#'
+#' # Step/bandwidth parameters
+#'
+#' Let
+#' \mjsdeqn{h_{kl} = \left( \frac{3}{4} \frac{\hat{V}_{kl}}{(\hat{B}_{kl})^2} \right)^{\frac{1}{7}} n^{-\frac{1}{7}}}
+#' be the (matrix-valued) bandwidth of the plug-in method. The value of
+#' \mjseqn{\epsilon_{kl}}, i.e. the step of the numerical differentiation method,
+#' can be defined identically, but we also provide a scalar value, replacing
+#' \mjseqn{\hat{V}_{kl}} and \mjseqn{\hat{B}_{kl}} with their sum over all
+#' \mjseqn{k,l}.
+#'
+#' @param y The vector of observations, of length \mjseqn{n}. This should
+#'   always be equal to all ones.
+#' @param x The array of regressors, also called the *data array* in other
+#'   functions. An array of size \mjseqn{(d+1) \times n}, where \mjseqn{d} is
+#'   the number of free attributes, and also the length of the vector
+#'   \mjseqn{\beta}.
+#' @param k The length of the vector of parameters \mjseqn{\gamma}, reduced by
+#'   \mjseqn{1}. Should be at least \mjseqn{2}.
+#' @param betaEst The vector \mjseqn{\hat{\beta}} of optimal parameters. If
+#'   omitted, then both \mjseqn{\beta} and \mjseqn{\gamma} are jointly
+#'   estimated.
+#' @param debugLogging Whether this function should print information for
+#'   debugging purposes.
+#' @return A list with members:
+#' \tabular{ll}{
+#'   \code{$nd} \tab The matrix-valued step parameter. \cr
+#'   \code{$nd.summer} \tab The scalar-valued step parameter. \cr
+#'   \code{$ker} \tab The matrix-valued bandwidth.
+#' }
 #' @keywords internal
 rot <- function(y, x, k, betaEst = NULL, debugLogging = FALSE) {
     stopifnot(k >= 2)
@@ -139,45 +291,21 @@ rot <- function(y, x, k, betaEst = NULL, debugLogging = FALSE) {
     }
     betaR <- if (is.null(betaEst)) { optPars[1:d] } else { betaEst }
     gamma <- if (is.null(betaEst)) { optPars[(d+1):(d+k+1)] } else { optPars }
-    # For μ_1 and σ_1, we use the sample mean and std.
-    mu1 <- mean(x[1, ])
-    sigma1 <- stats::sd(x[1, ])
-    # The estimates.
-    p <- (as.vector(betaR %*% x[2:(d+1), ]) + mu1) / sigma1
-    # Note that, according to our definitions,
-    #   s_u(x_1, x_r)   @ {x_1 = -x_r^T β_r} = γ_0
-    #   s'_u(x_1, x_r)  @ {x_1 = -x_r^T β_r} = γ_1
-    #   s''_u(x_1, x_r) @ {x_1 = -x_r^T β_r} = 2 γ_2
-    # where s'_u(x) = ∂/∂x_1 s_u(x), s''_u(x) = ∂^2/∂x_1^2 s_u(x).
-    # However, in the supplement, on pg. 20, Cattaneo has σ_u(x) and σ_u^3(x),
-    # where he has defined σ_u^2(x) = s_u(x), while in his code he uses
-    # σ_u^2(x) for σ_u(x).
-    # After communicating with the authors, it turns out that this is indeed an
-    # inconsistency. We recover the correct values of
-    # q_j = ∂^j/∂x_1^j σ_u(x) @ {x_1 = -x_r^T β_r}, which are:
-    #   * q_0 = γ_0^(1/2)
-    #   * q_1 = 1/2 γ_0^(-1/2) γ_1
-    #   * q_2 = -1/4 γ_0^(-3/2) γ_1^2 + γ_0^(-1/2) γ_2
-    # I still haven't verified these with Mathematica, but I have triple-checked
-    # my calculations.
-    # Note that F_0^{0,1}(x_r) can be easily shown to be equal to
-    #   (1/(2*σ_1)) φ((x_r^T β_r + μ_1)/σ_1),
-    # where φ is the pdf of the standard normal distribution.
+    # For μ_f and σ_f, we use the sample mean and std.
+    mu_f <- mean(x[1, ])
+    sigma_f <- stats::sd(x[1, ])
+    w <- (as.vector(betaR %*% x[2:(d+1), ]) + mu_f) / sigma_f
     gamma_0 <- gamma[1]
     gamma_1 <- gamma[2]
     gamma_2 <- gamma[3]
     q_0 <- gamma_0^(1/2)
     q_1 <- (1/2)*gamma_0^(-1/2)*gamma_1
     q_2 <- -(1/4)*gamma_0^(-3/2)*gamma_1^2 + gamma_0^(-1/2)*gamma_2
-    # q_0 <- sqrt(gamma_0)
-    # q_1 <- sqrt(gamma_1)
-    # q_2 <- sqrt(gamma_2)
-    F0_1_3 <- -(stats::dnorm(0) / (q_0 * sigma1^3)) * stats::dnorm(p) * (p^2 - 1)
-    F0_3_1 <-  (stats::dnorm(0) / (q_0^3 * sigma1)) * stats::dnorm(p) * (1 - q_2*q_0 + 2*q_1^2)
-    F0_0_1 <- (1 / (2*sigma1)) * stats::dnorm(p)
-    # See makeH function in confidence.R.
-    # Note that the integral over the reals of u -> u^3*K'(u), with K(u) = φ(u),
-    # is -3. Also, the integral over the reals of u -> K'(u)^2, is 1/(4*sqrt(pi)).
+    F0_1_3 <- -(stats::dnorm(0) / (q_0 * sigma_f^3)) * stats::dnorm(w) * (w^2 - 1)
+    F0_3_1 <-  (stats::dnorm(0) / (q_0^3 * sigma_f)) * stats::dnorm(w) * (1 - q_2*q_0 + 2*q_1^2)
+    F0_0_1 <- (1 / (2*sigma_f)) * stats::dnorm(w)
+    integral1 <- -3
+    integral2 <- 1/(4*sqrt(pi))
     B.nd  <- matrix(0, d, d)
     B.ker <- matrix(0, d, d)
     V.nd  <- matrix(0, d, d)
@@ -187,10 +315,10 @@ rot <- function(y, x, k, betaEst = NULL, debugLogging = FALSE) {
             x_row <- as.vector(x[row + 1, ])
             x_col <- as.vector(x[col + 1, ])
             B.nd[row, col]  = -mean((F0_1_3 + F0_3_1/3)*(x_row*x_col)*(x_row^2 + x_col^2))
-            B.ker[row, col] = -3*mean((F0_1_3 + F0_3_1/3)*(x_row*x_col))
+            B.ker[row, col] = integral1*mean((F0_1_3 + F0_3_1/3)*(x_row*x_col))
             f <- 2*abs(x_row) + 2*abs(x_col) - abs(x_row + x_col) - abs(x_row - x_col)
             V.nd[row, col]  <- (1/8)*mean(f * F0_0_1)
-            V.ker[row, col] <- (1/(2*sqrt(pi)))*mean(F0_0_1*x_row^2*x_col^2)
+            V.ker[row, col] <- 2*integral2*mean(F0_0_1*x_row^2*x_col^2)
         }
     }
     if (debugLogging) {

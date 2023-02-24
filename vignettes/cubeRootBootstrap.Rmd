@@ -1,0 +1,278 @@
+---
+title: "Calculating confidence regions using the cube-root bootstrap method"
+author: "Panaghis Mavrokefalos"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Calculating confidence regions using the cube-root bootstrap method}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+The function `cubeRootBootstrapCR()` implements a cube-root bootstrap method
+for calculating the confidence regions of the $\beta$ parameters that are
+obtained by `optimizeScoreFunction()`. See the `pointIdentifiedCR()` function,
+and the `"matched"` vignette for more information.
+
+The implementation is based on the paper [1]. Links to the
+[paper](https://mdcattaneo.github.io/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf),
+its [supplement](https://mdcattaneo.github.io/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA--Supplement.pdf),
+and an [implementation](https://github.com/mdcattaneo/replication-CJN_2020_ECMA) are provided.
+
+## Overview
+
+Let's set up the data array using the synthetic data, and compute the estimates
+$\hat{\beta}$.
+
+```{r setup}
+library(maxscoreest)
+filename <- system.file("extdata", "precomp_testdata.dat", package = "maxscoreest")
+matchedData <- importMatched(filename)
+ineqmembers <- Cineqmembers(matchedData$mate)
+dataArray <- CdataArray(matchedData$distanceMatrices, ineqmembers)
+bounds <- makeBounds(matchedData$noAttr, 10)
+optimParams <- getDefaultOptimParams()
+randomSeed <- 42
+optimizeScoreArgs <- list(
+    dataArray = dataArray,
+    bounds = bounds,
+    optimParams = optimParams,
+    getIneqSat = TRUE,
+    permuteInvariant = TRUE,
+    numRuns = 1000)
+set.seed(randomSeed)
+optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
+pointEstimate <- optResult$optArg
+pointEstimate
+```
+
+`cubeRootBootstrapCR()` has the same parameter list as `pointIdentifiedCR`,
+except it is not necessary to specify the `ssSize` parameter, as the method
+generates its subsamples by drawing (with replacement) as many markets as there
+are in the full data array.
+
+```{r}
+numSubsamples <- 20
+ssSize <- NULL
+confidenceLevel <- 0.95
+groupIDs <- makeGroupIDs(ineqmembers)
+```
+
+Let's call the function with the default options:
+```{r}
+options <- list()
+set.seed(randomSeed)
+cr <- cubeRootBootstrapCR(
+    dataArray, groupIDs, pointEstimate,
+    ssSize, numSubsamples, confidenceLevel,
+    optimizeScoreArgs, options)
+cr
+```
+
+The member `cr$cr` is an array containing the *confidence regions*. Each
+column is a pair of values denoting the confidence interval of the corresponding
+attribute. The members `cr$rawEstimates` and `cr$estimates` are also arrays,
+containing the results of the bootstrap operation. Each row corresponds to a
+single bootstrap sample. The rows of `cr$rawEstimates` are the actual
+parameter vectors $\tilde{\beta}$ obtained by optimizing the bootstrap function,
+while the rows of `cr$estimates` are the vectors $\tilde{\beta} - \hat{\beta}$,
+where $\hat{\beta}$ are the point estimates. We call the former estimates
+*uncentered*, and the latter *centered*.
+
+The matrix `cr$H` is the calculated estimate of the matrix $H$ mentioned in the
+paper [1]. While its value can be ignored in the usual case, it can allow more
+sophisticated use of the package. The significance of this matrix is explained
+in the paper, while the final section of this document gives an overview of the
+method.
+
+## Paremeters/Options
+
+As in `pointIdentifiedCR()`, a list of arguments related to optimizing
+the above function is required. The optimization is performed by the
+function `optimizeBootstrapFunction()`, which is similar to
+`optimizeScoreFunction()`. The parameter `optimizeScoreArgs`
+should be a list with the following elements: 
+
+- `bounds`
+- `coefficient1`
+- `method`
+- `optimParams`
+
+The list of arguments to `optimizeBootstrapFunction()` is then internally
+constructed using the above data.
+
+`cubeRootBootstrapCR()` supports passing an `options` list. The relevant options
+are explained here, but the user can also consult its documentation for more
+details.
+
+### `centered`
+
+Whether to *center* (see above, regarding `$rawEstimates` and `$estimates`) the
+confidence regions `$cr`. This can be useful if the user desires that the
+confidence intervals share a common reference.
+
+The rest of the options are related to the estimation of $H$. See also the
+`makeHmatrix()` function.
+
+### `Hest`
+
+Selects the method used for estimation. Set to `"numder"` for the numerical
+derivative method, which is more general, or to `"plugin"`, to use an
+estimator which is specific to this problem. We recommend using the plug-in
+method, which is the default.
+
+The plug-in method assumes a kernel function with specific properties.
+Specifically, its antiderivative should approximate the indicator function, and
+Condition K from the supplement to [1] should be satisfied. The only kernel
+currently available is the function $K(u) = \phi(u)$, i.e. the pdf of the
+standard normal distribution.
+
+### `bw`
+
+Both the numerical derivative and the plug-in method depend on a matrix-valued
+parameter: the *step* $\epsilon_{n,kl}$, and the *bandwidth* $h_{n,kl}$
+respectively. This is supposed to be a matrix of size $d \times d$, where $d$
+is the number of *free* attributes (i.e. the total number of attributes
+reduced by one, or the length of the vector $\beta$), but if given as a scalar,
+it is automatically converted to a matrix of the appropriate size with constant
+elements. Its default value is the scalar `1`.
+
+The paper [1] provides an alternative method of calculating this parameter,
+which is named the *Rule-Of-Thumb* (ROT) method. Setting the option `bw` to
+`"rot"` allows the step or bandwidth to be automatically calculated.
+
+### `makePosDef` and `makePosDefTol`
+
+The matrix $H$ is, by definition, positive semidefinite. It is possible, though,
+that the estimate calculated is not. Setting `makePosDef` to `TRUE` replaces
+the estimate calculated with a positive semidefinite matrix which is closest, in
+a sense, to that estimate. We provide two approaches:
+
+- Adding a constant value $\kappa$ to each diagonal element of $H$. This value
+  is defined as $\epsilon_{\mathrm{tol}} - \lambda_d$, where $\lambda_d < 0$ is
+  the smallest eigenvalue of the $H$ estimate, and $\epsilon_{\mathrm{tol}}$ is
+  a non-negative tolerance. This tolerance is specified by the value of
+  `makePosDefTol`.
+ 
+- Replacing all negative eigenvalues with $0$. To select this approach, set
+  `makePosDefTol` to `"drop"`.
+
+### `useCorrectionFactor`
+
+Selects whether the constant factor $c$ in the bootstrap function should equal
+$\frac{m}{n}$ (`TRUE`, the default) or revert to the legacy behavior, where it
+used to equal $1$ (`FALSE`). We recommend not changing this option unless
+reproducibility is desired.
+
+### `Hbypass`
+
+If provided, skips the entire calculation of $H$ and uses this value instead.
+
+## Examples
+
+### Compare plug-in and numerical derivative methods
+
+```{r compare1}
+options$bw <- 0.8
+options$Hest <- "numder"
+set.seed(randomSeed)
+crNumder <- cubeRootBootstrapCR(
+    dataArray, groupIDs, pointEstimate,
+    ssSize, numSubsamples, confidenceLevel,
+    optimizeScoreArgs, options)
+crNumder[c("cr", "H")]
+
+options$Hest <- "plugin"
+set.seed(randomSeed)
+crPlugin <- cubeRootBootstrapCR(
+    dataArray, groupIDs, pointEstimate,
+    ssSize, numSubsamples, confidenceLevel,
+    optimizeScoreArgs, options)
+crPlugin[c("cr", "H")]
+```
+
+### Use ROT
+```{r rot}
+options$bw <- "rot"
+options$Hest <- "numder"
+set.seed(randomSeed)
+crNumder <- cubeRootBootstrapCR(
+    dataArray, groupIDs, pointEstimate,
+    ssSize, numSubsamples, confidenceLevel,
+    optimizeScoreArgs, options)
+crNumder[c("cr", "H")]
+
+options$Hest <- "plugin"
+set.seed(randomSeed)
+crPlugin <- cubeRootBootstrapCR(
+    dataArray, groupIDs, pointEstimate,
+    ssSize, numSubsamples, confidenceLevel,
+    optimizeScoreArgs, options)
+crPlugin[c("cr", "H")]
+```
+
+### Fix non-PSD $H$ matrix
+
+```{r makePosDef}
+pointEstimate <- optResult$bestRuns[[67]]$optArg
+pointEstimate
+options$makePosDef <- FALSE
+set.seed(randomSeed)
+crNonPSD <- cubeRootBootstrapCR(
+    dataArray, groupIDs, pointEstimate,
+    ssSize, numSubsamples, confidenceLevel,
+    optimizeScoreArgs, options)
+crNonPSD[c("cr", "H")]
+eigen(crNonPSD$H)$values # has a negative eigenvalue, is not PSD
+
+options$makePosDef <- TRUE
+set.seed(randomSeed)
+crMakePosDef <- cubeRootBootstrapCR(
+    dataArray, groupIDs, pointEstimate,
+    ssSize, numSubsamples, confidenceLevel,
+    optimizeScoreArgs, options)
+crMakePosDef[c("cr", "H")]
+eigen(crMakePosDef$H)$values
+```
+
+## More on the method
+
+The estimates are calculated by sampling, with replacement, a number of markets
+equal to their total number, creating its associated data array, and maximizing
+a function related to the difference of their scores, augmented by a quadratic
+term.
+
+In particular, let $S(\beta; X)$ be the score function corresponding to the data
+array $X$ (see also `makeScoreObjFun()`), $\hat{\beta}$ be the point estimate
+previously calculated, and $H$ (short for $\tilde{H}_n$) be the matrix which
+estimates $H_0$. After sampling the full data array $X_{\mathrm{full}}$,
+we create the sample data array $X_{\mathrm{sample}}$.
+
+Define now the quadratic term
+$q(\beta; \hat{\beta}, H) = \frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})$
+
+Then the function maximized at each bootstrap step is
+$B(\beta; \hat{\beta}, H, X_{\mathrm{full}}, X_{\mathrm{sample}}) = c S(\beta; X_{\mathrm{sample}}) - S(\beta; X_{\mathrm{full}}) - q(\beta; \hat{\beta}, H)$
+
+Note that, as defined, the score function is normalized on the number of
+inequalities of the data array, and therefore takes values in the interval
+$[0, 1]$.
+
+The *correction factor* $c$ has a value which, by default, is equal to
+the ratio of the number of inequalities in the sample data array ($m$) to the
+number of inequalities in the full data array ($n$). Since markets are, in the
+general case, unbalanced with respect to their size, this factor is not
+necessarily equal to $1$. In a previous version, this factor was fixed to $1$,
+but most users should not revert to this behavior unless reproducibility with
+that version is desired.
+
+## References
+- [1] M. D. Cattaneo, M. Jansson, and K. Nagasawa, “Bootstrap-Based Inference for Cube Root Asymptotics”, *Econometrica*, vol. 88, no. 5, pp. 2203–2219, September 2020.
