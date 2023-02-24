@@ -162,6 +162,18 @@ We can also see which market subsets were chosen at each iteration.
 cr$samples
 ```
 
+Instead of the point-identified method, we can also use the cube-root bootstrap
+method. The signatures are the same:
+
+```{r}
+crCubeRoot <- cubeRootBootstrapCR(
+    dataArray, groupIDs, optResult$optArg,
+    ssSize, numSubsamples, confidenceLevel,
+    optimizeScoreArgs)
+```
+
+See the vignette *Calculating confidence regions using the cube-root bootstrap method* (accessed by `vignettes("cubeRootBootstrap"`) for more details on this method.
+
 # Taking a closer look
 
 ## Importing
@@ -257,7 +269,7 @@ the form $f_{\beta}(m, p, q) - f_{\beta}(m, r, s)$, where $f_{\beta}$ is the
 payoff function of the match evaluated at the parameter vector $\beta$, and
 $f_{\beta}(m, i, j)$ is its value for the upstream-downstream match $(i, j)$ of
 the $m$-th market. The indices $p, q, r, s$ are stored the vectors
-`$fctUpIdxs$`, `$fctDnIdxs`, `$cfcUpIdxs$`, and `$cfcDnIdxs`, respectively,
+`$fctUpIdxs`, `$fctDnIdxs`, `$cfcUpIdxs`, and `$cfcDnIdxs`, respectively,
 where `fct` and `cfc` correspond to the factual/LHS $(p, q)$ and
 counterfactual/RHS $(r, s)$ indices, and `Up` and `Dn` to the upstream
 $(p, r)$ and downstream $(q, s)$ indices.
@@ -370,4 +382,30 @@ distNames <- matchedData$header[matchedData$colIdxs$distanceColIdxs]
 distNamesFree <- distNames[-1]
 names(optResult$optArg) <- distNamesFree
 optResult$optArg
+```
+
+### Restarting the optimization multiple times
+
+Since we are dealing with an optimization problem with multiple solutions, we
+provide an option to restart optimization procedures, such as *Differential
+Evolution*, that depend on the state of the random generator. By using a
+different random state on each run, the optimal parameter vectors calculated
+on each run will also vary. The user can then choose one or more solutions
+according to their own criteria.
+
+Setting the parameter `numRuns` in `optimizeScoreFunction()` to an integer
+greater than `1` will restart the optimization procedure that many times, then
+collect the results that share the overall best score value found in the list
+`bestRuns`.
+
+It might be helpful to set the `progressUpdate` parameter to a positive value,
+in order to track the progress of the long-running operation.
+
+```{r restartOpt}
+optimizeScoreArgs$bounds <- bounds <- makeBounds(matchedData$noAttr, 10)
+optimizeScoreArgs$numRuns <- 1000
+optimizeScoreArgs$progressUpdate <- 50
+optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
+length(optResult$bestRuns)
+optResult$bestRuns[[100]]
 ```

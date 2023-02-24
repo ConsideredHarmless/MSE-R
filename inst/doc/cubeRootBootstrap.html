@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Panaghis Mavrokefalos" />
+
+
+<title>Calculating confidence regions using the cube-root bootstrap method</title>
+
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Calculating confidence regions using the cube-root bootstrap method</h1>
+<h4 class="author">Panaghis Mavrokefalos</h4>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The function <code>cubeRootBootstrapCR()</code> implements a cube-root bootstrap method for calculating the confidence regions of the <span class="math inline">\(\beta\)</span> parameters that are obtained by <code>optimizeScoreFunction()</code>. See the <code>pointIdentifiedCR()</code> function, and the <code>&quot;matched&quot;</code> vignette for more information.</p>
+<p>The implementation is based on the paper [1]. Links to the <a href="https://mdcattaneo.github.io/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf">paper</a>, its <a href="https://mdcattaneo.github.io/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA--Supplement.pdf">supplement</a>, and an <a href="https://github.com/mdcattaneo/replication-CJN_2020_ECMA">implementation</a> are provided.</p>
+</div>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>Let’s set up the data array using the synthetic data, and compute the estimates <span class="math inline">\(\hat{\beta}\)</span>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(maxscoreest)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Loading required package: data.table</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>filename <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;precomp_testdata.dat&quot;</span>, <span class="at">package =</span> <span class="st">&quot;maxscoreest&quot;</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>matchedData <span class="ot">&lt;-</span> <span class="fu">importMatched</span>(filename)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>ineqmembers <span class="ot">&lt;-</span> <span class="fu">Cineqmembers</span>(matchedData<span class="sc">$</span>mate)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>dataArray <span class="ot">&lt;-</span> <span class="fu">CdataArray</span>(matchedData<span class="sc">$</span>distanceMatrices, ineqmembers)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>bounds <span class="ot">&lt;-</span> <span class="fu">makeBounds</span>(matchedData<span class="sc">$</span>noAttr, <span class="dv">10</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>optimParams <span class="ot">&lt;-</span> <span class="fu">getDefaultOptimParams</span>()</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>randomSeed <span class="ot">&lt;-</span> <span class="dv">42</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>optimizeScoreArgs <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">dataArray =</span> dataArray,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">bounds =</span> bounds,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">optimParams =</span> optimParams,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">getIneqSat =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">permuteInvariant =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">numRuns =</span> <span class="dv">1000</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(randomSeed)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>optResult <span class="ot">&lt;-</span> <span class="fu">do.call</span>(optimizeScoreFunction, optimizeScoreArgs)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>pointEstimate <span class="ot">&lt;-</span> optResult<span class="sc">$</span>optArg</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>pointEstimate</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  0.9068375 -4.9464569  2.5058242  0.2094887</span></span></code></pre></div>
+<p><code>cubeRootBootstrapCR()</code> has the same parameter list as <code>pointIdentifiedCR</code>, except it is not necessary to specify the <code>ssSize</code> parameter, as the method generates its subsamples by drawing (with replacement) as many markets as there are in the full data array.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>numSubsamples <span class="ot">&lt;-</span> <span class="dv">20</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ssSize <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>confidenceLevel <span class="ot">&lt;-</span> <span class="fl">0.95</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>groupIDs <span class="ot">&lt;-</span> <span class="fu">makeGroupIDs</span>(ineqmembers)</span></code></pre></div>
+<p>Let’s call the function with the default options:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>options <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(randomSeed)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>cr <span class="ot">&lt;-</span> <span class="fu">cubeRootBootstrapCR</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, pointEstimate,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    ssSize, numSubsamples, confidenceLevel,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    optimizeScoreArgs, options)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>cr</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $cr</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]     [,3]      [,4]</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 0.8939480 -5.312836 2.505001 0.1859144</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] 0.9500417 -4.944754 2.809734 0.2757632</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $estimates</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                [,1]         [,2]          [,3]          [,4]</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]  0.0371977071 -0.359360056  0.3039101088  3.703738e-02</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]  0.0306128651 -0.199700176  0.2038414164 -1.346076e-02</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]  0.0354864322 -0.269808199  0.2379646316  1.627774e-03</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]  0.0307364134 -0.133894249  0.1780094548 -1.005462e-02</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]  0.0248271736 -0.174620865  0.1396228653  2.010014e-02</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]  0.0089438476 -0.352069344  0.2577189636  6.627449e-02</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]  0.0369512208 -0.208689502  0.2058665081 -1.704945e-02</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] -0.0128895543 -0.177525228  0.1117845327  2.973502e-02</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,]  0.0280052866 -0.187000988  0.1321211160  1.900137e-02</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] -0.0074762794 -0.170150601  0.1241003995  2.121631e-02</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [11,]  0.0432041470 -0.185579868  0.1952852065 -2.357432e-02</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [12,]  0.0341078702 -0.205698976  0.2057924775 -1.345022e-02</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13,]  0.0348478974 -0.213197115  0.2097799457 -1.469626e-02</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [14,]  0.0002573690  0.001702990 -0.0003834023 -3.980819e-04</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [15,]  0.0281016848 -0.302002157  0.2727253943  4.498634e-02</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [16,] -0.0075494311 -0.158906506  0.1219633484  2.337439e-02</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [17,] -0.0004550128 -0.003252012  0.0008993558  2.915047e-05</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [18,]  0.0356603922 -0.366379102  0.3020765764  4.132341e-02</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [19,]  0.0368784391 -0.223651786  0.2158790256 -4.669551e-03</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [20,] -0.0003463278  0.001469213 -0.0008235731 -3.691184e-04</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $rawEstimates</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]      [,2]     [,3]      [,4]</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 0.9440353 -5.305817 2.809734 0.2465261</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 0.9374504 -5.146157 2.709666 0.1960280</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 0.9423240 -5.216265 2.743789 0.2111165</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 0.9375740 -5.080351 2.683834 0.1994341</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 0.9316647 -5.121078 2.645447 0.2295889</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 0.9157814 -5.298526 2.763543 0.2757632</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.9437888 -5.155146 2.711691 0.1924393</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0.8939480 -5.123982 2.617609 0.2392237</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.9348428 -5.133458 2.637945 0.2284901</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 0.8993613 -5.116608 2.629925 0.2307050</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [11,] 0.9500417 -5.132037 2.701109 0.1859144</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [12,] 0.9409454 -5.152156 2.711617 0.1960385</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13,] 0.9416854 -5.159654 2.715604 0.1947924</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [14,] 0.9070949 -4.944754 2.505441 0.2090906</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [15,] 0.9349392 -5.248459 2.778550 0.2544751</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [16,] 0.8992881 -5.105363 2.627788 0.2328631</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [17,] 0.9063825 -4.949709 2.506724 0.2095179</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [18,] 0.9424979 -5.312836 2.807901 0.2508121</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [19,] 0.9437160 -5.170109 2.721703 0.2048192</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [20,] 0.9064912 -4.944988 2.505001 0.2091196</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $samples</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       [,1] [,2] [,3]</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,]    1    1    1</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,]    1    3    3</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,]    1    3    1</span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,]    1    3    3</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,]    2    2    1</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,]    2    2    1</span></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,]    3    1    3</span></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,]    3    2    2</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,]    2    1    1</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,]    2    3    3</span></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [11,]    1    3    3</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [12,]    1    3    3</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13,]    3    1    3</span></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [14,]    1    3    2</span></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [15,]    1    1    1</span></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [16,]    3    3    2</span></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [17,]    1    3    2</span></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [18,]    1    1    1</span></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [19,]    1    1    3</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [20,]    3    1    2</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $H</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]       [,2]       [,3]       [,4]</span></span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 10.7320392 -0.2137487 -1.9902010  4.8095097</span></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] -0.2137487  0.6806942  0.9674814  0.1959709</span></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] -1.9902010  0.9674814  1.7990087 -0.5771139</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]  4.8095097  0.1959709 -0.5771139  4.8327997</span></span></code></pre></div>
+<p>The member <code>cr$cr</code> is an array containing the <em>confidence regions</em>. Each column is a pair of values denoting the confidence interval of the corresponding attribute. The members <code>cr$rawEstimates</code> and <code>cr$estimates</code> are also arrays, containing the results of the bootstrap operation. Each row corresponds to a single bootstrap sample. The rows of <code>cr$rawEstimates</code> are the actual parameter vectors <span class="math inline">\(\tilde{\beta}\)</span> obtained by optimizing the bootstrap function, while the rows of <code>cr$estimates</code> are the vectors <span class="math inline">\(\tilde{\beta} - \hat{\beta}\)</span>, where <span class="math inline">\(\hat{\beta}\)</span> are the point estimates. We call the former estimates <em>uncentered</em>, and the latter <em>centered</em>.</p>
+<p>The matrix <code>cr$H</code> is the calculated estimate of the matrix <span class="math inline">\(H\)</span> mentioned in the paper [1]. While its value can be ignored in the usual case, it can allow more sophisticated use of the package. The significance of this matrix is explained in the paper, while the final section of this document gives an overview of the method.</p>
+</div>
+<div id="paremetersoptions" class="section level2">
+<h2>Paremeters/Options</h2>
+<p>As in <code>pointIdentifiedCR()</code>, a list of arguments related to optimizing the above function is required. The optimization is performed by the function <code>optimizeBootstrapFunction()</code>, which is similar to <code>optimizeScoreFunction()</code>. The parameter <code>optimizeScoreArgs</code> should be a list with the following elements:</p>
+<ul>
+<li><code>bounds</code></li>
+<li><code>coefficient1</code></li>
+<li><code>method</code></li>
+<li><code>optimParams</code></li>
+</ul>
+<p>The list of arguments to <code>optimizeBootstrapFunction()</code> is then internally constructed using the above data.</p>
+<p><code>cubeRootBootstrapCR()</code> supports passing an <code>options</code> list. The relevant options are explained here, but the user can also consult its documentation for more details.</p>
+<div id="centered" class="section level3">
+<h3><code>centered</code></h3>
+<p>Whether to <em>center</em> (see above, regarding <code>$rawEstimates</code> and <code>$estimates</code>) the confidence regions <code>$cr</code>. This can be useful if the user desires that the confidence intervals share a common reference.</p>
+<p>The rest of the options are related to the estimation of <span class="math inline">\(H\)</span>. See also the <code>makeHmatrix()</code> function.</p>
+</div>
+<div id="hest" class="section level3">
+<h3><code>Hest</code></h3>
+<p>Selects the method used for estimation. Set to <code>&quot;numder&quot;</code> for the numerical derivative method, which is more general, or to <code>&quot;plugin&quot;</code>, to use an estimator which is specific to this problem. We recommend using the plug-in method, which is the default.</p>
+<p>The plug-in method assumes a kernel function with specific properties. Specifically, its antiderivative should approximate the indicator function, and Condition K from the supplement to [1] should be satisfied. The only kernel currently available is the function <span class="math inline">\(K(u) = \phi(u)\)</span>, i.e. the pdf of the standard normal distribution.</p>
+</div>
+<div id="bw" class="section level3">
+<h3><code>bw</code></h3>
+<p>Both the numerical derivative and the plug-in method depend on a matrix-valued parameter: the <em>step</em> <span class="math inline">\(\epsilon_{n,kl}\)</span>, and the <em>bandwidth</em> <span class="math inline">\(h_{n,kl}\)</span> respectively. This is supposed to be a matrix of size <span class="math inline">\(d \times d\)</span>, where <span class="math inline">\(d\)</span> is the number of <em>free</em> attributes (i.e. the total number of attributes reduced by one, or the length of the vector <span class="math inline">\(\beta\)</span>), but if given as a scalar, it is automatically converted to a matrix of the appropriate size with constant elements. Its default value is the scalar <code>1</code>.</p>
+<p>The paper [1] provides an alternative method of calculating this parameter, which is named the <em>Rule-Of-Thumb</em> (ROT) method. Setting the option <code>bw</code> to <code>&quot;rot&quot;</code> allows the step or bandwidth to be automatically calculated.</p>
+</div>
+<div id="makeposdef-and-makeposdeftol" class="section level3">
+<h3><code>makePosDef</code> and <code>makePosDefTol</code></h3>
+<p>The matrix <span class="math inline">\(H\)</span> is, by definition, positive semidefinite. It is possible, though, that the estimate calculated is not. Setting <code>makePosDef</code> to <code>TRUE</code> replaces the estimate calculated with a positive semidefinite matrix which is closest, in a sense, to that estimate. We provide two approaches:</p>
+<ul>
+<li><p>Adding a constant value <span class="math inline">\(\kappa\)</span> to each diagonal element of <span class="math inline">\(H\)</span>. This value is defined as <span class="math inline">\(\epsilon_{\mathrm{tol}} - \lambda_d\)</span>, where <span class="math inline">\(\lambda_d &lt; 0\)</span> is the smallest eigenvalue of the <span class="math inline">\(H\)</span> estimate, and <span class="math inline">\(\epsilon_{\mathrm{tol}}\)</span> is a non-negative tolerance. This tolerance is specified by the value of <code>makePosDefTol</code>.</p></li>
+<li><p>Replacing all negative eigenvalues with <span class="math inline">\(0\)</span>. To select this approach, set <code>makePosDefTol</code> to <code>&quot;drop&quot;</code>.</p></li>
+</ul>
+</div>
+<div id="usecorrectionfactor" class="section level3">
+<h3><code>useCorrectionFactor</code></h3>
+<p>Selects whether the constant factor <span class="math inline">\(c\)</span> in the bootstrap function should equal <span class="math inline">\(\frac{m}{n}\)</span> (<code>TRUE</code>, the default) or revert to the legacy behavior, where it used to equal <span class="math inline">\(1\)</span> (<code>FALSE</code>). We recommend not changing this option unless reproducibility is desired.</p>
+</div>
+<div id="hbypass" class="section level3">
+<h3><code>Hbypass</code></h3>
+<p>If provided, skips the entire calculation of <span class="math inline">\(H\)</span> and uses this value instead.</p>
+</div>
+</div>
+<div id="examples" class="section level2">
+<h2>Examples</h2>
+<div id="compare-plug-in-and-numerical-derivative-methods" class="section level3">
+<h3>Compare plug-in and numerical derivative methods</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>options<span class="sc">$</span>bw <span class="ot">&lt;-</span> <span class="fl">0.8</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>options<span class="sc">$</span>Hest <span class="ot">&lt;-</span> <span class="st">&quot;numder&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(randomSeed)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>crNumder <span class="ot">&lt;-</span> <span class="fu">cubeRootBootstrapCR</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, pointEstimate,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    ssSize, numSubsamples, confidenceLevel,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    optimizeScoreArgs, options)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>crNumder[<span class="fu">c</span>(<span class="st">&quot;cr&quot;</span>, <span class="st">&quot;H&quot;</span>)]</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $cr</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]     [,3]       [,4]</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 0.6777201 -5.073160 2.464431 -0.6088816</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] 1.3417236 -4.322963 3.111673  0.6867287</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $H</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]         [,2]       [,3]         [,4]</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 0.06076389  0.011574074 0.00000000  0.017361111</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] 0.01157407  0.043402778 0.01446759 -0.002893519</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] 0.00000000  0.014467593 0.04918981  0.011574074</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,] 0.01736111 -0.002893519 0.01157407  0.054976852</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>options<span class="sc">$</span>Hest <span class="ot">&lt;-</span> <span class="st">&quot;plugin&quot;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(randomSeed)</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>crPlugin <span class="ot">&lt;-</span> <span class="fu">cubeRootBootstrapCR</span>(</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, pointEstimate,</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    ssSize, numSubsamples, confidenceLevel,</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    optimizeScoreArgs, options)</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>crPlugin[<span class="fu">c</span>(<span class="st">&quot;cr&quot;</span>, <span class="st">&quot;H&quot;</span>)]</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $cr</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]     [,3]      [,4]</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 0.8958730 -5.361839 2.483456 0.1891891</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] 0.9505654 -4.875568 2.827896 0.2615148</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $H</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]       [,2]       [,3]       [,4]</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 16.6451353 -0.2476134 -3.1889149  7.2790369</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] -0.2476134  1.0395032  1.4568352  0.3655993</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] -3.1889149  1.4568352  2.6654410 -0.8929428</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]  7.2790369  0.3655993 -0.8929428  7.4605123</span></span></code></pre></div>
+</div>
+<div id="use-rot" class="section level3">
+<h3>Use ROT</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>options<span class="sc">$</span>bw <span class="ot">&lt;-</span> <span class="st">&quot;rot&quot;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>options<span class="sc">$</span>Hest <span class="ot">&lt;-</span> <span class="st">&quot;numder&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(randomSeed)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>crNumder <span class="ot">&lt;-</span> <span class="fu">cubeRootBootstrapCR</span>(</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, pointEstimate,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    ssSize, numSubsamples, confidenceLevel,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    optimizeScoreArgs, options)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>crNumder[<span class="fu">c</span>(<span class="st">&quot;cr&quot;</span>, <span class="st">&quot;H&quot;</span>)]</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $cr</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           [,1]     [,2]      [,3]      [,4]</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] -5.033757 9.999022 -9.999999  9.999977</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] -5.014651 9.999985 -9.999856 10.000000</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $H</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]       [,2]       [,3]       [,4]</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]  4.5811335 -0.9162267 -1.8324534  1.8324534</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] -0.9162267  0.9162267  0.9162267 -0.9162267</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] -1.8324534  0.9162267  0.9162267  0.0000000</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]  1.8324534 -0.9162267  0.0000000  0.9162267</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>options<span class="sc">$</span>Hest <span class="ot">&lt;-</span> <span class="st">&quot;plugin&quot;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(randomSeed)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>crPlugin <span class="ot">&lt;-</span> <span class="fu">cubeRootBootstrapCR</span>(</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, pointEstimate,</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    ssSize, numSubsamples, confidenceLevel,</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    optimizeScoreArgs, options)</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>crPlugin[<span class="fu">c</span>(<span class="st">&quot;cr&quot;</span>, <span class="st">&quot;H&quot;</span>)]</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $cr</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]     [,3]      [,4]</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] 0.8892912 -5.142383 2.505735 0.2064052</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] 0.9340831 -4.921624 2.746992 0.2550134</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $H</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]        [,2]       [,3]        [,4]</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]  8.1279146 -0.12037897 -0.6783245  2.19674882</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] -0.1203790  0.52101355  0.6619327  0.09120604</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] -0.6783245  0.66193273  1.2846817 -0.10388165</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]  2.1967488  0.09120604 -0.1038817  3.61499103</span></span></code></pre></div>
+</div>
+<div id="fix-non-psd-h-matrix" class="section level3">
+<h3>Fix non-PSD <span class="math inline">\(H\)</span> matrix</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pointEstimate <span class="ot">&lt;-</span> optResult<span class="sc">$</span>bestRuns[[<span class="dv">67</span>]]<span class="sc">$</span>optArg</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>pointEstimate</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  0.9571261 -4.9932467  2.4818196  0.1314426</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>options<span class="sc">$</span>makePosDef <span class="ot">&lt;-</span> <span class="cn">FALSE</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(randomSeed)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>crNonPSD <span class="ot">&lt;-</span> <span class="fu">cubeRootBootstrapCR</span>(</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, pointEstimate,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    ssSize, numSubsamples, confidenceLevel,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    optimizeScoreArgs, options)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>crNonPSD[<span class="fu">c</span>(<span class="st">&quot;cr&quot;</span>, <span class="st">&quot;H&quot;</span>)]</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $cr</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           [,1]     [,2]      [,3]     [,4]</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] -4.322680 8.128105 -9.999999 6.164887</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,] -4.256353 8.278365 -9.998200 6.269314</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $H</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]      [,2]       [,3]      [,4]</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]  2.6915615 0.1059916 -0.2499945 1.5784874</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]  0.1059916 0.1943457  0.2545928 0.1933464</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] -0.2499945 0.2545928  0.5081253 0.3209350</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]  1.5784874 0.1933464  0.3209350 1.6024323</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="fu">eigen</span>(crNonPSD<span class="sc">$</span>H)<span class="sc">$</span>values <span class="co"># has a negative eigenvalue, is not PSD</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  3.82763862  0.97939891  0.19810686 -0.00867947</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>options<span class="sc">$</span>makePosDef <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(randomSeed)</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>crMakePosDef <span class="ot">&lt;-</span> <span class="fu">cubeRootBootstrapCR</span>(</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, pointEstimate,</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    ssSize, numSubsamples, confidenceLevel,</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    optimizeScoreArgs, options)</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>crMakePosDef[<span class="fu">c</span>(<span class="st">&quot;cr&quot;</span>, <span class="st">&quot;H&quot;</span>)]</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $cr</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,] -1.725598 -9.416711 -3.968077 -2.000919</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]  2.785998  1.498452  6.865105  3.268070</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $H</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            [,1]      [,2]       [,3]      [,4]</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1,]  2.6921814 0.1044899 -0.2485054 1.5777636</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2,]  0.1044899 0.1979834  0.2509857 0.1950996</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] -0.2485054 0.2509857  0.5117022 0.3191965</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]  1.5777636 0.1950996  0.3191965 1.6032773</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="fu">eigen</span>(crMakePosDef<span class="sc">$</span>H)<span class="sc">$</span>values</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3.827639e+00 9.793989e-01 1.981069e-01 4.637368e-16</span></span></code></pre></div>
+</div>
+</div>
+<div id="more-on-the-method" class="section level2">
+<h2>More on the method</h2>
+<p>The estimates are calculated by sampling, with replacement, a number of markets equal to their total number, creating its associated data array, and maximizing a function related to the difference of their scores, augmented by a quadratic term.</p>
+<p>In particular, let <span class="math inline">\(S(\beta; X)\)</span> be the score function corresponding to the data array <span class="math inline">\(X\)</span> (see also <code>makeScoreObjFun()</code>), <span class="math inline">\(\hat{\beta}\)</span> be the point estimate previously calculated, and <span class="math inline">\(H\)</span> (short for <span class="math inline">\(\tilde{H}_n\)</span>) be the matrix which estimates <span class="math inline">\(H_0\)</span>. After sampling the full data array <span class="math inline">\(X_{\mathrm{full}}\)</span>, we create the sample data array <span class="math inline">\(X_{\mathrm{sample}}\)</span>.</p>
+<p>Define now the quadratic term <span class="math inline">\(q(\beta; \hat{\beta}, H) = \frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})\)</span></p>
+<p>Then the function maximized at each bootstrap step is <span class="math inline">\(B(\beta; \hat{\beta}, H, X_{\mathrm{full}}, X_{\mathrm{sample}}) = c S(\beta; X_{\mathrm{sample}}) - S(\beta; X_{\mathrm{full}}) - q(\beta; \hat{\beta}, H)\)</span></p>
+<p>Note that, as defined, the score function is normalized on the number of inequalities of the data array, and therefore takes values in the interval <span class="math inline">\([0, 1]\)</span>.</p>
+<p>The <em>correction factor</em> <span class="math inline">\(c\)</span> has a value which, by default, is equal to the ratio of the number of inequalities in the sample data array (<span class="math inline">\(m\)</span>) to the number of inequalities in the full data array (<span class="math inline">\(n\)</span>). Since markets are, in the general case, unbalanced with respect to their size, this factor is not necessarily equal to <span class="math inline">\(1\)</span>. In a previous version, this factor was fixed to <span class="math inline">\(1\)</span>, but most users should not revert to this behavior unless reproducibility with that version is desired.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li>[1] M. D. Cattaneo, M. Jansson, and K. Nagasawa, “Bootstrap-Based Inference for Cube Root Asymptotics”, <em>Econometrica</em>, vol. 88, no. 5, pp. 2203–2219, September 2020.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

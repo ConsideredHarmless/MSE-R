@@ -62,6 +62,12 @@ plotCR(cr$estimates)
 cr$samples
 
 ## -----------------------------------------------------------------------------
+crCubeRoot <- cubeRootBootstrapCR(
+    dataArray, groupIDs, optResult$optArg,
+    ssSize, numSubsamples, confidenceLevel,
+    optimizeScoreArgs)
+
+## -----------------------------------------------------------------------------
 matchedData$noM
 matchedData$noU
 matchedData$noD
@@ -152,4 +158,12 @@ distNames <- matchedData$header[matchedData$colIdxs$distanceColIdxs]
 distNamesFree <- distNames[-1]
 names(optResult$optArg) <- distNamesFree
 optResult$optArg
+
+## ----restartOpt---------------------------------------------------------------
+optimizeScoreArgs$bounds <- bounds <- makeBounds(matchedData$noAttr, 10)
+optimizeScoreArgs$numRuns <- 1000
+optimizeScoreArgs$progressUpdate <- 50
+optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
+length(optResult$bestRuns)
+optResult$bestRuns[[100]]
 
