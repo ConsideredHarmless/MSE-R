@@ -36,9 +36,11 @@ See the section "Optimization methods" for more information.}
 \item{getIneqSat}{(optional) A boolean indicating whether to include the
 \code{$ineqSat} member in the result. Defaults to \code{FALSE}.}
 
-\item{permuteInvariant}{(optional) Whether to reorder the parameters before
-and after the optimization, such that the parameter with the smallest
-standard deviation comes first. Defaults to \code{TRUE}.}
+\item{permuteInvariant}{(optional) Whether to reorder the attributes rows of
+the data array before and after the optimization, such that the attribute
+whose row has the smallest standard deviation comes first. Note that
+setting this to \code{TRUE} affects only the internal procedures, as the initial
+order is restored in the results. Defaults to \code{TRUE}.}
 
 \item{numRuns}{(optional) How many times to restart the optimization method. Useful with
 methods such as \emph{Differential Evolution}, when restarting the method when the

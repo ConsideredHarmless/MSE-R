@@ -34,18 +34,20 @@ We import this using the function `importMatched`.
 matchedData <- importMatched(filename)
 ```
 
-Next, we need to calculate the *inequality members*; lists of indices of the
-pairings which participate in the inequalities defining the objective function.
-The function `Cineqmembers` uses the matching information, contained in the
-list member `$mate`, to create these indices.
+Next, we need to calculate the *inequality members*, which are lists of indices
+of the pairings that participate in the inequalities defining the objective
+function. The function `Cineqmembers` uses the matching information, contained
+in the list member `$mate`, to create these indices.
 
 ```{r}
 ineqmembers <- Cineqmembers(matchedData$mate)
 ```
 
-Now we can create use inequality members to create the *data array*. The
-function `CdataArray` uses these indices to gather and combine values from the
-distance matrices.
+Now we can use the inequalities to create the *data array*. The function
+`CdataArray` uses the indices of the inequality members to gather and combine
+values from the distance matrices. Here, a *distance* is an attribute that
+characterizes a pair composed of upstream and downstream agents (e.g. geographic
+distance between the agents, or their age multiplied, etc.).
 
 ```{r}
 dataArray <- CdataArray(matchedData$distanceMatrices, ineqmembers)
@@ -64,14 +66,14 @@ the package `DEoptim`), but this is a **non-deterministic** method. A user can
 fix the RNG seed on their setup, but there is no guarantee of reproducibility
 across different machines, operating systems, R versions, or package versions.
 
-The two facts stated above are also complicating things:
+These two facts stated above complicate the optimization in the following ways:
 
-- The objective is non-convex: this means that there is no guarantee of reaching
-the global optimum using local search methods.
-- The objective is non-smooth, and actually piecewise constant: this means that
-the objective attains its (global) optimum for infinitely many points. Even
-worse, there are potentially many disconnected subsets of the search space on
-which the objective attains its optimum.
+- The objective function is non-convex: this means that there is no guarantee of
+reaching the global optimum using local search methods.
+- The objective function is non-smooth, and actually piecewise constant: this
+means that the objective attains its (global) optimum for infinitely many
+points. Even worse, there are potentially many disconnected subsets of the
+search space on which the objective attains its optimum.
 
 Differential Evolution works very well in practice however, either finding the
 global optimum or approximating it very closely.
@@ -79,15 +81,18 @@ global optimum or approximating it very closely.
 ---
 
 Let's use the default parameters for Differential Evolution, and select a box
-constraint of $[-100, 100]$.
+constraint for the paramater estimates of $[-100, 100]$. The user needs to
+decide whether to restrict the parameter estimates to some bounds, whether the
+bounds are symmetrical, etc. See below under "Optimization" a discussion of
+these issues.
 
 ```{r}
 bounds <- makeBounds(matchedData$noAttr, 100)
 optimParams <- getDefaultOptimParams()
 ```
 
-We might also want to fix the RNG for reproducibility across runs. See the
-*note regarding optimization* above.
+We might also want to fix the RNG for reproducibility across runs. This is
+highly recommended. See the *note regarding optimization* above.
 
 ```{r}
 randomSeed <- 42
@@ -106,9 +111,29 @@ optimizeScoreArgs <- list(
     bounds = bounds,
     optimParams = optimParams,
     getIneqSat = TRUE,
-    permuteInvariant = TRUE)
+    permuteInvariant = TRUE,
+    numRuns = 1,
+    progressUpdate = 0)
 optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
 ```
+
+The rest of the (optional) arguments are explained below:
+
+- `getIneqSat`: Whether to include the boolean vector of satisfied inequalities
+`$ineqSat` in the result.
+- `permuteInvariant`: Whether to reorder the attributes rows of the data array
+before and after the optimization, such that the attribute whose row has the
+smallest standard deviation comes first. Note that setting this to `TRUE`
+affects only the internal procedures, as the initial order is restored in the
+results.
+- `numRuns`: Setting this to an integer greater than `1` restarts the
+optimization method that many times. Useful with methods such as Differential
+Evolution, when restarting the method when the random seed has changed might
+yield a different result. The user can retrieve the runs with the best overall
+value from the member `$bestRuns` in the result. See the section "Restarting the
+optimization multiple times" below for more information.
+- `progressUpdate`: If greater than `0`, prints a progress update to the console
+each time that many runs of the optimization procedure have completed.
 
 We can now see the optimal parameter vector, and how many inequalities are
 satisfied across each market.
@@ -122,10 +147,18 @@ calcPerMarketStats(optResult$ineqSat, makeGroupIDs(ineqmembers))
 # Calculating the confidence intervals
 
 Now that we have an optimal solution for the parameters, we can use it to
-calculate an estimate for the confidence regions.
+calculate an estimate for the confidence regions. The procedure for constructing
+the confidence intervals is explained in detail by Fox (2018) -- see both the
+text and the Supplementary Material. The procedure is based on Romano and Shaikh
+(2008).
 
-Let's choose a number of iterations for the confidence regions calculation
-procedure, and the size of the market subsets of each iteration.
+To implement it, one needs to choose a number of iterations for the confidence
+regions calculation procedure (`numSubsamples`). In addition, if the asymptotics
+is in the number of markets (or nests), one needs to also choose the size of the
+market subsets of each iteration (`ssSize`). Alternatively, the asymptotics
+could be in the number of matches, but this approach is not implemented here.
+Fox (2018) provides an example in which confidence intervals are generated by
+subsampling from the number of matches within markets.
 
 ```{r}
 ssSize <- 2
@@ -139,8 +172,8 @@ We also need to map each inequality to its market, using the function
 groupIDs <- makeGroupIDs(ineqmembers)
 ```
 
-Now we are ready to calculate the confidence regions. We choose a confidence
-level is equal to $0.95$.
+Now we are ready to calculate the confidence regions. We choose the standard
+value for the confidence level equal to $0.95$, but this can be modified.
 
 ```{r}
 confidenceLevel <- 0.95
@@ -150,7 +183,8 @@ cr <- pointIdentifiedCR(
     optimizeScoreArgs)
 ```
 
-We can use the function `plotCR` to visualize the confidence region estimates.
+We can use the function `plotCR` to visualize the confidence region estimates
+(centered around zero).
 
 ```{r}
 plotCR(cr$estimates)
@@ -162,8 +196,10 @@ We can also see which market subsets were chosen at each iteration.
 cr$samples
 ```
 
-Instead of the point-identified method, we can also use the cube-root bootstrap
-method. The signatures are the same:
+A novel feature of this code is that instead of the subsampling method for
+generating the confidence intervals, it is also possible to use the cube-root
+bootstrap method proposed by Cattaneo, Jansson and Nagasawa (2020). The
+signatures are the same:
 
 ```{r}
 crCubeRoot <- cubeRootBootstrapCR(
@@ -186,7 +222,7 @@ headers. It supports two modes:
 
 The optional argument `fieldMode` switches between those modes.
 The exact format of the header and values is explained in more detail in the
-documentation.
+corresponding documentation.
 
 ## Accessing the imported data
 
@@ -216,8 +252,8 @@ length(matchedData$matchMatrices)
 ```
 
 Let's check whether, in the third market, there is match between the
-upstream-downstream pair indexed by $(4, 7)$. Note the order that the indices
-appear.
+upstream-downstream pair indexed by $(4, 7)$. Note the order in which the
+indices appear.
 
 ```{r}
 mIdx <- 3
@@ -226,7 +262,8 @@ dIdx <- 7
 matchedData$matchMatrices[[mIdx]][dIdx, uIdx]
 ```
 
-We can also view the matching information for a single stream.
+We can also view the matching information for a single stream (upstream or
+downstream agents).
 
 ```{r}
 # Leaving an index blank takes all elements for that dimension.
@@ -361,7 +398,7 @@ bounds <- list(lower=c(-1, -2, -3, -5), upper=c(2, 3, 5, 8))
 bounds
 ```
 
-Note that since we have 5 distrance attributes, the number of free parameters
+Note that since we have 5 distance attributes, the number of free parameters
 is 4.
 
 `getDefaultOptimParams` returns a reasonable collection of parameters for the
@@ -371,10 +408,12 @@ Differential Evolution method.
 optimParams
 ```
 
-See the documentation of `DEoptim::DEoptim.control` for more information.
+See the documentation of `DEoptim::DEoptim.control` for more information and how
+to fine-tune the parameters of the Differential Evolution method to obtain
+better results for a given data.
 
-We can also use the original names of the distance attributes for the
-optimal parameter vector.
+To see the original names of the distance attributes for the optimal parameter
+vector, one can use the following commands:
 
 ```{r}
 distNames <- matchedData$header[matchedData$colIdxs$distanceColIdxs]
@@ -394,9 +433,10 @@ on each run will also vary. The user can then choose one or more solutions
 according to their own criteria.
 
 Setting the parameter `numRuns` in `optimizeScoreFunction()` to an integer
-greater than `1` will restart the optimization procedure that many times, then
-collect the results that share the overall best score value found in the list
-`bestRuns`.
+greater than `1` will restart the optimization procedure that many times. The
+list `bestRuns` then collects the results that share the overall best score
+value (that is, it collects the solution(s) that provide(s) the highest number
+of inequalities predicted).
 
 It might be helpful to set the `progressUpdate` parameter to a positive value,
 in order to track the progress of the long-running operation.
@@ -406,6 +446,16 @@ optimizeScoreArgs$bounds <- bounds <- makeBounds(matchedData$noAttr, 10)
 optimizeScoreArgs$numRuns <- 1000
 optimizeScoreArgs$progressUpdate <- 50
 optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
+# How many runs, out of the initial 1000, gave the best overall score?
 length(optResult$bestRuns)
+# Show the result of the 100th such run.
 optResult$bestRuns[[100]]
 ```
+
+## References
+- [1] Fox, J.T. (2018). Estimating matching games with transfers. *Quantitative
+Economics*, 9: 1-38. <https://doi.org/10.3982/QE823>
+- [2] Romano, J. P. and A. M. Shaikh (2008). Inference for identifiable
+parameters in partially identified econometric models. *Journal of Statistical
+Planning and Inference*, 138 (9), 2786–2807.
+<https://doi.org/10.1016/j.jspi.2008.03.015>

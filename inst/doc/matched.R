@@ -33,7 +33,9 @@ optimizeScoreArgs <- list(
     bounds = bounds,
     optimParams = optimParams,
     getIneqSat = TRUE,
-    permuteInvariant = TRUE)
+    permuteInvariant = TRUE,
+    numRuns = 1,
+    progressUpdate = 0)
 optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
 
 ## -----------------------------------------------------------------------------
@@ -164,6 +166,8 @@ optimizeScoreArgs$bounds <- bounds <- makeBounds(matchedData$noAttr, 10)
 optimizeScoreArgs$numRuns <- 1000
 optimizeScoreArgs$progressUpdate <- 50
 optResult <- do.call(optimizeScoreFunction, optimizeScoreArgs)
+# How many runs, out of the initial 1000, gave the best overall score?
 length(optResult$bestRuns)
+# Show the result of the 100th such run.
 optResult$bestRuns[[100]]
 
