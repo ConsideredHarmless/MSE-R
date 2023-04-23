@@ -19,8 +19,10 @@ knitr::opts_chunk$set(
 
 The function `cubeRootBootstrapCR()` implements a cube-root bootstrap method
 for calculating the confidence regions of the $\beta$ parameters that are
-obtained by `optimizeScoreFunction()`. See the `pointIdentifiedCR()` function,
-and the `"matched"` vignette for more information.
+obtained by `optimizeScoreFunction()`. This approach is applicable to situations
+in which the asymptotics is in the number of markets. See the
+`pointIdentifiedCR()` function, and the `"matched"` vignette for more
+information.
 
 The implementation is based on the paper [1]. Links to the
 [paper](https://mdcattaneo.github.io/papers/Cattaneo-Jansson-Nagasawa_2020_ECMA.pdf),
@@ -93,7 +95,38 @@ sophisticated use of the package. The significance of this matrix is explained
 in the paper, while the final section of this document gives an overview of the
 method.
 
-## Paremeters/Options
+## More on the method
+
+The estimates are calculated by sampling, with replacement, a number of markets
+equal to their total number in the original data, creating its associated data
+array, and maximizing a function related to the difference of their scores,
+augmented by a quadratic term.
+
+In particular, let $S(\beta; X)$ be the score function corresponding to the data
+array $X$ (see also `makeScoreObjFun()`), $\hat{\beta}$ be the point estimate
+previously calculated, and $H$ (short for $\tilde{H}_n$) be the matrix which
+estimates $H_0$. After sampling the full data array $X_{\mathrm{full}}$,
+we create the sample data array $X_{\mathrm{sample}}$.
+
+Define now the quadratic term
+$q(\beta; \hat{\beta}, H) = \frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})$
+
+Then the function maximized at each bootstrap step is
+$B(\beta; \hat{\beta}, H, X_{\mathrm{full}}, X_{\mathrm{sample}}) = c S(\beta; X_{\mathrm{sample}}) - S(\beta; X_{\mathrm{full}}) - q(\beta; \hat{\beta}, H)$
+
+Note that, as defined, the score function is normalized on the number of
+inequalities of the data array, and therefore takes values in the interval
+$[0, 1]$.
+
+The *correction factor* $c$ has a value which, by default, is equal to
+the ratio of the number of inequalities in the sample data array ($m$) to the
+number of inequalities in the full data array ($n$). Since markets are, in the
+general case, unbalanced with respect to their size, this factor is not
+necessarily equal to $1$. In a previous version, this factor was fixed to $1$,
+but most users should not revert to this behavior unless reproducibility with
+that version is desired.
+
+## Parameters/Options
 
 As in `pointIdentifiedCR()`, a list of arguments related to optimizing
 the above function is required. The optimization is performed by the
@@ -124,16 +157,16 @@ The rest of the options are related to the estimation of $H$. See also the
 
 ### `Hest`
 
-Selects the method used for estimation. Set to `"numder"` for the numerical
-derivative method, which is more general, or to `"plugin"`, to use an
+Selects the method for estimation. Set to `"numder"` for the numerical
+derivative method, which is more general, or to `"plugin"`, for an
 estimator which is specific to this problem. We recommend using the plug-in
 method, which is the default.
 
 The plug-in method assumes a kernel function with specific properties.
 Specifically, its antiderivative should approximate the indicator function, and
-Condition K from the supplement to [1] should be satisfied. The only kernel
-currently available is the function $K(u) = \phi(u)$, i.e. the pdf of the
-standard normal distribution.
+Condition K from the supplement of paper [1] should be satisfied. The only
+kernel currently available in the code is the function $K(u) = \phi(u)$, i.e.
+the pdf of the standard normal distribution.
 
 ### `bw`
 
@@ -151,10 +184,11 @@ which is named the *Rule-Of-Thumb* (ROT) method. Setting the option `bw` to
 
 ### `makePosDef` and `makePosDefTol`
 
-The matrix $H$ is, by definition, positive semidefinite. It is possible, though,
-that the estimate calculated is not. Setting `makePosDef` to `TRUE` replaces
-the estimate calculated with a positive semidefinite matrix which is closest, in
-a sense, to that estimate. We provide two approaches:
+The matrix $H$ is, by definition, positive semidefinite. In practice, it is
+possible, though, that the estimate is not positive semidefinite. Setting
+`makePosDef` to `TRUE` replaces the initial estimate with a positive
+semidefinite matrix which is closest, in a sense, to that estimate. We provide
+two approaches:
 
 - Adding a constant value $\kappa$ to each diagonal element of $H$. This value
   is defined as $\epsilon_{\mathrm{tol}} - \lambda_d$, where $\lambda_d < 0$ is
@@ -167,14 +201,26 @@ a sense, to that estimate. We provide two approaches:
 
 ### `useCorrectionFactor`
 
+---
+
+**Warning!**
+We strongly recommend not changing this option unless reproducibility with
+previous versions is desired.
+
+---
+
 Selects whether the constant factor $c$ in the bootstrap function should equal
 $\frac{m}{n}$ (`TRUE`, the default) or revert to the legacy behavior, where it
-used to equal $1$ (`FALSE`). We recommend not changing this option unless
-reproducibility is desired.
+used to equal $1$ (`FALSE`). See the section "More on the method" for the
+definition of this factor.
 
 ### `Hbypass`
 
-If provided, skips the entire calculation of $H$ and uses this value instead.
+Although the matrix $H$ is automatically estimated by the package in the usual
+case, we allow the user to skip this procedure and provide their own estimate
+instead. This is achieved by setting the option `Hbypass` to the provided
+estimate. Note that the user is responsible for ensuring that the estimate is a
+positive semidefinite matrix of the correct dimensions.
 
 ## Examples
 
@@ -242,37 +288,6 @@ crMakePosDef <- cubeRootBootstrapCR(
 crMakePosDef[c("cr", "H")]
 eigen(crMakePosDef$H)$values
 ```
-
-## More on the method
-
-The estimates are calculated by sampling, with replacement, a number of markets
-equal to their total number, creating its associated data array, and maximizing
-a function related to the difference of their scores, augmented by a quadratic
-term.
-
-In particular, let $S(\beta; X)$ be the score function corresponding to the data
-array $X$ (see also `makeScoreObjFun()`), $\hat{\beta}$ be the point estimate
-previously calculated, and $H$ (short for $\tilde{H}_n$) be the matrix which
-estimates $H_0$. After sampling the full data array $X_{\mathrm{full}}$,
-we create the sample data array $X_{\mathrm{sample}}$.
-
-Define now the quadratic term
-$q(\beta; \hat{\beta}, H) = \frac{1}{2} (\beta - \hat{\beta})^T H (\beta - \hat{\beta})$
-
-Then the function maximized at each bootstrap step is
-$B(\beta; \hat{\beta}, H, X_{\mathrm{full}}, X_{\mathrm{sample}}) = c S(\beta; X_{\mathrm{sample}}) - S(\beta; X_{\mathrm{full}}) - q(\beta; \hat{\beta}, H)$
-
-Note that, as defined, the score function is normalized on the number of
-inequalities of the data array, and therefore takes values in the interval
-$[0, 1]$.
-
-The *correction factor* $c$ has a value which, by default, is equal to
-the ratio of the number of inequalities in the sample data array ($m$) to the
-number of inequalities in the full data array ($n$). Since markets are, in the
-general case, unbalanced with respect to their size, this factor is not
-necessarily equal to $1$. In a previous version, this factor was fixed to $1$,
-but most users should not revert to this behavior unless reproducibility with
-that version is desired.
 
 ## References
 - [1] M. D. Cattaneo, M. Jansson, and K. Nagasawa, “Bootstrap-Based Inference for Cube Root Asymptotics”, *Econometrica*, vol. 88, no. 5, pp. 2203–2219, September 2020.
