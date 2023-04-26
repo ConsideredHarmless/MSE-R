@@ -193,9 +193,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>The rest of the (optional) arguments are explained below:</p>
 <ul>
 <li><code>getIneqSat</code>: Whether to include the boolean vector of satisfied inequalities <code>$ineqSat</code> in the result.</li>
-<li><code>permuteInvariant</code>: Whether to reorder the attributes rows of the data array before and after the optimization, such that the attribute whose row has the smallest standard deviation comes first. Note that setting this to <code>TRUE</code> affects only the internal procedures, as the initial order is restored in the results.</li>
-<li><code>numRuns</code>: Setting this to an integer greater than <code>1</code> restarts the optimization method that many times. Useful with methods such as Differential Evolution, when restarting the method when the random seed has changed might yield a different result. The user can retrieve the runs with the best overall value from the member <code>$bestRuns</code> in the result. See the section “Restarting the optimization multiple times” below for more information.</li>
-<li><code>progressUpdate</code>: If greater than <code>0</code>, prints a progress update to the console each time that many runs of the optimization procedure have completed.</li>
+<li><code>permuteInvariant</code>: Whether to reorder the attributes rows of the data array before and after the optimization, such that the attribute whose row has the smallest standard deviation comes first. Note that setting this to <code>TRUE</code> affects only the internal procedures, as the initial order is restored in the results. In addition to specifying the RNG, this feature is highly recommended in order to increase the likelihood that results are reproducible across runs and computers.</li>
+<li><code>numRuns</code>: Setting this to an integer greater than <code>1</code> restarts the optimization method as many times as indicated by this integer. This is highly useful for methods such as Differential Evolution, because such methods can yield a different result depending on the random seed. Thus, this approach increases the likelihood that the user searches and finds the estimates that maximize a higher number of inequalities. The user can retrieve the runs with the best overall value from the member <code>$bestRuns</code> in the result. See the section “Restarting the optimization multiple times” below for more information.</li>
+<li><code>progressUpdate</code>: If greater than <code>0</code>, prints a progress update to the console for the specified increment in the number of completed runs of the optimization procedure (e.g. every 8 runs, if the progress update is equal to <code>8</code>).</li>
 </ul>
 <p>We can now see the optimal parameter vector, and how many inequalities are satisfied across each market.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>optResult<span class="sc">$</span>optArg</span>
@@ -217,7 +217,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>numSubsamples <span class="ot">&lt;-</span> <span class="dv">50</span></span></code></pre></div>
 <p>We also need to map each inequality to its market, using the function <code>makeGroupIDs</code>.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>groupIDs <span class="ot">&lt;-</span> <span class="fu">makeGroupIDs</span>(ineqmembers)</span></code></pre></div>
-<p>Now we are ready to calculate the confidence regions. We choose the standard value for the confidence level equal to <span class="math inline">\(0.95\)</span>, but this can be modified.</p>
+<p>Now we are ready to calculate the confidence regions. We chose the standard value for the confidence level equal to <span class="math inline">\(0.95\)</span>, but this can be modified to any desired value.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>confidenceLevel <span class="ot">&lt;-</span> <span class="fl">0.95</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>cr <span class="ot">&lt;-</span> <span class="fu">pointIdentifiedCR</span>(</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, optResult<span class="sc">$</span>optArg,</span>
@@ -279,7 +279,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [48,]    1    3</span></span>
 <span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [49,]    1    2</span></span>
 <span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [50,]    3    1</span></span></code></pre></div>
-<p>A novel feature of this code is that instead of the subsampling method for generating the confidence intervals, it is also possible to use the cube-root bootstrap method proposed by Cattaneo, Jansson and Nagasawa (2020). The signatures are the same:</p>
+<p>A novel feature of this code is that instead of the subsampling method for generating the confidence intervals proposed by Fox (2018), it is also possible to use the cube-root bootstrap method introduced by Cattaneo, Jansson and Nagasawa (2020). The signatures are the same:</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>crCubeRoot <span class="ot">&lt;-</span> <span class="fu">cubeRootBootstrapCR</span>(</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    dataArray, groupIDs, optResult<span class="sc">$</span>optArg,</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    ssSize, numSubsamples, confidenceLevel,</span>
@@ -317,7 +317,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(matchedData<span class="sc">$</span>matchMatrices)</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span></code></pre></div>
-<p>Let’s check whether, in the third market, there is match between the upstream-downstream pair indexed by <span class="math inline">\((4, 7)\)</span>. Note the order in which the indices appear.</p>
+<p>Let’s check whether, in the third market, there is a match between the upstream-downstream pair indexed by <span class="math inline">\((4, 7)\)</span>. Note the order in which the indices appear: market, downstream and then upstream. A value of <code>1</code> indicates a match and a value of <code>0</code> indicates the respective upstream-downstream pairing is not a match in the real data.</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>mIdx <span class="ot">&lt;-</span> <span class="dv">3</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>uIdx <span class="ot">&lt;-</span> <span class="dv">4</span></span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>dIdx <span class="ot">&lt;-</span> <span class="dv">7</span></span>
@@ -472,14 +472,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="optimization" class="section level2">
 <h2>Optimization</h2>
-<p>The function <code>makeBounds</code> creates equal symmetrical box constraints for each variable:</p>
+<p>The function <code>makeBounds</code> creates equal symmetrical box constraints for each variable estimate:</p>
 <div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">makeBounds</span>(matchedData<span class="sc">$</span>noAttr, <span class="dv">100</span>)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $lower</span></span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -100 -100 -100 -100</span></span>
 <span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $upper</span></span>
 <span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 100 100 100 100</span></span></code></pre></div>
-<p>If non-symmetrical constraints are desired, we can pass a third argument to the function:</p>
+<p>If non-symmetrical constraints for the estimates are desired, we can pass a third argument to the function:</p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">makeBounds</span>(matchedData<span class="sc">$</span>noAttr, <span class="dv">10</span>, <span class="sc">-</span><span class="dv">20</span>)</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $lower</span></span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -20 -20 -20 -20</span></span>
@@ -495,7 +495,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $upper</span></span>
 <span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2 3 5 8</span></span></code></pre></div>
 <p>Note that since we have 5 distance attributes, the number of free parameters is 4.</p>
-<p><code>getDefaultOptimParams</code> returns a reasonable collection of parameters for the Differential Evolution method.</p>
+<p><code>getDefaultOptimParams</code> returns a reasonable collection of parameters for the Differential Evolution method. Therefore, the user should impose constraints on the parameter estimates only if they have reasons to suspect the data is of a particular form that requires such constraints.</p>
 <div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>optimParams</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $NP</span></span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 50</span></span>
@@ -525,7 +525,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   1.81745  -2.75489  87.03322 -17.54139</span></span></code></pre></div>
 <div id="restarting-the-optimization-multiple-times" class="section level3">
 <h3>Restarting the optimization multiple times</h3>
-<p>Since we are dealing with an optimization problem with multiple solutions, we provide an option to restart optimization procedures, such as <em>Differential Evolution</em>, that depend on the state of the random generator. By using a different random state on each run, the optimal parameter vectors calculated on each run will also vary. The user can then choose one or more solutions according to their own criteria.</p>
+<p>Since we are dealing with an optimization problem with multiple solutions, we provide an option to restart optimization procedures, such as <em>Differential Evolution</em>, that depend on the state of the random generator. By using a different random state on each run, the optimal parameter vectors calculated on each run will also vary. The user can then choose one or more solutions according to their own criteria. The overall goal is to reach the maximum number of inequalities predicted.</p>
 <p>Setting the parameter <code>numRuns</code> in <code>optimizeScoreFunction()</code> to an integer greater than <code>1</code> will restart the optimization procedure that many times. The list <code>bestRuns</code> then collects the results that share the overall best score value (that is, it collects the solution(s) that provide(s) the highest number of inequalities predicted).</p>
 <p>It might be helpful to set the <code>progressUpdate</code> parameter to a positive value, in order to track the progress of the long-running operation.</p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>optimizeScoreArgs<span class="sc">$</span>bounds <span class="ot">&lt;-</span> bounds <span class="ot">&lt;-</span> <span class="fu">makeBounds</span>(matchedData<span class="sc">$</span>noAttr, <span class="dv">10</span>)</span>

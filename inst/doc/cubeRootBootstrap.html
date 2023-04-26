@@ -180,7 +180,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>pointEstimate <span class="ot">&lt;-</span> optResult<span class="sc">$</span>optArg</span>
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>pointEstimate</span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  0.9068375 -4.9464569  2.5058242  0.2094887</span></span></code></pre></div>
-<p><code>cubeRootBootstrapCR()</code> has the same parameter list as <code>pointIdentifiedCR</code>, except it is not necessary to specify the <code>ssSize</code> parameter, as the method generates its subsamples by drawing (with replacement) as many markets as there are in the full data array.</p>
+<p><code>cubeRootBootstrapCR()</code> has the same parameter list as <code>pointIdentifiedCR</code>, except it is not necessary to specify the <code>ssSize</code> parameter, as the method generates its bootstrap samples by drawing (with replacement) as many markets as there are in the full data array.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>numSubsamples <span class="ot">&lt;-</span> <span class="dv">20</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ssSize <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>confidenceLevel <span class="ot">&lt;-</span> <span class="fl">0.95</span></span>
@@ -274,7 +274,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3,] -1.9902010  0.9674814  1.7990087 -0.5771139</span></span>
 <span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4,]  4.8095097  0.1959709 -0.5771139  4.8327997</span></span></code></pre></div>
 <p>The member <code>cr$cr</code> is an array containing the <em>confidence regions</em>. Each column is a pair of values denoting the confidence interval of the corresponding attribute. The members <code>cr$rawEstimates</code> and <code>cr$estimates</code> are also arrays, containing the results of the bootstrap operation. Each row corresponds to a single bootstrap sample. The rows of <code>cr$rawEstimates</code> are the actual parameter vectors <span class="math inline">\(\tilde{\beta}\)</span> obtained by optimizing the bootstrap function, while the rows of <code>cr$estimates</code> are the vectors <span class="math inline">\(\tilde{\beta} - \hat{\beta}\)</span>, where <span class="math inline">\(\hat{\beta}\)</span> are the point estimates. We call the former estimates <em>uncentered</em>, and the latter <em>centered</em>.</p>
-<p>The matrix <code>cr$H</code> is the calculated estimate of the matrix <span class="math inline">\(H\)</span> mentioned in the paper [1]. While its value can be ignored in the usual case, it can allow more sophisticated use of the package. The significance of this matrix is explained in the paper, while the final section of this document gives an overview of the method.</p>
+<p>The matrix <code>cr$H</code> is the calculated estimate of the matrix <span class="math inline">\(H\)</span> mentioned in the paper [1]. While its value can be ignored in the usual case, it can allow for a more sophisticated use of the package. The significance of this matrix is explained in the paper, while the final section of this document gives an overview of the method.</p>
 </div>
 <div id="more-on-the-method" class="section level2">
 <h2>More on the method</h2>
@@ -289,7 +289,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h2>Parameters/Options</h2>
 <p>As in <code>pointIdentifiedCR()</code>, a list of arguments related to optimizing the above function is required. The optimization is performed by the function <code>optimizeBootstrapFunction()</code>, which is similar to <code>optimizeScoreFunction()</code>. The parameter <code>optimizeScoreArgs</code> should be a list with the following elements:</p>
 <ul>
-<li><code>bounds</code></li>
+<li><code>bounds # of the (coefficient) estimates</code></li>
 <li><code>coefficient1</code></li>
 <li><code>method</code></li>
 <li><code>optimParams</code></li>
@@ -322,13 +322,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="usecorrectionfactor" class="section level3">
 <h3><code>useCorrectionFactor</code></h3>
 <hr />
-<p><strong>Warning!</strong> We strongly recommend not changing this option unless reproducibility with previous versions is desired.</p>
+<p><strong>Warning!</strong> We strongly recommend not changing this option unless the user has a reason to check the results for a different formula for the correction factor.</p>
 <hr />
 <p>Selects whether the constant factor <span class="math inline">\(c\)</span> in the bootstrap function should equal <span class="math inline">\(\frac{m}{n}\)</span> (<code>TRUE</code>, the default) or revert to the legacy behavior, where it used to equal <span class="math inline">\(1\)</span> (<code>FALSE</code>). See the section “More on the method” for the definition of this factor.</p>
 </div>
 <div id="hbypass" class="section level3">
 <h3><code>Hbypass</code></h3>
-<p>Although the matrix <span class="math inline">\(H\)</span> is automatically estimated by the package in the usual case, we allow the user to skip this procedure and provide their own estimate instead. This is achieved by setting the option <code>Hbypass</code> to the provided estimate. Note that the user is responsible for ensuring that the estimate is a positive semidefinite matrix of the correct dimensions.</p>
+<p>Although the matrix <span class="math inline">\(H\)</span> is automatically estimated by the package in the usual case, we allow the users to skip this procedure and provide their own estimate instead. This is achieved by setting the option <code>Hbypass</code> to the provided estimate. Note that the user is responsible for ensuring that the estimate is a positive semidefinite matrix of the correct dimensions.</p>
 </div>
 </div>
 <div id="examples" class="section level2">
