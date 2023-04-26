@@ -58,8 +58,8 @@ pointEstimate
 
 `cubeRootBootstrapCR()` has the same parameter list as `pointIdentifiedCR`,
 except it is not necessary to specify the `ssSize` parameter, as the method
-generates its subsamples by drawing (with replacement) as many markets as there
-are in the full data array.
+generates its bootstrap samples by drawing (with replacement) as many markets as
+there are in the full data array.
 
 ```{r}
 numSubsamples <- 20
@@ -90,10 +90,10 @@ where $\hat{\beta}$ are the point estimates. We call the former estimates
 *uncentered*, and the latter *centered*.
 
 The matrix `cr$H` is the calculated estimate of the matrix $H$ mentioned in the
-paper [1]. While its value can be ignored in the usual case, it can allow more
-sophisticated use of the package. The significance of this matrix is explained
-in the paper, while the final section of this document gives an overview of the
-method.
+paper [1]. While its value can be ignored in the usual case, it can allow for a
+more sophisticated use of the package. The significance of this matrix is
+explained in the paper, while the final section of this document gives an
+overview of the method.
 
 ## More on the method
 
@@ -134,7 +134,7 @@ function `optimizeBootstrapFunction()`, which is similar to
 `optimizeScoreFunction()`. The parameter `optimizeScoreArgs`
 should be a list with the following elements: 
 
-- `bounds`
+- `bounds # of the (coefficient) estimates`
 - `coefficient1`
 - `method`
 - `optimParams`
@@ -204,8 +204,8 @@ two approaches:
 ---
 
 **Warning!**
-We strongly recommend not changing this option unless reproducibility with
-previous versions is desired.
+We strongly recommend not changing this option unless the user has a reason to
+check the results for a different formula for the correction factor.
 
 ---
 
@@ -217,7 +217,7 @@ definition of this factor.
 ### `Hbypass`
 
 Although the matrix $H$ is automatically estimated by the package in the usual
-case, we allow the user to skip this procedure and provide their own estimate
+case, we allow the users to skip this procedure and provide their own estimate
 instead. This is achieved by setting the option `Hbypass` to the provided
 estimate. Note that the user is responsible for ensuring that the estimate is a
 positive semidefinite matrix of the correct dimensions.

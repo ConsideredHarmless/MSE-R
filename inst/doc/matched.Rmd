@@ -125,15 +125,20 @@ The rest of the (optional) arguments are explained below:
 before and after the optimization, such that the attribute whose row has the
 smallest standard deviation comes first. Note that setting this to `TRUE`
 affects only the internal procedures, as the initial order is restored in the
-results.
+results. In addition to specifying the RNG, this feature is highly recommended
+in order to increase the likelihood that results are reproducible across runs
+and computers.
 - `numRuns`: Setting this to an integer greater than `1` restarts the
-optimization method that many times. Useful with methods such as Differential
-Evolution, when restarting the method when the random seed has changed might
-yield a different result. The user can retrieve the runs with the best overall
-value from the member `$bestRuns` in the result. See the section "Restarting the
-optimization multiple times" below for more information.
+optimization method as many times as indicated by this integer. This is highly
+useful for methods such as Differential Evolution, because such methods can
+yield a different result depending on the random seed. Thus, this approach
+increases the likelihood that the user searches and finds the estimates that
+maximize a higher number of inequalities. The user can retrieve the runs with
+the best overall value from the member `$bestRuns` in the result. See the
+section "Restarting the optimization multiple times" below for more information.
 - `progressUpdate`: If greater than `0`, prints a progress update to the console
-each time that many runs of the optimization procedure have completed.
+for the specified increment in the number of completed runs of the optimization
+procedure (e.g. every 8 runs, if the progress update is equal to `8`).
 
 We can now see the optimal parameter vector, and how many inequalities are
 satisfied across each market.
@@ -172,8 +177,9 @@ We also need to map each inequality to its market, using the function
 groupIDs <- makeGroupIDs(ineqmembers)
 ```
 
-Now we are ready to calculate the confidence regions. We choose the standard
-value for the confidence level equal to $0.95$, but this can be modified.
+Now we are ready to calculate the confidence regions. We chose the standard
+value for the confidence level equal to $0.95$, but this can be modified to any
+desired value.
 
 ```{r}
 confidenceLevel <- 0.95
@@ -197,9 +203,9 @@ cr$samples
 ```
 
 A novel feature of this code is that instead of the subsampling method for
-generating the confidence intervals, it is also possible to use the cube-root
-bootstrap method proposed by Cattaneo, Jansson and Nagasawa (2020). The
-signatures are the same:
+generating the confidence intervals proposed by Fox (2018), it is also possible
+to use the cube-root bootstrap method introduced by Cattaneo, Jansson and
+Nagasawa (2020). The signatures are the same:
 
 ```{r}
 crCubeRoot <- cubeRootBootstrapCR(
@@ -251,9 +257,11 @@ length(matchedData$distanceMatrices)
 length(matchedData$matchMatrices)
 ```
 
-Let's check whether, in the third market, there is match between the
+Let's check whether, in the third market, there is a match between the
 upstream-downstream pair indexed by $(4, 7)$. Note the order in which the
-indices appear.
+indices appear: market, downstream and then upstream. A value of `1` indicates a
+match and a value of `0` indicates the respective upstream-downstream pairing is
+not a match in the real data.
 
 ```{r}
 mIdx <- 3
@@ -376,14 +384,14 @@ qualifiedIndices
 ## Optimization
 
 The function `makeBounds` creates equal symmetrical box constraints for each
-variable:
+variable estimate:
 
 ```{r}
 makeBounds(matchedData$noAttr, 100)
 ```
 
-If non-symmetrical constraints are desired, we can pass a third argument to the
-function:
+If non-symmetrical constraints for the estimates are desired, we can pass a
+third argument to the function:
 
 ```{r}
 makeBounds(matchedData$noAttr, 10, -20)
@@ -402,7 +410,9 @@ Note that since we have 5 distance attributes, the number of free parameters
 is 4.
 
 `getDefaultOptimParams` returns a reasonable collection of parameters for the
-Differential Evolution method.
+Differential Evolution method. Therefore, the user should impose constraints on
+the parameter estimates only if they have reasons to suspect the data is of a
+particular form that requires such constraints.
 
 ```{r}
 optimParams
@@ -430,7 +440,8 @@ provide an option to restart optimization procedures, such as *Differential
 Evolution*, that depend on the state of the random generator. By using a
 different random state on each run, the optimal parameter vectors calculated
 on each run will also vary. The user can then choose one or more solutions
-according to their own criteria.
+according to their own criteria. The overall goal is to reach the maximum number
+of inequalities predicted.
 
 Setting the parameter `numRuns` in `optimizeScoreFunction()` to an integer
 greater than `1` will restart the optimization procedure that many times. The
